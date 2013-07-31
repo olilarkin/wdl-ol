@@ -276,9 +276,14 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
 - (void) onTimer: (NSTimer*) pTimer
 {
   IRECT r;
-  if (pTimer == mTimer && mGraphics && mGraphics->IsDirty(&r))
+  if (pTimer == mTimer && mGraphics)
   {
-    [self setNeedsDisplayInRect:ToNSRect(mGraphics, &r)];
+    mGraphics->GetPlug()->OnGUITimer();
+
+    if (mGraphics->IsDirty(&r))
+    {
+      [self setNeedsDisplayInRect:ToNSRect(mGraphics, &r)];
+    }
   }
 }
 

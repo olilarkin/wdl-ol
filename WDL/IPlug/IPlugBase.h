@@ -67,6 +67,8 @@ public:
   // Only active if USE_IDLE_CALLS is defined.
   virtual void OnIdle() {}
 
+  virtual void OnGUITimer() {}
+
   // Not usually needed ... Reset is called on activate regardless of whether this is implemented.
   // Also different hosts have different interpretations of "activate".
   // Implementations should set a mutex lock like in the no-op!

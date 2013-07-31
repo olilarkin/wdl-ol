@@ -85,6 +85,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     {
       if (wParam == IPLUG_TIMER_ID)
       {
+        pGraphics->GetPlug()->OnGUITimer();
 
         if (pGraphics->mParamEditWnd && pGraphics->mParamEditMsg != kNone)
         {
