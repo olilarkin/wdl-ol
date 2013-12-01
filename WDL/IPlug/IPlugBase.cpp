@@ -80,7 +80,6 @@ IPlugBase::IPlugBase(int nParams,
   , mGraphics(0)
   , mCurrentPresetIdx(0)
   , mIsInst(plugIsInst)
-  , mDoesMIDI(plugDoesMidi)
   , mAPI(plugAPI)
   , mIsBypassed(false)
   , mDelay(0)
@@ -531,7 +530,7 @@ void IPlugBase::SetLatency(int samples)
   }
 }
 
-// this is over-ridden for AAX
+// this is over-ridden for VST3 and AAX formats
 void IPlugBase::SetParameterFromGUI(int idx, double normalizedValue)
 {
   Trace(TRACELOC, "%d:%f", idx, normalizedValue);
@@ -892,25 +891,32 @@ int IPlugBase::UnserializePresets(ByteChunk* pChunk, int startPos)
 
 bool IPlugBase::SerializeParams(ByteChunk* pChunk)
 {
-  TRACE;
 
+  TRACE;
   WDL_MutexLock lock(&mMutex);
   bool savedOK = true;
   int i, n = mParams.GetSize();
   for (i = 0; i < n && savedOK; ++i)
   {
     IParam* pParam = mParams.Get(i);
-    Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
-    double v = pParam->Value();
+	  double v;
+#ifndef IPLUG_SAVE_NORMALIZED_PARAMS
+	  v = pParam->Value();
+#else
+	  v = pParam->GetNormalized();
+#endif
+#ifndef DEMO
     savedOK &= (pChunk->Put(&v) > 0);
+#endif
   }
   return savedOK;
+
 }
 
 int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
 {
   TRACE;
-
+ 
   WDL_MutexLock lock(&mMutex);
   int i, n = mParams.GetSize(), pos = startPos;
   for (i = 0; i < n && pos >= 0; ++i)
@@ -919,7 +925,13 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
     double v = 0.0;
     Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
     pos = pChunk->Get(&v, pos);
+#ifndef DEMO
+#ifndef IPLUG_SAVE_NORMALIZED_PARAMS
     pParam->Set(v);
+#else
+	pParam->SetNormalized(v);
+#endif
+#endif
   }
   OnParamReset();
   return pos;
@@ -1333,7 +1345,6 @@ bool IPlugBase::LoadProgramFromFXP()
           GetIPlugVerFromChunk(&pgm, &pos);
           UnserializeState(&pgm, pos);
           ModifyCurrentPreset(prgName);
-          RestorePreset(GetCurrentPresetIdx());
           InformHostOfProgramChange();
 
           return true;

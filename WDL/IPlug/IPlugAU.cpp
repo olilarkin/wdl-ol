@@ -1580,12 +1580,14 @@ ComponentResult IPlugAU::SetParamProc(void* pPlug, AudioUnitParameterID paramID,
   IPlugAU* _this = (IPlugAU*) pPlug;
   IMutexLock lock(_this);
   IParam* pParam = _this->GetParam(paramID);
+#ifndef DEMO
   pParam->Set(value);
   if (_this->GetGUI())
   {
     _this->GetGUI()->SetParameterFromPlug(paramID, value, false);
   }
   _this->OnParamChange(paramID);
+#endif
   return noErr;
 }
 
