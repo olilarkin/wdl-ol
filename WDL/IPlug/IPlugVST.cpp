@@ -886,6 +886,7 @@ float VSTCALLBACK IPlugVST::VSTGetParameter(AEffect *pEffect, VstInt32 idx)
 
 void VSTCALLBACK IPlugVST::VSTSetParameter(AEffect *pEffect, VstInt32 idx, float value)
 {
+#ifndef DEMO
   Trace(TRACELOC, "%d:%f", idx, value);
   IPlugVST* _this = (IPlugVST*) pEffect->object;
   IMutexLock lock(_this);
@@ -898,4 +899,5 @@ void VSTCALLBACK IPlugVST::VSTSetParameter(AEffect *pEffect, VstInt32 idx, float
     _this->GetParam(idx)->SetNormalized(value);
     _this->OnParamChange(idx);
   }
+#endif
 }

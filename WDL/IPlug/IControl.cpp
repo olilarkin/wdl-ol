@@ -40,14 +40,9 @@ void IControl::SetDirty(bool pushParamToPlug)
     
     if (mValDisplayControl) 
     {
-      WDL_String plusLabel;
       char str[32];
       pParam->GetDisplayForHost(str);
-      plusLabel.Set(str, 32);
-      plusLabel.Append(" ", 32);
-      plusLabel.Append(pParam->GetLabelForHost(), 32);
-      
-      ((ITextControl*)mValDisplayControl)->SetTextFromPlug(plusLabel.Get());
+      ((ITextControl*)mValDisplayControl)->SetTextFromPlug(str);
     }
     
     if (mNameDisplayControl) 
@@ -63,10 +58,24 @@ void IControl::SetClean()
   mRedraw = false;
 }
 
+/**
+ * Saverio: this is needed to be able to move an IControl to a new position
+ */
+void IControl::Move(int x, int y) {
+	int w = mRECT.W();
+	int h = mRECT.H();
+	mRECT.L = x;
+	mRECT.T = y; 
+	mRECT.R = x + w;
+	mRECT.B = y + h;
+	mTargetRECT = mRECT;
+}
+	
 void IControl::Hide(bool hide)
 {
   mHide = hide;
   mRedraw = true;
+  mBlend.mWeight = (hide ? 0.f : 1.f);
   SetDirty(false);
 }
 
@@ -221,64 +230,57 @@ bool IBitmapControl::Draw(IGraphics* pGraphics)
   return pGraphics->DrawBitmap(&mBitmap, &mRECT, i, &mBlend);
 }
 
+
+
 void ISwitchControl::OnMouseDown(int x, int y, IMouseMod* pMod)
 {
-  if (mBitmap.N > 1)
-  {
+  if (pMod->R) {
+    PromptUserInput();
+  } else if (mBitmap.N > 1) {
     mValue += 1.0 / (double) (mBitmap.N - 1);
-  }
-  else
-  {
-    mValue += 1.0;
-  }
+	
+	  //double valueStep = 1.0 / (double) (mBitmap.N - 1);
+//	  // look if control is vertical or horizontal
+//	  double oldstep = 0.0;
+//	  if(mDirection == kHorizontal) {
+//		  double step = mRECT.W() / mBitmap.N;
+//		  double current = step;
+//		  for (int i=0; i < mBitmap.N; i++) {
+//			  if (x > (mRECT.L + oldstep) && x < (mRECT.L + current)) {
+//				  mValue = valueStep * i;
+//				  break;
+//			  }
+//			  oldstep = step;
+//			  current = current + step;
+//		  }
+//	  }else if(mDirection == kVertical){
+//		  double step = mRECT.H() / mBitmap.N;
+//		  double current = step;
+//		  for (int i=0; i < mBitmap.N; i++) {
+//			  if (y > (mRECT.T + oldstep) && y < (mRECT.T + current)) {
+//				  mValue = valueStep * i;
+//				  break;
+//			  }
+//			  oldstep = step;
+//			  current = current + step;
+//		  }
+//		  
+//	  }else{
+//		  mValue += 1.0 / (double) (mBitmap.N - 1);
+//	  }
 
-  if (mValue > 1.001)
-  {
-    mValue = 0.0;
+  } else {
+	mValue += 1.0;
   }
-  SetDirty();
+	if (mValue > 1.001) {
+		mValue = 0.0;
+	}
+	SetDirty();
 }
 
 void ISwitchControl::OnMouseDblClick(int x, int y, IMouseMod* pMod)
 {
   OnMouseDown(x, y, pMod);
-}
-
-void ISwitchPopUpControl::OnMouseDown(int x, int y, IMouseMod* pMod)
-{
-  PromptUserInput();
-
-  SetDirty();
-}
-
-ISwitchFramesControl::ISwitchFramesControl(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap, bool imagesAreHorizontal, IChannelBlend::EBlendMethod blendMethod)
-  : ISwitchControl(pPlug, x, y, paramIdx, pBitmap, blendMethod)
-{
-  mDisablePrompt = false;
-  
-  for(int i = 0; i < pBitmap->N; i++)
-  {
-    if (imagesAreHorizontal)
-      mRECTs.Add(mRECT.SubRectHorizontal(pBitmap->N, i)); 
-    else
-      mRECTs.Add(mRECT.SubRectVertical(pBitmap->N, i)); 
-  }
-}
-
-void ISwitchFramesControl::OnMouseDown(int x, int y, IMouseMod* pMod)
-{
-  int n = mRECTs.GetSize();
-  
-  for (int i = 0; i < n; i++) 
-  {
-    if (mRECTs.Get()[i].Contains(x, y)) 
-    {
-      mValue = (double) i / (double) (n - 1);
-      break;
-    }
-  }
-  
-  SetDirty();
 }
 
 IInvisibleSwitchControl::IInvisibleSwitchControl(IPlugBase* pPlug, IRECT pR, int paramIdx)

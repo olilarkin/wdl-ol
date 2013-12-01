@@ -302,7 +302,7 @@ tresult PLUGIN_API IPlugVST3::setBusArrangements(SpeakerArrangement* inputs, int
       audioInputs.remove(bus);
       addAudioInput(USTRING("Sidechain Input"), getSpeakerArrForChans(reqNumSideChainChannels), kAux, 0); // either mono or stereo
     }
-
+	  
     return kResultTrue;
   }
 
@@ -494,6 +494,7 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
         {
           mSidechainActive = true;
           SetInputChannelConnections(0, NInChannels(), true);
+		  //SetInputChannelConnections(data.inputs[0].numChannels + mScChans, NInChannels(), false);
         }
         else
         {

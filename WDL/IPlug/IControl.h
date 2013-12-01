@@ -117,6 +117,11 @@ public:
   virtual void SetAuxParamValueFromPlug(int auxParamIdx, double value); // can override if nessecary
   void SetAllAuxParamsFromGUI();
   int NAuxParams() { return mAuxParams.GetSize(); }
+	
+  /**
+   * Saverio: this is needed to be able to move an IControl to a new position
+   */
+  virtual void Move(int x, int y);
   
 protected:
   int mTextEntryLength;
