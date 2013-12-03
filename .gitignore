@@ -1,3 +1,5 @@
+.gitingore
+*.dep
 *.o
 *.a
 *.ipch
@@ -43,4 +45,3 @@ IPlugExamples/build_errors.log
 
 /IPlugExamples/IPlugEEL/libEEL/build/
 */build/*
-
