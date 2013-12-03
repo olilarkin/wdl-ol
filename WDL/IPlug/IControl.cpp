@@ -630,6 +630,7 @@ bool ITextControl::Draw(IGraphics* pGraphics)
 ICaptionControl::ICaptionControl(IPlugBase* pPlug, IRECT pR, int paramIdx, IText* pText, bool showParamLabel)
   :   ITextControl(pPlug, pR, pText), mShowParamLabel(showParamLabel)
 {
+  mDisablePrompt = false;
   mParamIdx = paramIdx;
 }
 
