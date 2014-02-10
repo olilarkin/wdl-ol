@@ -358,6 +358,7 @@ protected:
   IBitmap mBitmap;
 };
 
+
 // A knob that consists of a static base, a rotating mask, and a rotating top.
 // The bitmaps are assumed to be symmetrical and identical sizes.
 class IKnobRotatingMaskControl : public IKnobControl
@@ -481,6 +482,52 @@ protected:
   WDL_String mDir, mFile, mExtensions;
   EFileAction mFileAction;
   EFileSelectorState mState;
+};
+
+class IKnobMultiControlText : public IKnobMultiControl  
+{
+	
+public:
+	
+	enum EKnobMultiControlTextPosition { kTxtPosBelow, kTxtPosAbove, kTxtPosMiddle };
+	
+	IKnobMultiControlText(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap, IText* pText, bool showParamLabel = true, IKnobMultiControlText::EKnobMultiControlTextPosition labelPosition = kTxtPosBelow)
+	:	IKnobMultiControl(pPlug, x, y, paramIdx, pBitmap)
+	{
+		mText = *pText;
+		//mTextRECT = IRECT(mRECT.L, mRECT.B-20, mRECT.R, mRECT.B);
+		mImgRECT = IRECT(x, y, pBitmap);
+		mDisablePrompt = false;
+		mShowParamLabel = showParamLabel;
+		
+		int captionHeight = pText->mSize + 4;
+		int captionTop;
+		switch (labelPosition) {
+			case kTxtPosBelow:
+				mTextRECT = IRECT(mImgRECT.L, mImgRECT.B, mImgRECT.L+mImgRECT.W(), mImgRECT.T+mImgRECT.H()+captionHeight);
+				break;
+			case kTxtPosAbove:
+				mTextRECT = IRECT(mImgRECT.L, mImgRECT.T-captionHeight, mImgRECT.L+mImgRECT.W(), mImgRECT.T);
+				break;
+			case kTxtPosMiddle:
+				captionTop = mImgRECT.T + (mImgRECT.H()/2) - (captionHeight/2)+2;
+				mTextRECT = IRECT(mImgRECT.L, captionTop, mImgRECT.L+mImgRECT.W(), captionTop+captionHeight);
+				break;
+		}
+	}
+	
+	~IKnobMultiControlText() {}
+	
+	bool Draw(IGraphics* pGraphics);
+	void OnMouseDown(int x, int y, IMouseMod* pMod);
+	void OnMouseDblClick(int x, int y, IMouseMod* pMod);
+
+private:
+	IRECT mTextRECT, mImgRECT;
+	IBitmap mBitmap;
+	WDL_String mStr;
+	bool mShowParamLabel;
+	
 };
 
 #endif
