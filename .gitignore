@@ -22,6 +22,7 @@
 *.xcworkspace
 *xcuserdata*
 *.xcschememanagement.plist
+*.pbxtree
 build-*
 /IPlugExamples/*/*.vcxproj.user
 
