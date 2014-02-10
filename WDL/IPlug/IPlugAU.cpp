@@ -589,7 +589,8 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
         memset(pInfo, 0, sizeof(AudioUnitParameterInfo));
         pInfo->flags = kAudioUnitParameterFlag_CFNameRelease |
                        kAudioUnitParameterFlag_HasCFNameString |
-                       kAudioUnitParameterFlag_IsReadable;
+                       kAudioUnitParameterFlag_IsReadable |
+					   kAudioUnitParameterFlag_IsElementMeta;
         
         IParam* pParam = GetParam(element);
         
