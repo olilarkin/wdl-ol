@@ -625,6 +625,57 @@ bool IKnobMultiControl::Draw(IGraphics* pGraphics)
   return pGraphics->DrawBitmap(&mBitmap, &mRECT, i, &mBlend);
 }
 
+
+bool IKnobMultiControlText::Draw(IGraphics* pGraphics)
+{
+	IKnobMultiControl::Draw(pGraphics);
+    
+    char cStr[32];
+    mPlug->GetParam(mParamIdx)->GetDisplayForHost(cStr);
+    mStr.Set(cStr);
+	if (mShowParamLabel) {
+		mStr.Append(" ");
+		mStr.Append(mPlug->GetParam(mParamIdx)->GetLabelForHost());
+	}
+
+    if (CSTR_NOT_EMPTY(cStr)) {
+		// measure the text size
+		pGraphics->DrawIText(&mText, mStr.Get(), &mTextRECT,true);
+		// draw text
+		return pGraphics->DrawIText(&mText, mStr.Get(), &mTextRECT);
+    }
+    return true;
+}
+	
+void IKnobMultiControlText::OnMouseDown(int x, int y, IMouseMod* pMod)
+{
+	if (mTextRECT.Contains(x, y)) PromptUserInput(&mTextRECT);
+#ifdef PROTOOLS
+	else if (pMod->A) {
+		if (mDefaultValue >= 0.0) {
+			mValue = mDefaultValue;
+			SetDirty();
+		}
+	}
+#endif
+	else {
+		OnMouseDrag(x, y, 0, 0, pMod);
+	}
+}
+	
+void IKnobMultiControlText::OnMouseDblClick(int x, int y, IMouseMod* pMod)
+{
+#ifdef PROTOOLS
+	PromptUserInput(&mTextRECT);
+#else
+	if (mDefaultValue >= 0.0) {
+		mValue = mDefaultValue;
+		SetDirty();
+	}
+#endif
+}
+
+
 bool IKnobRotatingMaskControl::Draw(IGraphics* pGraphics)
 {
   double angle = mMinAngle + mValue * (mMaxAngle - mMinAngle);
