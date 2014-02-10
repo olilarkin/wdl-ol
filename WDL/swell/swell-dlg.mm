@@ -920,10 +920,6 @@ static int DelegateMouseMove(NSView *view, NSEvent *theEvent)
   
   [self setHidden:YES];
   
-//  BOOL wasHid=[self isHidden];
-  //if (!wasHid) [self setHidden:YES];
-  
-  bool isChild=false;
   
   if ([parent isKindOfClass:[NSSavePanel class]]||[parent isKindOfClass:[NSOpenPanel class]])
   {
@@ -946,7 +942,6 @@ static int DelegateMouseMove(NSView *view, NSEvent *theEvent)
   }
   else
   {
-    isChild=[parent isKindOfClass:[NSView class]];
     [parent addSubview:self];
   }
   if (resstate) resstate->createFunc((HWND)self,resstate->windowTypeFlags);
@@ -2413,7 +2408,7 @@ void SWELL_CarbonWndHost_SetWantAllKeys(void* carbonhost, bool want)
     //CFRetain(wndref);
 
     m_cwnd = [[NSWindow alloc] initWithWindowRef:wndref];
-#if __MAC_OS_X_VERSION_MAX_ALLOWED > 1060
+#if __MAC_OS_X_VERSION_MAX_ALLOWED > 1050
     [m_cwnd setDelegate:(id<NSWindowDelegate>)self];
 #else
     [m_cwnd setDelegate: self];
