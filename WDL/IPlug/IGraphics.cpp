@@ -324,10 +324,10 @@ void IGraphics::SetParameterFromPlug(int paramIdx, double value, bool normalized
       pControl->SetValueFromPlug(value);
       // Could be more than one, don't break until we check them all.
     }
-    
+
     // now look for any auxilliary parameters
     int auxParamIdx = pControl->AuxParamIdx(paramIdx);
-    
+
     if (auxParamIdx > -1) // there are aux params
     {
       pControl->SetAuxParamValueFromPlug(auxParamIdx, value);
@@ -421,14 +421,19 @@ IBitmap IGraphics::LoadIBitmap(int ID, const char* name, int nStates, bool frame
   return IBitmap(lb, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal);
 }
 
-void IGraphics::RetainBitmap(IBitmap* pBitmap)
+void IGraphics::RetainBitmap(IBitmap* pBitmap, int ID = -1)
 {
-  s_bitmapCache.Add((LICE_IBitmap*)pBitmap->mData);
+  s_bitmapCache.Add((LICE_IBitmap*)pBitmap->mData, ID);
 }
 
 void IGraphics::ReleaseBitmap(IBitmap* pBitmap)
 {
   s_bitmapCache.Remove((LICE_IBitmap*)pBitmap->mData);
+}
+
+LICE_IBitmap* IGraphics::FindBitmap(int ID)
+{
+    return s_bitmapCache.Find(ID);
 }
 
 void IGraphics::PrepDraw()
@@ -555,11 +560,11 @@ bool IGraphics::FillRoundRect(const IColor* pColor, IRECT* pR, const IChannelBle
   int y1 = pR->T;
   int h = pR->H();
   int w = pR->W();
-  
+
   int mode = LiceBlendMode(pBlend);
   float weight = LiceWeight(pBlend);
   LICE_pixel color = LiceColor(pColor);
-  
+
   _LICE::LICE_FillRect(mDrawBitmap, x1+cornerradius, y1, w-2*cornerradius, h, color, weight, mode);
   _LICE::LICE_FillRect(mDrawBitmap, x1, y1+cornerradius, cornerradius, h-2*cornerradius,color, weight, mode);
   _LICE::LICE_FillRect(mDrawBitmap, x1+w-cornerradius, y1+cornerradius, cornerradius, h-2*cornerradius, color, weight, mode);
@@ -569,7 +574,7 @@ bool IGraphics::FillRoundRect(const IColor* pColor, IRECT* pR, const IChannelBle
   _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+w-cornerradius-1, (float) y1+h-cornerradius-1, (float) cornerradius, color, weight, mode, aa);
   _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+w-cornerradius-1, (float) y1+cornerradius, (float) cornerradius, color, weight, mode, aa);
   _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+cornerradius, (float) y1+h-cornerradius-1, (float) cornerradius, color, weight, mode, aa);
-  
+
   return true;
 }
 
@@ -803,7 +808,7 @@ bool IGraphics::Draw(IRECT* pR)
   }
 
 #ifndef NDEBUG
-  if (mShowControlBounds) 
+  if (mShowControlBounds)
   {
     for (int j = 1; j < mControls.GetSize(); j++)
     {
@@ -846,7 +851,7 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
       }
     }
     #endif
-    
+
     #ifdef AAX_API
     if (mAAXViewContainer && paramIdx >= 0)
     {
@@ -866,12 +871,12 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
       }
     }
     #endif
-    
+
     if (paramIdx >= 0)
     {
       mPlug->BeginInformHostOfParamChange(paramIdx);
     }
-        
+
     pControl->OnMouseDown(x, y, pMod);
   }
 }
@@ -1068,7 +1073,7 @@ bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
   }
 
   LICE_IFont* font = pTxt->mCached;
-  
+
   if (!font)
   {
     font = CacheFont(pTxt);
@@ -1087,12 +1092,12 @@ bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
   else // if (pTxt->mAlign == IText::kAlignFar)
     fmt |= DT_RIGHT;
 
-  if (measure) 
+  if (measure)
   {
     fmt |= DT_CALCRECT;
     RECT R = {0,0,0,0};
     font->DrawText(mDrawBitmap, str, -1, &R, fmt);
-    
+
     if( pTxt->mAlign == IText::kAlignNear)
     {
       pR->R = R.right;
@@ -1107,10 +1112,10 @@ bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
       pR->L = pR->R - R.right;
       pR->R = pR->L + R.right;
     }
-    
+
     pR->B = pR->T + R.bottom;
   }
-  else 
+  else
   {
     RECT R = { pR->L, pR->T, pR->R, pR->B };
     font->DrawText(mDrawBitmap, str, -1, &R, fmt);
