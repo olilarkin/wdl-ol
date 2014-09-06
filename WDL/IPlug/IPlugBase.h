@@ -79,11 +79,16 @@ public:
   // Implementations should set a mutex lock and call SerializeParams() after custom data is serialized
   virtual bool SerializeState(ByteChunk* pChunk) { TRACE; return SerializeParams(pChunk); }
   // Return the new chunk position (endPos). Implementations should set a mutex lock and call UnserializeParams() after custom data is unserialized
+  #ifdef PLUG_USE_PARAMUID
+  void PutParamUidHeader(ByteChunk* pChunk);
+  virtual int UnserializeState(ByteChunk* pChunk, int startPos) = 0;
+  #else//PLUG_USE_PARAMUID
   virtual int UnserializeState(ByteChunk* pChunk, int startPos) { TRACE; return UnserializeParams(pChunk, startPos); }
-  
+  #endif//PLUG_USE_PARAMUID
+
   // Only used by RTAS & AAX, override in plugins that do chunks
   virtual bool CompareState(const unsigned char* incomingState, int startPos);
-  
+
   #ifndef OS_IOS
   virtual void OnWindowResize() {}
   #endif
@@ -120,7 +125,7 @@ public:
   virtual void EndInformHostOfParamChange(int idx) = 0;
 
   virtual void InformHostOfProgramChange() = 0;
-  
+
   // ----------------------------------------
   // Useful stuff for your plugin class or an outsider to call,
   // most of which is implemented by the API class.
@@ -151,7 +156,7 @@ public:
   int GetHostVersion(bool decimal); // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
   void GetHostVersionStr(char* str);
   const char* GetArchString();
-  
+
   // Tell the host that the graphics resized.
   // Should be called only by the graphics object when it resizes itself.
   virtual void ResizeGraphics(int w, int h) = 0;
@@ -219,7 +224,12 @@ protected:
 
   // Will append if the chunk is already started
   bool SerializeParams(ByteChunk* pChunk);
+  #ifdef PLUG_USE_PARAMUID
+  int UnserializeParams(ByteChunk* pChunk, int startPos, int &plugVersion, int &numParams);
+  IParamUID* GetParamUID() { return &s_paramUIDs; }
+  #else//PLUG_USE_PARAMUID
   int UnserializeParams(ByteChunk* pChunk, int startPos); // Returns the new chunk position (endPos)
+  #endif//PLUG_USE_PARAMUID
 
   #ifndef OS_IOS
   virtual void RedrawParamControls();  // Called after restoring state.
@@ -252,7 +262,7 @@ protected:
   void ProcessBuffers(double sampleType, int nFrames);
   void ProcessBuffersAccumulating(float sampleType, int nFrames);
   void ZeroScratchBuffers();
-  
+
 public:
   void ModifyCurrentPreset(const char* name = 0);     // Sets the currently active preset to whatever current params are.
   int NPresets() { return mPresets.GetSize(); }
@@ -260,7 +270,7 @@ public:
   bool RestorePreset(int idx);
   bool RestorePreset(const char* name);
   const char* GetPresetName(int idx);
-  
+
   virtual void DirtyPTCompareState() {}; // needed in chunks based plugins to tell PT a non-indexed param changed and to turn on the compare light
 
   // Dump the current state as source code for a call to MakePresetFromNamedParams / MakePresetFromBlob
@@ -275,10 +285,10 @@ public:
   bool LoadProgramFromFXP();
   bool LoadBankFromFXB();
   #endif
-  
+
   void SetSampleRate(double sampleRate);
   virtual void SetBlockSize(int blockSize); // overridden in IPlugAU
-  
+
   WDL_Mutex mMutex;
 
   struct IMutexLock
@@ -322,6 +332,7 @@ protected:
   WDL_String mPreviousPath; // for saving/loading fxps
   NChanDelayLine* mDelay; // for delaying dry signal when mLatency > 0 and plugin is bypassed
   WDL_PtrList<const char> mParamGroups;
+  WDL_PtrList<IPreset> *GetPresets() { return &mPresets; }
 
 private:
   IGraphics* mGraphics;
@@ -332,6 +343,9 @@ private:
   WDL_PtrList<OutChannel> mOutChannels;
   WDL_PtrList<WDL_String> mInputBusLabels;
   WDL_PtrList<WDL_String> mOutputBusLabels;
+  #ifdef PLUG_USE_PARAMUID
+  static IParamUID s_paramUIDs;
+  #endif//PLUG_USE_PARAMUID
 };
 
 #endif
