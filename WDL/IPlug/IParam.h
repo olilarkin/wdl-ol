@@ -125,7 +125,7 @@ struct IParamUID
             ++i;
         }
         return true;
-        // now the Plug should start describing (adding) the params one by one and their unique IDs!
+        // now the Plug should start describing (setting) the params one by one and their unique IDs!
     }
 
     //void Set(int paramIdx, int UID = -1)
@@ -142,13 +142,20 @@ struct IParamUID
             mCurrentID = UID+1;
             *p = UID;
             ++mNInited;
-            if (mInitialized == mUID.GetSize())
+            if (mNInited == mUID.GetSize())
             {
                 // last one
                 mInitialized = true;
             }
             return;
         }
+    }
+    void Rem()
+    {
+        // when deleting existing params - you can replace their Set(paramIdx) call with a Rem(); // paramIdx
+        // this simply autoincrements
+        assert(mInitialized == false);
+        ++mCurrentID;
     }
     int FindIDX(int UID)
     {
