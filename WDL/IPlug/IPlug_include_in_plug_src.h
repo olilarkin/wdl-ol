@@ -165,7 +165,7 @@ END_FACTORY
     static WDL_Mutex sMutex;
     WDL_MutexLock lock(&sMutex);
     IPlugInstanceInfo instanceInfo;
-    
+
     return new PLUG_CLASS_NAME(instanceInfo);
   }
 #elif defined SA_API
@@ -213,8 +213,8 @@ END_FACTORY
 
 #define PUBLIC_NAME PLUG_NAME
 
-#define IPLUG_CTOR(nParams, nPresets, instanceInfo) \
-  IPlug(instanceInfo, nParams, PLUG_CHANNEL_IO, nPresets, \
+#define IPLUG_CTOR(nParams, nHiddenParams, nPresets, instanceInfo) \
+  IPlug(instanceInfo, nParams, nHiddenParams, PLUG_CHANNEL_IO, nPresets, \
     PUBLIC_NAME, "", PLUG_MFR, PLUG_VER, PLUG_UNIQUE_ID, PLUG_MFR_ID, \
     PLUG_LATENCY, PLUG_DOES_MIDI, PLUG_DOES_STATE_CHUNKS, PLUG_IS_INST, PLUG_SC_CHANS)
 

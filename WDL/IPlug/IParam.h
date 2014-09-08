@@ -37,6 +37,7 @@ public:
   void Set(double value) { mValue = BOUNDED(value, mMin, mMax); }
   void SetDisplayText(int value, const char* text);
   void SetCanAutomate(bool canAutomate) { mCanAutomate = canAutomate; }
+  void SetIgnorePresets(bool ignorePresets = true) { mIgnorePresets = ignorePresets; }
   // The higher the shape, the more resolution around host value zero.
   void SetShape(double shape);
 
@@ -81,6 +82,7 @@ public:
   const int GetPrecision() {return mDisplayPrecision;}
 
   bool GetCanAutomate() { return mCanAutomate; }
+  bool GetIgnorePresets() { return mIgnorePresets; }
 
 private:
   // All we store is the readable values.
@@ -94,6 +96,7 @@ private:
   bool mNegateDisplay;
   bool mSignDisplay;
   bool mCanAutomate;
+  bool mIgnorePresets;
 
   struct DisplayText
   {

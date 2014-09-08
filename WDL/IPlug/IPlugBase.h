@@ -27,6 +27,7 @@ class IPlugBase
 public:
   // Use IPLUG_CTOR instead of calling directly (defined in IPlug_include_in_plug_src.h).
   IPlugBase(int nParams,
+            int nHiddenParams,
             const char* channelIOStr,
             int nPresets,
             const char* effectName,
@@ -104,8 +105,17 @@ public:
   // ----------------------------------------
   // Your plugin class, or a control class, can call these functions.
 
-  int NParams() { return mParams.GetSize(); }
-  IParam* GetParam(int idx) { return mParams.Get(idx); }
+  int NParams(bool includingHidden = false)
+  {
+      if (includingHidden) { return mParams.GetSize() + mHiddenParams.GetSize(); }
+      return mParams.GetSize();
+  }
+  int NHiddenParams() { return mHiddenParams.GetSize(); }
+  IParam* GetParam(int idx)
+  {
+      if (idx >= NParams()) { return mHiddenParams.Get(idx - NParams()); }
+      return mParams.Get(idx);
+  }
   IGraphics* GetGUI() { return mGraphics; }
 
   const char* GetEffectName() { return mEffectName; }
@@ -337,6 +347,7 @@ protected:
 private:
   IGraphics* mGraphics;
   WDL_PtrList<IParam> mParams;
+  WDL_PtrList<IParam> mHiddenParams;
   WDL_PtrList<IPreset> mPresets;
   WDL_TypedBuf<double*> mInData, mOutData;
   WDL_PtrList<InChannel> mInChannels;

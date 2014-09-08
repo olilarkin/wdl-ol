@@ -55,6 +55,7 @@ void GetVersionStr(int version, char* str)
 #endif
 
 IPlugBase::IPlugBase(int nParams,
+                     int nHiddenParams,
                      const char* channelIOStr,
                      int nPresets,
                      const char* effectName,
@@ -92,6 +93,11 @@ IPlugBase::IPlugBase(int nParams,
   for (int i = 0; i < nParams; ++i)
   {
     mParams.Add(new IParam);
+  }
+
+  for (int i = 0; i < nHiddenParams; ++i)
+  {
+    mHiddenParams.Add(new IParam);
   }
 
   for (int i = 0; i < nPresets; ++i)
@@ -157,6 +163,7 @@ IPlugBase::~IPlugBase()
   DELETE_NULL(mGraphics);
   #endif
   mParams.Empty(true);
+  mHiddenParams.Empty(true);
   mPresets.Empty(true);
   mInChannels.Empty(true);
   mOutChannels.Empty(true);
@@ -231,7 +238,7 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
   if (pGraphics)
   {
     WDL_MutexLock lock(&mMutex);
-    int i, n = mParams.GetSize();
+    int i, n = NParams(true); //mParams.GetSize();
 
     for (i = 0; i < n; ++i)
     {
@@ -537,13 +544,16 @@ void IPlugBase::SetParameterFromGUI(int idx, double normalizedValue)
   Trace(TRACELOC, "%d:%f", idx, normalizedValue);
   WDL_MutexLock lock(&mMutex);
   GetParam(idx)->SetNormalized(normalizedValue);
-  InformHostOfParamChange(idx, normalizedValue);
+  if (idx < NParams())
+  {
+    InformHostOfParamChange(idx, normalizedValue);
+  }
   OnParamChange(idx);
 }
 
 void IPlugBase::OnParamReset()
 {
-  for (int i = 0; i < mParams.GetSize(); ++i)
+  for (int i = 0; i < NParams(true); ++i)
   {
     OnParamChange(i);
   }
@@ -647,7 +657,7 @@ void IPlugBase::PutParamUidHeader(ByteChunk* pChunk)
     // write the plugin version and the number of params
     x = GetEffectVersion(true);
     pChunk->Put(&x);
-    x = NParams();
+    x = NParams(true);
     pChunk->Put(&x);
 }
 #endif//PLUG_USE_PARAMUID
@@ -664,7 +674,7 @@ void IPlugBase::MakePreset(char* name, ...)
     PutParamUidHeader(&pPreset->mChunk);
     #endif//PLUG_USE_PARAMUID
 
-    int i, n = mParams.GetSize();
+    int i, n = NParams(true); //mParams.GetSize();
 
     double v = 0.0;
     va_list vp;
@@ -692,7 +702,7 @@ void IPlugBase::MakePresetFromNamedParams(char* name, int nParamsNamed, ...)
     pPreset->mInitialized = true;
     strcpy(pPreset->mName, name);
 
-    int i = 0, n = mParams.GetSize();
+    int i = 0, n = NParams(true); //mParams.GetSize();
 
     WDL_TypedBuf<double> vals;
     vals.Resize(n);
@@ -926,7 +936,7 @@ bool IPlugBase::SerializeParams(ByteChunk* pChunk)
 
   WDL_MutexLock lock(&mMutex);
   bool savedOK = true;
-  int i, n = mParams.GetSize();
+  int i, n = NParams(true); //mParams.GetSize();
 
   #ifdef PLUG_USE_PARAMUID
   PutParamUidHeader(pChunk);
@@ -934,7 +944,7 @@ bool IPlugBase::SerializeParams(ByteChunk* pChunk)
 
   for (i = 0; i < n && savedOK; ++i)
   {
-    IParam* pParam = mParams.Get(i);
+    IParam* pParam = GetParam(i);
     Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
     double v = pParam->Value();
     #ifdef PLUG_USE_PARAMUID
@@ -972,17 +982,20 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos, int &plugVersi
             pos = pChunk->Get(&v, pos); // value
             // find the param by the UID
             int idx = s_paramUIDs.FindIDX(x);
-            if (idx >= 0 && idx < NParams())
+            if (idx >= 0 && idx < NParams(true))
             {
-                IParam* pParam = mParams.Get(idx);
-                Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value()); // not sure why this is here
-                pParam->Set(v);
+                IParam* pParam = GetParam(idx);
+                if (pParam->GetIgnorePresets() == false)
+                {
+                    pParam->Set(v);
+                    Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
+                }
             }
         }
         //OnParamReset();
         return pos;
     }
-    return startPos; // hm
+    return startPos;
 }
 #else//PLUG_USE_PARAMUID
 int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
@@ -990,14 +1003,17 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
   TRACE;
 
   WDL_MutexLock lock(&mMutex);
-  int i, n = mParams.GetSize(), pos = startPos;
+  int i, n = NParams(true), pos = startPos;
   for (i = 0; i < n && pos >= 0; ++i)
   {
-    IParam* pParam = mParams.Get(i);
+    IParam* pParam = GetParam(i);
     double v = 0.0;
-    Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
     pos = pChunk->Get(&v, pos);
-    pParam->Set(v);
+    if (pParam->GetIgnorePresets() == false)
+    {
+      Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
+      pParam->Set(v);
+    }
   }
   OnParamReset();
   return pos;
@@ -1012,12 +1028,16 @@ bool IPlugBase::CompareState(const unsigned char* incomingState, int startPos)
 
   // dirty hack here because protools treats param values as 32 bit int and in IPlug they are 64bit float
   // if we memcmp() the incoming state with the current they may have tiny differences due to the quantization
-  for (int i = 0; i < NParams(); i++)
+  for (int i = 0; i < NParams(true); i++)
   {
-    float v = (float) GetParam(i)->Value();
-    float vi = (float) *(data++);
+    IParam* pParam = GetParam(i);
+    if (pParam->GetIgnorePresets() == false)
+    {
+      float v = (float) pParam->Value();
+      float vi = (float) *(data++);
 
-    isEqual &= (fabsf(v - vi) < 0.00001);
+      isEqual &= (fabsf(v - vi) < 0.00001);
+    }
   }
 
   return isEqual;
@@ -1028,10 +1048,10 @@ void IPlugBase::RedrawParamControls()
 {
   if (mGraphics)
   {
-    int i, n = mParams.GetSize();
+    int i, n = NParams(true);
     for (i = 0; i < n; ++i)
     {
-      double v = mParams.Get(i)->Value();
+      double v = GetParam(i)->Value();
       mGraphics->SetParameterFromPlug(i, v, false);
     }
   }
@@ -1056,7 +1076,7 @@ void IPlugBase::DumpPresetSrcCode(const char* filename, const char* paramEnumNam
   if (!sDumped)
   {
     sDumped = true;
-    int i, n = NParams();
+    int i, n = NParams(true);
     FILE* fp = fopen(filename, "w");
     fprintf(fp, "  MakePresetFromNamedParams(\"name\", %d", n);
     for (i = 0; i < n; ++i)
@@ -1175,7 +1195,7 @@ bool IPlugBase::SaveProgramAsFXP(const char* defaultFileName)
       VstInt32 fxpVersion = WDL_bswap32(kFXPVersionNum);
       VstInt32 pluginID = WDL_bswap32(GetUniqueID());
       VstInt32 pluginVersion = WDL_bswap32(GetEffectVersion(true));
-      VstInt32 numParams = WDL_bswap32(NParams());
+      VstInt32 numParams = WDL_bswap32(NParams(true));
       char prgName[28];
       memset(prgName, 0, 28);
       strcpy(prgName, GetPresetName(GetCurrentPresetIdx()));
@@ -1217,10 +1237,10 @@ bool IPlugBase::SaveProgramAsFXP(const char* defaultFileName)
         pgm.Put(&numParams);
         pgm.PutBytes(prgName, 28); // not PutStr (we want all 28 bytes)
 
-        for (int i = 0; i< NParams(); i++)
+        for (int i = 0; i< NParams(true); i++)
         {
           WDL_EndianFloat v32;
-          v32.f = (float) mParams.Get(i)->GetNormalized();
+          v32.f = (float) GetParam(i)->GetNormalized();
           unsigned int swapped = WDL_bswap32(v32.int32);
           pgm.Put(&swapped);
         }
@@ -1301,7 +1321,7 @@ bool IPlugBase::SaveBankAsFXB(const char* defaultFileName)
 
         VstInt32 fxpMagic = WDL_bswap32('FxCk');
         VstInt32 fxpVersion = WDL_bswap32(kFXPVersionNum);
-        VstInt32 numParams = WDL_bswap32(NParams());
+        VstInt32 numParams = WDL_bswap32(NParams(true));
 
         for (int p = 0; p < NPresets(); p++)
         {
@@ -1323,13 +1343,13 @@ bool IPlugBase::SaveBankAsFXB(const char* defaultFileName)
 
           int pos = 0;
 
-          for (int i = 0; i< NParams(); i++)
+          for (int i = 0; i< NParams(true); i++)
           {
             double v = 0.0;
             pos = pPreset->mChunk.Get(&v, pos);
 
             WDL_EndianFloat v32;
-            v32.f = (float) mParams.Get(i)->GetNormalized(v);
+            v32.f = (float) GetParam(i)->GetNormalized(v);
             unsigned int swapped = WDL_bswap32(v32.int32);
             bnk.Put(&swapped);
           }
@@ -1402,7 +1422,7 @@ bool IPlugBase::LoadProgramFromFXP()
         if (pluginID != GetUniqueID()) return false;
         //if (pluginVersion != GetEffectVersion(true)) return false; // TODO: provide mechanism for loading earlier versions
         #ifndef PLUG_USE_PARAMUID
-        if (numParams != NParams()) return false; // TODO: provide mechanism for loading earlier versions with less params
+        if (numParams != NParams(true)) return false; // TODO: provide mechanism for loading earlier versions with less params
         #endif//PLUG_USE_PARAMUID
 
         if (DoesStateChunks() && fxpMagic == 'FPCh')
@@ -1421,12 +1441,16 @@ bool IPlugBase::LoadProgramFromFXP()
         }
         else if (fxpMagic == 'FxCk')
         {
-          for (int i = 0; i< NParams(); i++)
+          for (int i = 0; i< NParams(true); i++)
           {
             WDL_EndianFloat v32;
             pos = pgm.Get(&v32.int32, pos);
             v32.int32 = WDL_bswap_if_le(v32.int32);
-            mParams.Get(i)->SetNormalized((double) v32.f);
+            IParam* pParam = GetParam(i);
+            if (pParam->GetIgnorePresets() == false)
+            {
+              pParam->SetNormalized((double) v32.f);
+            }
           }
 
           ModifyCurrentPreset(prgName);
@@ -1552,18 +1576,24 @@ bool IPlugBase::LoadBankFromFXB()
             if (chunkMagic != 'CcnK') return false;
             if (fxpMagic != 'FxCk') return false;
             if (fxpVersion != kFXPVersionNum) return false;
-            if (numParams != NParams()) return false;
+            #ifndef PLUG_USE_PARAMUID
+            if (numParams != NParams(true)) return false;
+            #endif//PLUG_USE_PARAMUID
 
             pos = bnk.GetBytes(prgName, 28, pos);
 
             RestorePreset(i);
 
-            for (int j = 0; j< NParams(); j++)
+            for (int j = 0; j< NParams(true); j++)
             {
               WDL_EndianFloat v32;
               pos = bnk.Get(&v32.int32, pos);
               v32.int32 = WDL_bswap_if_le(v32.int32);
-              mParams.Get(j)->SetNormalized((double) v32.f);
+              IParam* pParam = GetParam(j);
+              if (pParam->GetIgnorePresets() == false)
+              {
+                pParam->SetNormalized((double) v32.f);
+              }
             }
 
             ModifyCurrentPreset(prgName);
