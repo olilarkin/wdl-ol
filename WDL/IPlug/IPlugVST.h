@@ -15,6 +15,7 @@ class IPlugVST : public IPlugBase
 public:
   IPlugVST(IPlugInstanceInfo instanceInfo,
            int nParams,
+           int nHiddenParams,
            const char* channelIOStr,
            int nPresets,
            const char* effectName,

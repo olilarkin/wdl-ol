@@ -37,9 +37,10 @@ public:
   void Set(double value) { mValue = BOUNDED(value, mMin, mMax); }
   void SetDisplayText(int value, const char* text);
   void SetCanAutomate(bool canAutomate) { mCanAutomate = canAutomate; }
+  void SetIgnorePresets(bool ignorePresets = true) { mIgnorePresets = ignorePresets; }
   // The higher the shape, the more resolution around host value zero.
   void SetShape(double shape);
-  
+
   void SetToDefault() { mValue = mDefault; }
 
   // Call this if your param is (x, y) but you want to always display (-x, -y).
@@ -65,7 +66,7 @@ public:
   const char* GetNameForHost();
   const char* GetLabelForHost();
   const char* GetParamGroupForHost();
-  
+
   int GetNDisplayTexts();
   const char* GetDisplayText(int value);
   const char* GetDisplayTextAtIdx(int idx, int* value = 0);
@@ -81,6 +82,7 @@ public:
   const int GetPrecision() {return mDisplayPrecision;}
 
   bool GetCanAutomate() { return mCanAutomate; }
+  bool GetIgnorePresets() { return mIgnorePresets; }
 
 private:
   // All we store is the readable values.
@@ -94,14 +96,83 @@ private:
   bool mNegateDisplay;
   bool mSignDisplay;
   bool mCanAutomate;
+  bool mIgnorePresets;
 
   struct DisplayText
   {
     int mValue;
     char mText[MAX_PARAM_DISPLAY_LEN];
   };
-  
+
   WDL_TypedBuf<DisplayText> mDisplayTexts;
+};
+
+struct IParamUID
+{
+    IParamUID()
+    {
+        mCurrentID = 0;
+        mInitialized = false;
+        mNInited = 0;
+    }
+    bool Init(int numParams)
+    {
+        if (mInitialized) { return false; }
+        // need initialization
+        assert(numParams > 0);
+        mUID.Resize(numParams);
+        int i = 0;
+        while (i < mUID.GetSize())
+        {
+            mUID.Get()[i] = -1;
+            ++i;
+        }
+        return true;
+        // now the Plug should start describing (setting) the params one by one and their unique IDs!
+    }
+
+    //void Set(int paramIdx, int UID = -1)
+    void Set(int paramIdx) { Set(-1, paramIdx); }
+    void Set(int UID, int paramIdx)
+    {
+        assert(mInitialized == false);
+        // UID "-1" == autoincrement
+        if (paramIdx < 0 || paramIdx >= mUID.GetSize()) { return; }
+        int *p = &(mUID.Get()[paramIdx]);
+        if (*p == -1)
+        {
+            if (UID == -1) { UID = mCurrentID; }
+            mCurrentID = UID+1;
+            *p = UID;
+            ++mNInited;
+            if (mNInited == mUID.GetSize())
+            {
+                // last one
+                mInitialized = true;
+            }
+            return;
+        }
+    }
+    void Rem()
+    {
+        // when deleting existing params - you can replace their Set(paramIdx) call with a Rem(); // paramIdx
+        // this simply autoincrements
+        assert(mInitialized == false);
+        ++mCurrentID;
+    }
+    int FindIDX(int UID)
+    {
+        return mUID.Find(UID);
+    }
+    int GetUID(int paramIdx)
+    {
+        return mUID.Get()[paramIdx];
+    }
+
+    WDL_TypedBuf<int> mUID;
+    int mCurrentID;
+    int mNInited;
+    bool mInitialized;
 };
 
 #endif

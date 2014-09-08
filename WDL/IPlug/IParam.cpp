@@ -3,7 +3,7 @@
 
 IParam::IParam()
   : mType(kTypeNone), mValue(0.0), mMin(0.0), mMax(1.0), mStep(1.0),
-    mDisplayPrecision(0), mNegateDisplay(false), mShape(1.0), mCanAutomate(true), mDefault(0.)
+    mDisplayPrecision(0), mNegateDisplay(false), mShape(1.0), mCanAutomate(true), mDefault(0.), mIgnorePresets(false)
 {
   memset(mName, 0, MAX_PARAM_NAME_LEN * sizeof(char));
   memset(mLabel, 0, MAX_PARAM_LABEL_LEN * sizeof(char));
@@ -15,7 +15,7 @@ IParam::~IParam() {}
 void IParam::InitBool(const char* name, bool defaultVal, const char* label, const char* group)
 {
   if (mType == kTypeNone) mType = kTypeBool;
-  
+
   InitEnum(name, (defaultVal ? 1 : 0), 2, label, group);
 
   SetDisplayText(0, "off");
@@ -25,21 +25,21 @@ void IParam::InitBool(const char* name, bool defaultVal, const char* label, cons
 void IParam::InitEnum(const char* name, int defaultVal, int nEnums, const char* label, const char* group)
 {
   if (mType == kTypeNone) mType = kTypeEnum;
-  
+
   InitInt(name, defaultVal, 0, nEnums - 1, label, group);
 }
 
 void IParam::InitInt(const char* name, int defaultVal, int minVal, int maxVal, const char* label, const char* group)
 {
   if (mType == kTypeNone) mType = kTypeInt;
-  
+
   InitDouble(name, (double) defaultVal, (double) minVal, (double) maxVal, 1.0, label, group);
 }
 
 void IParam::InitDouble(const char* name, double defaultVal, double minVal, double maxVal, double step, const char* label, const char* group, double shape)
 {
   if (mType == kTypeNone) mType = kTypeDouble;
-  
+
   strcpy(mName, name);
   strcpy(mLabel, label);
   strcpy(mParamGroup, group);
@@ -55,7 +55,7 @@ void IParam::InitDouble(const char* name, double defaultVal, double minVal, doub
   {
     ;
   }
-  
+
   SetShape(shape);
 }
 
@@ -82,12 +82,12 @@ double IParam::DBToAmp()
 void IParam::SetNormalized(double normalizedValue)
 {
   mValue = FromNormalizedParam(normalizedValue, mMin, mMax, mShape);
-  
+
   if (mType != kTypeDouble)
   {
     mValue = floor(0.5 + mValue / mStep) * mStep;
   }
-  
+
   mValue = IPMIN(mValue, mMax);
 }
 
@@ -178,8 +178,8 @@ const char* IParam::GetDisplayText(int value)
 const char* IParam::GetDisplayTextAtIdx(int idx, int* value)
 {
   DisplayText* pDT = mDisplayTexts.Get()+idx;
-  
-  if (value) 
+
+  if (value)
   {
     *value = pDT->mValue;
   }
@@ -189,7 +189,7 @@ const char* IParam::GetDisplayTextAtIdx(int idx, int* value)
 bool IParam::MapDisplayText(char* str, int* pValue)
 {
   int n = mDisplayTexts.GetSize();
-  
+
   if (n)
   {
     DisplayText* pDT = mDisplayTexts.Get();

@@ -216,20 +216,24 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
         return 0;
       }
 #endif
-      pGraphics->OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
+      {
+        IMouseMod tmpimm = GetMouseMod(wParam);
+        pGraphics->OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &tmpimm);
+      }
       return 0;
 
     case WM_MOUSEMOVE:
     {
       if (!(wParam & (MK_LBUTTON | MK_RBUTTON)))
       {
-        if (pGraphics->OnMouseOver(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam)))
+        IMouseMod tmpimm = GetMouseMod(wParam);
+        if (pGraphics->OnMouseOver(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &tmpimm))
         {
           TRACKMOUSEEVENT eventTrack = { sizeof(TRACKMOUSEEVENT), TME_LEAVE, hWnd, HOVER_DEFAULT };
-          if (pGraphics->TooltipsEnabled()) 
+          if (pGraphics->TooltipsEnabled())
           {
             int c = pGraphics->GetMouseOver();
-            if (c != pGraphics->mTooltipIdx) 
+            if (c != pGraphics->mTooltipIdx)
             {
               if (c >= 0) eventTrack.dwFlags |= TME_HOVER;
               pGraphics->mTooltipIdx = c;
@@ -242,12 +246,13 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       }
       else if (GetCapture() == hWnd && !pGraphics->mParamEditWnd)
       {
-        pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
+        IMouseMod tmpimm = GetMouseMod(wParam);
+        pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &tmpimm);
       }
 
       return 0;
     }
-    case WM_MOUSEHOVER: 
+    case WM_MOUSEHOVER:
     {
       pGraphics->ShowTooltip();
 		  return 0;
@@ -262,12 +267,14 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     case WM_RBUTTONUP:
     {
       ReleaseCapture();
-      pGraphics->OnMouseUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
+      IMouseMod tmpimm = GetMouseMod(wParam);
+      pGraphics->OnMouseUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &tmpimm);
       return 0;
     }
     case WM_LBUTTONDBLCLK:
     {
-      if (pGraphics->OnMouseDblClick(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam)))
+      IMouseMod tmpimm = GetMouseMod(wParam);
+      if (pGraphics->OnMouseDblClick(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &tmpimm))
       {
         SetCapture(hWnd);
       }
@@ -287,7 +294,8 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
         int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
         RECT r;
         GetWindowRect(hWnd, &r);
-        pGraphics->OnMouseWheel(x - r.left, y - r.top, &GetMouseMod(wParam), d);
+        IMouseMod tmpimm = GetMouseMod(wParam);
+        pGraphics->OnMouseWheel(x - r.left, y - r.top, &tmpimm, d);
         return 0;
       }
     }
@@ -664,7 +672,7 @@ void* IGraphicsWin::OpenWindow(void* pParentWnd)
   if (mPlugWnd && TooltipsEnabled())
   {
     bool ok = false;
-    static const INITCOMMONCONTROLSEX iccex = { sizeof(INITCOMMONCONTROLSEX), ICC_TAB_CLASSES };
+    static /* const */ INITCOMMONCONTROLSEX iccex = { sizeof(INITCOMMONCONTROLSEX), ICC_TAB_CLASSES };
 
     if (InitCommonControlsEx(&iccex))
     {
