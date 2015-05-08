@@ -110,6 +110,7 @@ void IPlugRTAS::InformHostOfParamChange(int idx, double normalizedValue) // actu
       case IParam::kTypeDouble:
       {
         CPluginControl_Continuous *control = dynamic_cast<CPluginControl_Continuous*>(mProcess->GetControl(idx));
+		control->SetMinMax(pParam->GetMin(), pParam->GetMax());
         mProcess->SetControlValue(idx, control->ConvertContinuousToControl( pParam->Value() ));
         break;
       }
@@ -178,7 +179,7 @@ EHost IPlugRTAS::GetHost()
   EHost host = IPlugBase::GetHost();
   if (host == kHostUninit)
   {
-    SetHost("ProTools", mProcess->GetHostVersion());
+	SetHost("ProTools", mProcess->GetHostVersion());
     host = IPlugBase::GetHost();
   }
   return host;
