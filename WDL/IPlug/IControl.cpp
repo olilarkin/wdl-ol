@@ -294,7 +294,8 @@ ISwitchFramesControl::ISwitchFramesControl(IPlugBase* pPlug, int x, int y, int p
 : ISwitchControl(pPlug, x, y, paramIdx, pBitmap, blendMethod)
 {
 	mDisablePrompt = false;
-	
+	mImagesAreHorizontal = imagesAreHorizontal;
+	mNumFrames = pBitmap->N;
 	for(int i = 0; i < pBitmap->N; i++)
 	{
 		if (imagesAreHorizontal)
@@ -318,6 +319,20 @@ void ISwitchFramesControl::OnMouseDown(int x, int y, IMouseMod* pMod)
 	}
 	
 	SetDirty();
+}
+
+void ISwitchFramesControl::Move(int x, int y)
+{
+	IControl::Move(x, y);
+	int n = mRECTs.GetSize();
+	for(int i = 0; i < n; i++)
+	{
+		//mRECTs.Delete(i);
+		if (mImagesAreHorizontal)
+			mRECTs.Get()[i] = mRECT.SubRectHorizontal(n, i); 
+		else
+			mRECTs.Get()[i] = mRECT.SubRectVertical(n, i); 
+	}
 }
 
 IInvisibleSwitchControl::IInvisibleSwitchControl(IPlugBase* pPlug, IRECT pR, int paramIdx)
@@ -630,21 +645,21 @@ bool IKnobMultiControlText::Draw(IGraphics* pGraphics)
 {
 	IKnobMultiControl::Draw(pGraphics);
     
-    char cStr[32];
-    mPlug->GetParam(mParamIdx)->GetDisplayForHost(cStr);
-    mStr.Set(cStr);
+	char cStr[32];
+	mPlug->GetParam(mParamIdx)->GetDisplayForHost(cStr);
+	mStr.Set(cStr);
 	if (mShowParamLabel) {
 		mStr.Append(" ");
 		mStr.Append(mPlug->GetParam(mParamIdx)->GetLabelForHost());
 	}
 
-    if (CSTR_NOT_EMPTY(cStr)) {
+	if (CSTR_NOT_EMPTY(cStr)) {
 		// measure the text size
 		pGraphics->DrawIText(&mText, mStr.Get(), &mTextRECT,true);
 		// draw text
 		return pGraphics->DrawIText(&mText, mStr.Get(), &mTextRECT);
-    }
-    return true;
+	}
+	return true;
 }
 	
 void IKnobMultiControlText::OnMouseDown(int x, int y, IMouseMod* pMod)

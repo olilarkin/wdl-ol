@@ -213,9 +213,13 @@ public:
   ~ISwitchFramesControl() {}
   
   void OnMouseDown(int x, int y, IMouseMod* pMod);
+	
+	void Move(int x, int y); 
   
 protected:
   WDL_TypedBuf<IRECT> mRECTs;
+	bool mImagesAreHorizontal;
+	int mNumFrames;;
 };
 
 // On/off switch that has a target area only.
@@ -489,7 +493,7 @@ class IKnobMultiControlText : public IKnobMultiControl
 	
 public:
 	
-	enum EKnobMultiControlTextPosition { kTxtPosBelow, kTxtPosAbove, kTxtPosMiddle };
+	enum EKnobMultiControlTextPosition { kTxtPosBelow, kTxtPosAbove, kTxtPosMiddle, kTxtPosLeft, kTxtPosRight };
 	
 	IKnobMultiControlText(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap, IText* pText, bool showParamLabel = true, IKnobMultiControlText::EKnobMultiControlTextPosition labelPosition = kTxtPosBelow)
 	:	IKnobMultiControl(pPlug, x, y, paramIdx, pBitmap)
@@ -501,17 +505,26 @@ public:
 		mShowParamLabel = showParamLabel;
 		
 		int captionHeight = pText->mSize + 4;
-		int captionTop;
+		int captionTop = mImgRECT.T + (mImgRECT.H()/2) - (captionHeight/2)+2;
 		switch (labelPosition) {
 			case kTxtPosBelow:
-				mTextRECT = IRECT(mImgRECT.L, mImgRECT.B, mImgRECT.L+mImgRECT.W(), mImgRECT.T+mImgRECT.H()+captionHeight);
+				mTextRECT = IRECT(mImgRECT.L, mImgRECT.B + 4, mImgRECT.L+mImgRECT.W(), mImgRECT.T+mImgRECT.H()+4+captionHeight);
+				mTargetRECT.B = mTextRECT.B;
 				break;
 			case kTxtPosAbove:
-				mTextRECT = IRECT(mImgRECT.L, mImgRECT.T-captionHeight, mImgRECT.L+mImgRECT.W(), mImgRECT.T);
+				mTextRECT = IRECT(mImgRECT.L, mImgRECT.T -4 -captionHeight, mImgRECT.L+mImgRECT.W(), mImgRECT.T);
+				mTargetRECT.T = mTextRECT.T;
 				break;
 			case kTxtPosMiddle:
-				captionTop = mImgRECT.T + (mImgRECT.H()/2) - (captionHeight/2)+2;
 				mTextRECT = IRECT(mImgRECT.L, captionTop, mImgRECT.L+mImgRECT.W(), captionTop+captionHeight);
+				break;
+			case kTxtPosLeft:
+				mTextRECT = IRECT(mImgRECT.L - mImgRECT.W(), captionTop +4, mImgRECT.L, captionTop+captionHeight+4);
+				mTargetRECT.L = mTextRECT.L;
+				break;
+			case kTxtPosRight:
+				mTextRECT = IRECT(mImgRECT.L + mImgRECT.W(), captionTop +4 , mImgRECT.L + (mImgRECT.W() * 2) , captionTop+captionHeight+4);
+				mTargetRECT.R = mTextRECT.R;
 				break;
 		}
 	}
