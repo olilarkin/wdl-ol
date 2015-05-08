@@ -218,8 +218,8 @@
 		4F8D4B6E13E97425004F7633 /* lice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice.cpp; path = ../lice/lice.cpp; sourceTree = "<group>"; };
 		4F8D4B6F13E97425004F7633 /* lice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lice.h; path = ../lice/lice.h; sourceTree = "<group>"; };
 		4F8D4BAD13E974CF004F7633 /* lice.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = lice.xcconfig; sourceTree = "<group>"; };
-		4F8D4C1413E976A7004F7633 /* lice32.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = lice32.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		D2AAC046055464E500DB518D /* lice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = lice.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		566CD5461A0B8EFA00491D60 /* lice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = lice.a; path = "/Users/EcHo2K_old/GoogleDrive/vst_save/wdl-ol/WDL/lice/build-mac/Debug/lice.a"; sourceTree = "<absolute>"; };
+		566CD5471A0B8EFA00491D60 /* lice32.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = lice32.a; path = "/Users/EcHo2K_old/GoogleDrive/vst_save/wdl-ol/WDL/lice/build-mac/Debug/lice32.a"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -243,9 +243,9 @@
 		08FB7794FE84155DC02AAC07 /* lice */ = {
 			isa = PBXGroup;
 			children = (
+				561622001A123810007E358E /* Products */,
 				4F8D4BAD13E974CF004F7633 /* lice.xcconfig */,
 				08FB7795FE84155DC02AAC07 /* Source */,
-				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
 			name = lice;
 			sourceTree = "<group>";
@@ -272,15 +272,6 @@
 				4F8D4B6F13E97425004F7633 /* lice.h */,
 			);
 			name = Source;
-			sourceTree = "<group>";
-		};
-		1AB674ADFE9D54B511CA2CBB /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				D2AAC046055464E500DB518D /* lice.a */,
-				4F8D4C1413E976A7004F7633 /* lice32.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		4F8D4AF013E973D9004F7633 /* zlib */ = {
@@ -343,6 +334,13 @@
 				4F8D4B4513E973FA004F7633 /* pngwutil.c */,
 			);
 			name = libpng;
+			sourceTree = "<group>";
+		};
+		561622001A123810007E358E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -411,7 +409,7 @@
 			);
 			name = lice_32_intel;
 			productName = lice;
-			productReference = 4F8D4C1413E976A7004F7633 /* lice32.a */;
+			productReference = 566CD5471A0B8EFA00491D60 /* lice32.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		D2AAC045055464E500DB518D /* lice_32&64_intel */ = {
@@ -428,7 +426,7 @@
 			);
 			name = "lice_32&64_intel";
 			productName = lice;
-			productReference = D2AAC046055464E500DB518D /* lice.a */;
+			productReference = 566CD5461A0B8EFA00491D60 /* lice.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -436,6 +434,9 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+			};
 			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "lice" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -573,20 +574,25 @@
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = "";
 				GCC_AUTO_VECTORIZATION = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_ENABLE_SUPPLEMENTAL_SSE3_INSTRUCTIONS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = "";
 				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build-mac/Debug",
+				);
 				PRODUCT_NAME = lice;
+				SDKROOT = macosx10.5;
 				SKIP_INSTALL = YES;
 				SYMROOT = "build-mac";
 			};
@@ -597,15 +603,21 @@
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = "";
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = "";
 				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build-mac/Debug",
+				);
 				PRODUCT_NAME = lice;
+				SDKROOT = macosx10.5;
 				SKIP_INSTALL = YES;
 				STRIP_INSTALLED_PRODUCT = YES;
 				STRIP_STYLE = "non-global";
@@ -617,6 +629,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -624,12 +637,14 @@
 					"$(DEBUG_DEFS)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_VERSION = "$(COMPILER)";
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_ACTIVE_ARCH = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = "$(BASE_SDK)";
+				SYMROOT = "build-mac";
 			};
 			name = Debug;
 		};
@@ -637,17 +652,20 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(ALL_DEFS)",
 					"$(RELEASE_DEFS)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				GCC_VERSION = "$(COMPILER)";
+				GCC_VERSION = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
 				PREBINDING = NO;
 				SDKROOT = "$(BASE_SDK)";
+				SYMROOT = "build-mac";
 			};
 			name = Release;
 		};
@@ -656,16 +674,16 @@
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = "";
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = lice32;
 				SKIP_INSTALL = YES;
@@ -678,7 +696,7 @@
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXECUTABLE_PREFIX = "";
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
@@ -686,6 +704,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = lice32;
 				SKIP_INSTALL = YES;
@@ -701,7 +720,9 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_VERSION = "";
 				PRODUCT_NAME = All;
+				SYMROOT = "build-mac";
 			};
 			name = Debug;
 		};
@@ -710,8 +731,9 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_VERSION = "";
 				PRODUCT_NAME = All;
+				SYMROOT = "build-mac";
 				ZERO_LINK = NO;
 			};
 			name = Release;
