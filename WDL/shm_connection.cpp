@@ -45,11 +45,12 @@ WDL_SHM_Connection::WDL_SHM_Connection(bool whichChan,
   m_tempfn.Append(uniquestring);
   m_tempfn.Append(".tmp");
 
-  WDL_String tmp;
-  if (!(GetVersion()&0x80000000)) tmp.Set("Global\\WDL_SHM_");
-  else tmp.Set("WDL_SHM_");
+  WDL_String tmp("Global\\WDL_SHM_");
+#ifdef WDL_SUPPORT_WIN9X
+  if (GetVersion()&0x80000000) tmp.Set("WDL_SHM_");
+#endif
   tmp.Append(uniquestring);
-  int tmp_l = strlen(tmp.Get());
+  const size_t tmp_l = strlen(tmp.Get());
 
   tmp.Append(".m");
   HANDLE mutex = CreateMutex(NULL,FALSE,tmp.Get());

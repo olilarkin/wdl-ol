@@ -30,7 +30,7 @@ static int __boolval(const char *p, int defval)
 
 static LICE_pixel __colorval(const char *p, LICE_pixel def)
 {
-  int lp = strlen(p);
+  const size_t lp = strlen(p);
   if (lp == 3)
   {
     int r = chartohex(p[0]);
@@ -198,7 +198,7 @@ private:
 
 #define DECL_OPT(type, cfunc) \
   static type getoption_##type(LineParser *lp, int startidx, const char *name, type def) { \
-    int namelen = strlen(name); \
+    const size_t namelen = strlen(name); \
     for(;startidx<lp->getnumtokens();startidx++) { \
       const char *p=lp->gettoken_str(startidx); \
       if (!strnicmp(name,p,namelen) && p[namelen]=='=') return cfunc(p+namelen+1,def); \
@@ -595,8 +595,10 @@ void *LICE_LoadLVGFromContext(ProjectStateContext *ctx, const char *nameInfo, in
 void *LICE_LoadLVG(const char *filename)
 {
   FILE *fp=NULL;
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(WDL_NO_SUPPORT_UTF8)
+  #ifdef WDL_SUPPORT_WIN9X
   if (GetVersion()<0x80000000)
+  #endif
   {
     WCHAR wf[2048];
     if (MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,filename,-1,wf,2048))

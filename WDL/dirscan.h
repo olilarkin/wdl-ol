@@ -68,14 +68,14 @@ class WDL_DirScan
 #endif
      ) // returns 0 if success
     {
-      int l=strlen(dirname);
+      size_t l=strlen(dirname);
       if (l < 1) return -1;
 
       WDL_String scanstr(dirname);
 #ifdef _WIN32
       if (!isExactSpec) 
 #endif
-	 if (dirname[l-1] == '\\' || dirname[l-1] == '/')  scanstr.SetLen(l-1);
+	 if (dirname[l-1] == '\\' || dirname[l-1] == '/')  scanstr.SetLen((int)l-1);
    
    m_leading_path.Set(scanstr.Get());
 
@@ -98,7 +98,11 @@ class WDL_DirScan
 #ifdef _WIN32
     #ifndef WDL_NO_SUPPORT_UTF8
       m_h=INVALID_HANDLE_VALUE;
+      #ifdef WDL_SUPPORT_WIN9X
       m_wcmode = GetVersion()< 0x80000000;
+      #else
+      m_wcmode = true;
+      #endif
 
       if (m_wcmode)
       {

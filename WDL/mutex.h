@@ -47,13 +47,10 @@
 #include <pthread.h>
 #endif
 
-#ifdef __APPLE__
-#include <libkern/OSAtomic.h>
-#endif
-
 #endif
 
 #include "wdltypes.h"
+#include "wdlatomic.h"
 
 class WDL_Mutex {
   public:
@@ -65,26 +62,27 @@ class WDL_Mutex {
 
 #ifdef _WIN32
       InitializeCriticalSection(&m_cs);
-#else
-#ifdef WDL_MAC_USE_CARBON_CRITSEC
+#elif defined( WDL_MAC_USE_CARBON_CRITSEC)
       MPCreateCriticalRegion(&m_cr);
+#elif defined(PTHREAD_RECURSIVE_MUTEX_INITIALIZER)
+      const pthread_mutex_t tmp = PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
+      m_mutex = tmp;
 #else
-      m_ownerthread=0;
-      m_lockcnt=0;
-      pthread_mutex_init(&m_mutex,NULL);
-#endif
+      pthread_mutexattr_t attr;
+      pthread_mutexattr_init(&attr);
+      pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
+      pthread_mutex_init(&m_mutex,&attr);
+      pthread_mutexattr_destroy(&attr);
 #endif
     }
     ~WDL_Mutex()
     {
 #ifdef _WIN32
       DeleteCriticalSection(&m_cs);
-#else
-#ifdef WDL_MAC_USE_CARBON_CRITSEC
+#elif defined(WDL_MAC_USE_CARBON_CRITSEC)
       MPDeleteCriticalRegion(m_cr);
 #else
       pthread_mutex_destroy(&m_mutex);
-#endif
 #endif
     }
 
@@ -96,19 +94,10 @@ class WDL_Mutex {
 
 #ifdef _WIN32
       EnterCriticalSection(&m_cs);
-#else
-#ifdef WDL_MAC_USE_CARBON_CRITSEC
+#elif defined(WDL_MAC_USE_CARBON_CRITSEC)
       MPEnterCriticalRegion(m_cr,kDurationForever);
 #else
-      pthread_t tt=pthread_self();
-      if (m_ownerthread==tt) m_lockcnt++;
-      else
-      {
-        pthread_mutex_lock(&m_mutex);
-        m_ownerthread=tt;
-        m_lockcnt=0;
-      }
-#endif
+      pthread_mutex_lock(&m_mutex);
 #endif
     }
 
@@ -117,18 +106,13 @@ class WDL_Mutex {
 #ifdef _DEBUG
       _debug_cnt--;
 #endif
+
 #ifdef _WIN32
       LeaveCriticalSection(&m_cs);
-#else
-#ifdef WDL_MAC_USE_CARBON_CRITSEC
+#elif defined(WDL_MAC_USE_CARBON_CRITSEC)
       MPExitCriticalRegion(m_cr);
 #else
-      if (--m_lockcnt < 0)
-      {
-        m_ownerthread=0;
-        pthread_mutex_unlock(&m_mutex);
-      }
-#endif
+      pthread_mutex_unlock(&m_mutex);
 #endif
     }
 
@@ -139,14 +123,10 @@ class WDL_Mutex {
   private:
 #ifdef _WIN32
   CRITICAL_SECTION m_cs;
-#else
-#ifdef WDL_MAC_USE_CARBON_CRITSEC
+#elif defined(WDL_MAC_USE_CARBON_CRITSEC)
   MPCriticalRegionID m_cr;
 #else
   pthread_mutex_t m_mutex;
-  pthread_t m_ownerthread;
-  int m_lockcnt;
-#endif
 #endif
 
 } WDL_FIXALIGN;
@@ -188,41 +168,44 @@ class WDL_SharedMutex
     void LockShared() 
     { 
       m_mutex.Enter();
-#ifdef _WIN32
-      InterlockedIncrement(&m_sharedcnt);
-#elif defined (__APPLE__)
-      OSAtomicIncrement32(&m_sharedcnt);
-#else
-      m_cntmutex.Enter();
-      m_sharedcnt++;
-      m_cntmutex.Leave();
-#endif
-
+      wdl_atomic_incr(&m_sharedcnt);
       m_mutex.Leave();
     }
     void UnlockShared()
     {
+      wdl_atomic_decr(&m_sharedcnt);
+    }
+
+    void SharedToExclusive() // assumes a SINGLE shared lock by this thread!
+    { 
+      m_mutex.Enter(); 
 #ifdef _WIN32
-      InterlockedDecrement(&m_sharedcnt);
-#elif defined(__APPLE__)
-      OSAtomicDecrement32(&m_sharedcnt);
-#else
-      m_cntmutex.Enter();
-      m_sharedcnt--;
-      m_cntmutex.Leave();
+	  // OL - This is nessecary to avoid a collision in the PTSDK
+#ifdef Sleep
+#define tempSleep Sleep
+#undef Sleep
 #endif
+	  while (m_sharedcnt>1) Sleep(1);
+#ifdef tempSleep
+#define Sleep tempSleep
+#undef tempSleep
+#endif
+#else
+	  while (m_sharedcnt>0) usleep(100);
+#endif
+      UnlockShared();
+    }
+  
+    void ExclusiveToShared() // assumes exclusive locked returns with shared locked
+    {
+      // already have exclusive lock
+      wdl_atomic_incr(&m_sharedcnt);
+      m_mutex.Leave();
     }
 
   private:
     WDL_Mutex m_mutex;
-#ifdef _WIN32
-    LONG m_sharedcnt;
-#elif defined(__APPLE__)
-    int32_t m_sharedcnt;
-#else
-    WDL_Mutex m_cntmutex;
     int m_sharedcnt;
-#endif
 } WDL_FIXALIGN;
 
 

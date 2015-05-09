@@ -1554,6 +1554,7 @@
 		089C1669FE841209C02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastUpgradeCheck = 0610;
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 0500;
 			};
@@ -2058,6 +2059,7 @@
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /;
 				LIBRARY_SEARCH_PATHS = "$(ADDITIONAL_LIBRARY_PATHS)";
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2107,6 +2109,7 @@
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /;
 				LIBRARY_SEARCH_PATHS = "$(ADDITIONAL_LIBRARY_PATHS)";
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"$(GCC_CFLAGS)",
@@ -2289,9 +2292,10 @@
 				INFOPLIST_FILE = "resources/IPlugText-RTAS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(ADDITIONAL_LIBRARY_PATHS)",
-					"\"$(SRCROOT)/../../PT9_SDK/MacBag/Libs/Debug\"",
 					"\"$(SRCROOT)/../../PT9_SDK/MacBag/Libs/Release\"",
+					"\"$(SRCROOT)/../../PT9_SDK/MacBag/Libs/Debug\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				MacBag = "$(PT9_SDK)/MacBag";
 				OBJROOT = "build-mac";
 				OTHER_CFLAGS = "-fno-inline";
@@ -2342,6 +2346,7 @@
 					"\"$(SRCROOT)/../../PT9_SDK/MacBag/Libs/Release\"",
 					"\"$(SRCROOT)/../../PT9_SDK/MacBag/Libs/Debug\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				MacBag = "$(PT9_SDK)/MacBag";
 				OBJROOT = "build-mac";
 				OTHER_CFLAGS = "";
@@ -2387,6 +2392,7 @@
 					"\"$(SRCROOT)/../../PT9_SDK/MacBag/Libs/Release\"",
 					"\"$(SRCROOT)/../../PT9_SDK/MacBag/Libs/Debug\"",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				MacBag = "$(PT9_SDK)/MacBag";
 				OBJROOT = "build-mac";
 				OTHER_CFLAGS = "";
@@ -2485,17 +2491,21 @@
 					"$(IPLUG_PATH)",
 					"$(ADDITIONAL_INCLUDES)",
 					"$(inherited)",
+					"$(AAX_SDK)/Interfaces",
+					"$(AAX_SDK)/Interfaces/ACF",
 				);
 				INFOPLIST_FILE = "resources/IPlugText-AAX-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(ADDITIONAL_LIBRARY_PATHS)",
-					"$(SRCROOT)/../../AAX_SDK/Libs/Debug",
+					"$(AAX_SDK)/Libs/Debug",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				SDKROOT = "$(BASE_SDK)";
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
+					"-Wno-incompatible-ms-struct",
 				);
 				WRAPPER_EXTENSION = aaxplugin;
 			};
@@ -2529,18 +2539,22 @@
 					"$(IPLUG_PATH)",
 					"$(ADDITIONAL_INCLUDES)",
 					"$(inherited)",
+					"$(AAX_SDK)/Interfaces",
+					"$(AAX_SDK)/Interfaces/ACF",
 				);
 				INFOPLIST_FILE = "resources/IPlugText-AAX-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(ADDITIONAL_LIBRARY_PATHS)",
-					"$(SRCROOT)/../../AAX_SDK/Libs/Release",
+					"$(AAX_SDK)/Libs/Release",
 				);
 				PREBINDING = YES;
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				SDKROOT = "$(BASE_SDK)";
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
+					"-Wno-incompatible-ms-struct",
 				);
 				WRAPPER_EXTENSION = aaxplugin;
 			};
@@ -2574,17 +2588,21 @@
 					"$(IPLUG_PATH)",
 					"$(ADDITIONAL_INCLUDES)",
 					"$(inherited)",
+					"$(AAX_SDK)/Interfaces",
+					"$(AAX_SDK)/Interfaces/ACF",
 				);
 				INFOPLIST_FILE = "resources/IPlugText-AAX-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(ADDITIONAL_LIBRARY_PATHS)",
-					"$(SRCROOT)/../../AAX_SDK/Libs/Release",
+					"$(AAX_SDK)/Libs/Release",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				SDKROOT = "$(BASE_SDK)";
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
+					"-Wno-incompatible-ms-struct",
 				);
 				WRAPPER_EXTENSION = aaxplugin;
 			};
@@ -2694,6 +2712,7 @@
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /;
 				LIBRARY_SEARCH_PATHS = "$(ADDITIONAL_LIBRARY_PATHS)";
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"$(GCC_CFLAGS)",

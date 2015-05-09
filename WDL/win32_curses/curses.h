@@ -14,7 +14,6 @@
   #else
   #include "../swell/swell.h"
   #endif
-  #include "../queue.h"
 
 /*
 ** this implements a tiny subset of curses on win32.
@@ -40,10 +39,10 @@
 #define addstr(str) __addnstr(CURSES_INSTANCE,str,-1)
 #define addch(c) __addch(CURSES_INSTANCE,c)
 
-#define mvaddstr(x,y,str) __mvaddnstr(CURSES_INSTANCE,x,y,str,-1)
-#define mvaddnstr(x,y,str,n) __mvaddnstr(CURSES_INSTANCE,x,y,str,n)
+#define mvaddstr(y,x,str) __mvaddnstr(CURSES_INSTANCE,y,x,str,-1)
+#define mvaddnstr(y,x,str,n) __mvaddnstr(CURSES_INSTANCE,y,x,str,n)
 #define clrtoeol() __clrtoeol(CURSES_INSTANCE)
-#define move(x,y) __move(CURSES_INSTANCE, x,y, 0)
+#define move(y,x) __move(CURSES_INSTANCE,y,x,0)
 #define attrset(a) (CURSES_INSTANCE)->m_cur_attr=(a)
 #define bkgdset(a) (CURSES_INSTANCE)->m_cur_erase_attr=(a)
 #define initscr() __initscr(CURSES_INSTANCE)
@@ -59,35 +58,50 @@
 #define COLOR_PAIRS 16
 #define NUM_ATTRBITS 1
 
+#define WIN32_CURSES_CURSOR_TYPE_VERTBAR 0
+#define WIN32_CURSES_CURSOR_TYPE_HORZBAR 1
+#define WIN32_CURSES_CURSOR_TYPE_BLOCK 2
+
 typedef struct win32CursesCtx
 {
   HWND m_hwnd;
   int lines, cols;
 
-  int m_cursor_x;
-  int m_cursor_y;
-  char m_cur_attr, m_cur_erase_attr;
+  int want_scrollbar;
+  int scrollbar_topmargin,scrollbar_botmargin;
+  int drew_scrollbar[2];
+  int offs_y[2];  
+  int div_y, tot_y;
+  int scroll_y[2], scroll_h[2];
+
+  int m_cursor_x, m_cursor_y;
+  int cursor_state_lx,cursor_state_ly; // used to detect changes and reset cursor_state
+
   unsigned char *m_framebuffer;
   HFONT mOurFont;
+  int *fontsize_ptr;
   
-  bool m_need_fontcalc;
   int m_font_w, m_font_h;
-  int m_need_redraw;
-
-  WDL_Queue *m_kbq;
-  int m_intimer;
 
   int colortab[COLOR_PAIRS << NUM_ATTRBITS][2];
 
-  int m_cursor_state; // blinky
-  int m_cursor_state_lx,m_cursor_state_ly; // used to detect changes and reset m_cursor_state
+  int m_kb_queue[64];
+  unsigned char m_kb_queue_valid;
+  unsigned char m_kb_queue_pos;
+
+  char need_redraw; // &2 = need font calculation, &1 = need redraw, &4=full paint pending, no need to keep invalidating
+  char cursor_state; // blinky cycle
+
+  char m_cur_attr;
+  char m_cur_erase_attr;
 
   // callbacks/config available for user
-  int want_getch_runmsgpump; // set to 1 to cause getch() to run the message pump, 2 to cause it to be blocking (waiting for keychar)
+  char want_getch_runmsgpump; // set to 1 to cause getch() to run the message pump, 2 to cause it to be blocking (waiting for keychar)
+  char cursor_type; // set to WIN32_CURSES_CURSOR_TYPE_VERTBAR etc
 
-  void (*ui_run)(struct win32CursesCtx *ctx);
+  void (*do_update)(win32CursesCtx *ctx); // called on resize/etc, to avoid flicker. NULL will use default behavior
+
   void *user_data;
-
   LRESULT (*onMouseMessage)(void *user_data, HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 } win32CursesCtx;
 
@@ -99,9 +113,8 @@ void curses_registerChildClass(HINSTANCE hInstance);
 HWND curses_CreateWindow(HINSTANCE hInstance, win32CursesCtx *ctx, const char *title);
 
 
-
 void __addnstr(win32CursesCtx *inst, const char *str,int n);
-void __move(win32CursesCtx *inst, int x, int y, int noupdest);
+void __move(win32CursesCtx *inst, int y, int x, int noupdest);
 static inline void __addch(win32CursesCtx *inst, char c) { __addnstr(inst,&c,1); }
 static inline void __mvaddnstr(win32CursesCtx *inst, int x, int y, const char *str, int n) { __move(inst,x,y,1); __addnstr(inst,str,n); }
 
@@ -110,6 +123,7 @@ void __clrtoeol(win32CursesCtx *inst);
 void __initscr(win32CursesCtx *inst);
 void __endwin(win32CursesCtx *inst);
 void __curses_erase(win32CursesCtx *inst);
+void __curses_invalidatefull(win32CursesCtx *inst, bool finish); // use around a block with a lot of drawing to prevent excessive invalidaterects
 
 int curses_getch(win32CursesCtx *inst);
 

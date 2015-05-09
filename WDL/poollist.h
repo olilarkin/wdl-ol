@@ -50,25 +50,18 @@
 
 #include "mutex.h"
 
-template<class DATATYPE> class WDL_PoolList
+template<class DATATYPE> class WDL_PoolList_NoFreeOnDestroy
 {
 public:
 
-  WDL_PoolList()
+  WDL_PoolList_NoFreeOnDestroy()
   {
   }
-  ~WDL_PoolList()
+  ~WDL_PoolList_NoFreeOnDestroy()
   {
-    int x;
-    for (x = 0; x < pool.GetSize(); x ++) 
-    {
-      DATATYPE *p = pool.Get(x);
-      free(p->WDL_POOLLIST_identstr);
-      delete p;
-    }
   }
 
-  DATATYPE *Get(const char *filename)
+  DATATYPE *Get(const char *filename, bool createIfExists=true)
   {
     WDL_MutexLock lock(&mutex);
 
@@ -78,6 +71,7 @@ public:
       t->WDL_POOLLIST_refcnt++;
       return t;
     }
+    if (!createIfExists) return NULL;
 
     t = new DATATYPE(strdup(filename));
     t->WDL_POOLLIST_refcnt=1;
@@ -136,6 +130,18 @@ public:
     }
     return refcnt;
   }
+ 
+  void RemoveAll() 
+  {
+    int x;
+    for (x = 0; x < pool.GetSize(); x ++) 
+    {
+      DATATYPE *p = pool.Get(x);
+      free(p->WDL_POOLLIST_identstr);
+      delete p;
+    }
+    pool.Empty();
+  }
 
   WDL_Mutex mutex;
   WDL_PtrList< DATATYPE > pool;
@@ -151,5 +157,13 @@ private:
   }
 };
 
+template<class DATATYPE> class WDL_PoolList : public WDL_PoolList_NoFreeOnDestroy<DATATYPE>
+{
+public:
+  WDL_PoolList() { }
+  ~WDL_PoolList() { WDL_PoolList_NoFreeOnDestroy<DATATYPE>::RemoveAll(); }
+
+
+};
 
 #endif

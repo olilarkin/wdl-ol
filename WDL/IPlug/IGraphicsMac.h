@@ -96,7 +96,9 @@ public:
   void HostPath(WDL_String* pPath);
   void PluginPath(WDL_String* pPath);
   void DesktopPath(WDL_String* pPath);
-  void AppSupportPath(WDL_String* pPath);
+//  void VST3PresetsPath(WDL_String* pPath, bool isSystem = true);
+  void AppSupportPath(WDL_String* pPath, bool isSystem = false);
+  void SandboxSafeAppSupportPath(WDL_String* pPath);
 
   void PromptForFile(WDL_String* pFilename, EFileAction action = kFileOpen, WDL_String* pDir = 0, char* extensions = "");   // extensions = "txt wav" for example.
   bool PromptForColor(IColor* pColor, char* prompt = "");
@@ -110,6 +112,8 @@ public:
 
   const char* GetBundleID()  { return mBundleID.Get(); }
   static int GetUserOSVersion();   // Returns a number like 0x1050 (10.5).
+  
+  bool GetTextFromClipboard(WDL_String* pStr);
 
 protected:
   virtual LICE_IBitmap* OSLoadBitmap(int ID, const char* name);
@@ -127,6 +131,9 @@ private:
 #ifndef IPLUG_NO_CARBON_SUPPORT
   friend class IGraphicsCarbon;
 #endif
+  
+  void *mColorSpace; // CGColorSpaceRef, created on demand and freed on destroy
+  WDL_HeapBuf mRetinaUpscaleBuf; // used for doubled-bitmap when drawing retina
   
 public: //TODO: make this private
   void* mHostNSWindow;

@@ -73,7 +73,10 @@ typedef uintptr_t UINT_PTR, *PUINT_PTR, ULONG_PTR, *PULONG_PTR, DWORD_PTR, *PDWO
 #define GetCurrentDirectory(sz,buf) (!getcwd(buf,sz))
 #define SetCurrentDirectory(buf) (!chdir(buf))
 #define CreateDirectory(x,y) (!mkdir((x),0755))
+
+#ifndef wsprintf
 #define wsprintf sprintf
+#endif
 
 #ifndef LOWORD
 #define MAKEWORD(a, b)      ((unsigned short)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
@@ -160,8 +163,8 @@ typedef unsigned int ULONG;
 typedef short SHORT;
 typedef int *LPINT;
 typedef char CHAR;
-typedef char *LPSTR;
-typedef const char *LPCSTR;
+typedef char *LPSTR, *LPTSTR;
+typedef const char *LPCSTR, *LPCTSTR;
 
 #define __int64 long long // define rather than typedef, for unsigned __int64 support
 
@@ -650,7 +653,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define GWL_WNDPROC         (-4)
 #define DWL_DLGPROC         (-8)
 
-#define SWELL_NOT_WS_VISIBLE 0x80000000L
+#define SWELL_NOT_WS_VISIBLE ((int)0x80000000)
 #define WS_CHILDWINDOW (WS_CHILD)
 #define WS_CHILD      0x40000000L
 #define WS_DISABLED   0x08000000L
@@ -877,6 +880,8 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define MFS_ENABLED MF_ENABLED
 #define MFS_UNCHECKED MF_UNCHECKED
 
+#define EN_SETFOCUS         0x0100
+#define EN_KILLFOCUS        0x0200
 #define EN_CHANGE           0x0300
 #define STN_CLICKED         0
 #define STN_DBLCLK          1
@@ -1156,17 +1161,16 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define MK_MBUTTON        0x10
 
 
-#define IDC_SIZENESW MAKEINTRESOURCE(-1007)
-#define IDC_SIZENWSE MAKEINTRESOURCE(-1006)
-#define IDC_IBEAM MAKEINTRESOURCE(-1005)
-#define IDC_UPARROW MAKEINTRESOURCE(-1004)
-#define IDC_NO MAKEINTRESOURCE(-1003)
-#define IDC_SIZEALL MAKEINTRESOURCE(-1002)
-#define IDC_SIZENS MAKEINTRESOURCE(-1001)
-#define IDC_SIZEWE MAKEINTRESOURCE(-1000)
-#define IDC_ARROW MAKEINTRESOURCE(-999)
+#define IDC_SIZENESW MAKEINTRESOURCE(32643)
+#define IDC_SIZENWSE MAKEINTRESOURCE(32642)
+#define IDC_IBEAM MAKEINTRESOURCE(32513)
+#define IDC_UPARROW MAKEINTRESOURCE(32516)
+#define IDC_NO MAKEINTRESOURCE(32648)
+#define IDC_SIZEALL MAKEINTRESOURCE(32646)
+#define IDC_SIZENS MAKEINTRESOURCE(32645)
+#define IDC_SIZEWE MAKEINTRESOURCE(32644)
+#define IDC_ARROW MAKEINTRESOURCE(32512)
 #define IDC_HAND MAKEINTRESOURCE(32649)
-
 
 
 

@@ -4,6 +4,7 @@
 #include "../wdlstring.h"
 #include "../ptrlist.h"
 
+
 class WDL_CursesEditor
 {
 public:
@@ -13,9 +14,9 @@ public:
   bool IsDirty() const { return m_clean_undopos != m_undoStack_pos; }
 
   virtual int onChar(int c);
-  virtual void onRightClick() { }
+  virtual void onRightClick(HWND hwnd) { } 
 
-  int updateFile(); // saves file on disk
+  virtual int updateFile(); // saves file on disk
   void RunEditor(); // called from timer/main loop when on simulated curses -- if on a real console just call onChar(getch())
 
   void *m_cursesCtx; // win32CursesCtx *
@@ -23,39 +24,49 @@ public:
   int m_color_bottomline, m_color_statustext,  m_color_selection,  m_color_message; // COLOR_PAIR(x)
   int m_top_margin, m_bottom_margin;
 
+  const char *GetFileName() { return m_filename.Get(); }
+
+  virtual void setCursor(int isVscroll=0, double ycenter=-1.0);
+
+  int m_indent_size;
+  int m_max_undo_states;
+
+  virtual int init(const char *fn, const char *init_if_empty=0); 
+  virtual void draw(int lineidx=-1);
+
+  virtual void highlight_line(int line);
 
 protected:
   class refcntString;
   class editUndoRec;
 
-  int init(const char *fn, const char *init_if_empty=0); 
-  virtual void draw(int lineidx=-1);
   void draw_message(const char *str);
   void draw_status_state();
-  void setCursor(int isVscroll=0);
-  LRESULT onMouseMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+  virtual LRESULT onMouseMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
   static LRESULT _onMouseMessage(void *user_data, HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
     if (user_data) return ((WDL_CursesEditor*)user_data)->onMouseMessage(hwnd,uMsg,wParam,lParam);
     return 0;
   }
+  
   void runSearch();
 
   void indentSelect(int amt);
   void removeSelect();
   void getselectregion(int &minx, int &miny, int &maxx, int &maxy);
-  void doDrawString(int y, int x, int line_n, const char *p, int ml, bool *c_comment_state, int skipcnt);
+  void doDrawString(int y, int x, int line_n, const char *p, int ml, int *c_comment_state, int skipcnt);
 
   void saveUndoState();
   void preSaveUndoState(); // updates coordinates of edit to last rec
   void loadUndoState(editUndoRec *rec);
 
-  virtual int GetPreviousCommentStartEnd(int *line, int *col); // pass current line/col, updates with interesting point, returns nonzero if start (1 if /*, 2 if //)
+  virtual int GetCommentStateForLineStart(int line); // pass current line, returns flags (which will be passed as c_comment_state)
 
-  virtual void mvaddnstr_highlight(int y, int x, const char *p, int ml, bool *c_comment_state, int skipcnt);
+  virtual void mvaddnstr_highlight(int y, int x, const char *p, int ml, int *c_comment_state, int skipcnt);
   virtual void draw_top_line() { }// within m_top_margin
   virtual void draw_bottom_line();
-  virtual bool LineCanAffectOtherLines(const char *txt) // if multiline comment etc
+  virtual bool LineCanAffectOtherLines(const char *txt, int spos, int slen) // if multiline comment etc
   {
     return false;
   }
@@ -73,18 +84,22 @@ protected:
   int m_selecting;
   int m_select_x1,m_select_y1,m_select_x2,m_select_y2;
 
-  int m_offs_x, m_offs_y;
+  int m_offs_x;
   int m_curs_x, m_curs_y;
-  int m_want_x;
+  int m_want_x; // to restore active column when vscrolling
 
+  int m_scrollcap; // 1=top, 2=bottom, 3=divider
+  int m_scrollcap_yoffs;
+  
+  int m_curpane;
+  double m_pane_div;
+  int m_paneoffs_y[2]; 
 
-  char newfilename_str[256];
-  WDL_FastString m_newfn;
+  int GetPaneDims(int* paney, int* paneh);
 
   static char s_search_string[256];
   static int s_overwrite;
   static WDL_FastString s_fake_clipboard;
-
 
   class refcntString
   {
@@ -124,8 +139,11 @@ protected:
 
     WDL_PtrList<refcntString> m_htext;
 
-    int m_offs_x, m_offs_y;
+    int m_offs_x;
     int m_curs_x, m_curs_y;
+    int m_curpane;
+    double m_pane_div;
+    int m_paneoffs_y[2];
   };
 };
 #endif

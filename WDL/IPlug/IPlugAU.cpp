@@ -599,6 +599,11 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
           pInfo->flags = pInfo->flags | kAudioUnitParameterFlag_IsWritable;
         }
         
+        if (pParam->GetIsMeta()) 
+        {
+          pInfo->flags |= kAudioUnitParameterFlag_IsElementMeta;
+        }
+        
         const char* paramName = pParam->GetNameForHost();
         pInfo->cfNameString = MakeCFString(pParam->GetNameForHost());
         strcpy(pInfo->name, paramName);   // Max 52.
@@ -797,7 +802,15 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
     }
     case kAudioUnitProperty_TailTime:                    // 20,   // listenable
     {
-      return GetProperty(kAudioUnitProperty_Latency, scope, element, pDataSize, pWriteable, pData);
+      ASSERT_SCOPE(kAudioUnitScope_Global);
+      *pWriteable = GetTailSize() > 0;
+      *pDataSize = sizeof(Float64);
+      
+      if (pData)
+      {
+        *((Float64*) pData) = (double) GetTailSize() / GetSampleRate();
+      }
+      return noErr;
     }
     case kAudioUnitProperty_BypassEffect:                // 21,
     {
@@ -1774,11 +1787,11 @@ ComponentResult IPlugAU::RenderProc(void* pPlug, AudioUnitRenderActionFlags* pFl
 
 IPlugAU::BusChannels* IPlugAU::GetBus(AudioUnitScope scope, AudioUnitElement busIdx)
 {
-  if (scope == kAudioUnitScope_Input && busIdx >= 0 && busIdx < mInBuses.GetSize())
+  if (scope == kAudioUnitScope_Input && busIdx < mInBuses.GetSize())
   {
     return mInBuses.Get(busIdx);
   }
-  if (scope == kAudioUnitScope_Output && busIdx >= 0 && busIdx < mOutBuses.GetSize())
+  if (scope == kAudioUnitScope_Output && busIdx < mOutBuses.GetSize())
   {
     return mOutBuses.Get(busIdx);
   }

@@ -218,8 +218,8 @@
 		4F8D4B6E13E97425004F7633 /* lice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice.cpp; path = ../lice/lice.cpp; sourceTree = "<group>"; };
 		4F8D4B6F13E97425004F7633 /* lice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lice.h; path = ../lice/lice.h; sourceTree = "<group>"; };
 		4F8D4BAD13E974CF004F7633 /* lice.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = lice.xcconfig; sourceTree = "<group>"; };
-		566CD5461A0B8EFA00491D60 /* lice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = lice.a; path = "/Users/EcHo2K_old/GoogleDrive/vst_save/wdl-ol/WDL/lice/build-mac/Debug/lice.a"; sourceTree = "<absolute>"; };
-		566CD5471A0B8EFA00491D60 /* lice32.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = lice32.a; path = "/Users/EcHo2K_old/GoogleDrive/vst_save/wdl-ol/WDL/lice/build-mac/Debug/lice32.a"; sourceTree = "<absolute>"; };
+		5687D16F1AFD30450017FE90 /* lice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = lice.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		5687D1701AFD30450017FE90 /* lice32.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = lice32.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -339,6 +339,8 @@
 		561622001A123810007E358E /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				5687D16F1AFD30450017FE90 /* lice.a */,
+				5687D1701AFD30450017FE90 /* lice32.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -409,7 +411,7 @@
 			);
 			name = lice_32_intel;
 			productName = lice;
-			productReference = 566CD5471A0B8EFA00491D60 /* lice32.a */;
+			productReference = 5687D1701AFD30450017FE90 /* lice32.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		D2AAC045055464E500DB518D /* lice_32&64_intel */ = {
@@ -426,7 +428,7 @@
 			);
 			name = "lice_32&64_intel";
 			productName = lice;
-			productReference = 566CD5461A0B8EFA00491D60 /* lice.a */;
+			productReference = 5687D16F1AFD30450017FE90 /* lice.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */

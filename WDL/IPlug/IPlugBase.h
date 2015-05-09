@@ -152,6 +152,8 @@ public:
   void GetHostVersionStr(char* str);
   const char* GetArchString();
   
+  int GetTailSize() { return mTailSize; }
+  
   // Tell the host that the graphics resized.
   // Should be called only by the graphics object when it resizes itself.
   virtual void ResizeGraphics(int w, int h) = 0;
@@ -197,12 +199,17 @@ protected:
 
   // If latency changes after initialization (often not supported by the host).
   virtual void SetLatency(int samples);
+  
+  // set to 0xffffffff for infinite tail (VST3), or 0 for none (default)
+  // for VST2 setting to 1 means no tail, but it would be better i think to leave it at 0, the default
+  void SetTailSize(unsigned int tailSizeSamples) { mTailSize = tailSizeSamples; }
+  
   virtual bool SendMidiMsg(IMidiMsg* pMsg) = 0;
   bool SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs);
   virtual bool SendSysEx(ISysEx* pSysEx) { return false; }
   bool IsInst() { return mIsInst; }
   bool DoesMIDI() { return mDoesMIDI; }
-
+  
   // You can't use these three methods with chunks-based plugins, because there is no way to set the custom data
   void MakeDefaultPreset(char* name = 0, int nPresets = 1);
   // MakePreset(name, param1, param2, ..., paramN)
@@ -269,12 +276,11 @@ public:
 
   virtual void PresetsChangedByHost() {} // does nothing by default
   void DirtyParameters(); // hack to tell the host to dirty file state, when a preset is recalled
-  #ifndef OS_IOS
-  bool SaveProgramAsFXP(const char* defaultFileName = "");
-  bool SaveBankAsFXB(const char* defaultFileName = "");
-  bool LoadProgramFromFXP();
-  bool LoadBankFromFXB();
-  #endif
+  
+  bool SaveProgramAsFXP(WDL_String* fileName);
+  bool SaveBankAsFXB(WDL_String* fileName);
+  bool LoadProgramFromFXP(WDL_String* fileName);
+  bool LoadBankFromFXB(WDL_String* fileName);
   
   void SetSampleRate(double sampleRate);
   virtual void SetBlockSize(int blockSize); // overridden in IPlugAU
@@ -319,7 +325,7 @@ protected:
   int mCurrentPresetIdx;
   double mSampleRate;
   int mBlockSize, mLatency;
-  WDL_String mPreviousPath; // for saving/loading fxps
+  unsigned int mTailSize;
   NChanDelayLine* mDelay; // for delaying dry signal when mLatency > 0 and plugin is bypassed
   WDL_PtrList<const char> mParamGroups;
 

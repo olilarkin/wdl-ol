@@ -140,7 +140,11 @@ public:
     }
 
 #ifdef WDL_WIN32_NATIVE_WRITE
-    bool isNT = (GetVersion()<0x80000000);
+    #ifdef WDL_SUPPORT_WIN9X
+    const bool isNT = (GetVersion()<0x80000000);
+    #else
+    const bool isNT = true;
+    #endif
     m_async = allow_async && isNT;
 #ifdef WIN32_ASYNC_NOBUF_WRITE
     bufsize = (bufsize+4095)&~4095;
@@ -308,8 +312,7 @@ public:
 
     if (m_async)
     {
-      char *pbuf=(char *)buf;
-
+      int rdpos = 0;
       while (len > 0)
       {
         if (!m_empties.GetSize()) 
@@ -354,18 +357,18 @@ public:
 
         int ml=ent->m_bufsz-ent->m_bufused;
         if (ml>len) ml=len;
-        memcpy(ent->m_bufptr+ent->m_bufused,pbuf,ml);
+        memcpy(ent->m_bufptr+ent->m_bufused,(const char *)buf + rdpos,ml);
 
         ent->m_bufused+=ml;
         len-=ml;
-        pbuf+=ml;
+        rdpos+=ml;
 
         if (ent->m_bufused >= ent->m_bufsz)
         {
           if (RunAsyncWrite(ent,true)) m_empties.Delete(0); // if queued remove from list
         }
       }
-      return pbuf - (char *)buf; 
+      return rdpos; 
     }
     else
     {

@@ -59,9 +59,8 @@ class WDL_HeapBuf
     void SetGranul(int granul) { m_granul = granul; }
     int GetGranul() const { return m_granul; }
 
-    void SetMinAllocSize(int mas) { m_mas=mas; }
-
-
+    void *ResizeOK(int newsize, bool resizedown = true) { void *p=Resize(newsize, resizedown); return GetSize() == newsize ? p : NULL; }
+    
     WDL_HeapBuf(const WDL_HeapBuf &cp)
     {
       m_buf=0;
@@ -76,10 +75,8 @@ class WDL_HeapBuf
 
 
   #ifndef WDL_HEAPBUF_TRACE
-    explicit WDL_HeapBuf(int granul=4096) : m_alloc(0), m_size(0), m_mas(0)
+    explicit WDL_HeapBuf(int granul=4096) : m_buf(NULL), m_alloc(0), m_size(0), m_granul(granul)
     {
-      SetGranul(granul);
-      m_buf=0;
     }
     ~WDL_HeapBuf()
     {
@@ -87,11 +84,8 @@ class WDL_HeapBuf
     }
   #else
     explicit WDL_HeapBuf(int granul=4096, const char *tracetype="WDL_HeapBuf"
-      ) : m_alloc(0), m_size(0), m_mas(0)
+      ) : m_buf(NULL), m_alloc(0), m_size(0), m_granul(granul)
     {
-      SetGranul(granul);
-      m_buf=0;
-
       m_tracetype = tracetype;
       char tmp[512];
       wsprintf(tmp,"WDL_HeapBuf: created type: %s granul=%d\n",tracetype,granul);
@@ -116,6 +110,7 @@ class WDL_HeapBuf
       void *Resize(int newsize, bool resizedown=true)
     #endif
       {
+        if (newsize<0) newsize=0;
         #ifdef DEBUG_TIGHT_ALLOC // horribly slow, do not use for release builds
           if (newsize == m_size) return m_buf;
 
@@ -137,7 +132,7 @@ class WDL_HeapBuf
 
         //#define WDL_HEAPBUF_DYNAMIC
         #ifdef WDL_HEAPBUF_DYNAMIC
-          // ignoring m_granul and m_mas
+          // ignoring m_granul
 
           if (newsize!=m_size)
           {
@@ -214,8 +209,6 @@ class WDL_HeapBuf
                 newalloc = ((newsize + granul + 96)&~4095)-96;
               }
          
-              if (newalloc < m_mas) newalloc=m_mas;
-
               if (newalloc != m_alloc)
               {
 
@@ -275,7 +268,6 @@ class WDL_HeapBuf
             m_tracetype = hb->m_tracetype;
           #endif
           m_granul = hb->m_granul;
-          m_mas = hb->m_mas;
 
           m_size=m_alloc=0;
           m_buf=hb->m_buf && hb->m_alloc>0 ? malloc(m_alloc = hb->m_alloc) : NULL;
@@ -300,13 +292,13 @@ class WDL_HeapBuf
 
   private:
     void *m_buf;
-  #if !defined(_WIN64) && !defined(__LP64__)
-    int ___pad; // keep this 8 byte aligned on osx32
-  #endif
-    int m_granul;
     int m_alloc;
     int m_size;
-    int m_mas;
+    int m_granul;
+
+  #if defined(_WIN64) || defined(__LP64__)
+    int ___pad; // keep size 8 byte aligned
+  #endif
 
   #ifdef WDL_HEAPBUF_TRACE
     const char *m_tracetype;
@@ -318,9 +310,10 @@ template<class PTRTYPE> class WDL_TypedBuf
 {
   public:
     PTRTYPE *Get() const { return (PTRTYPE *) m_hb.Get(); }
-    int GetSize() const { return m_hb.GetSize()/sizeof(PTRTYPE); }
+    int GetSize() const { return m_hb.GetSize()/(unsigned int)sizeof(PTRTYPE); }
 
-    PTRTYPE *Resize(int newsize, bool resizedown=true) { return (PTRTYPE *)m_hb.Resize(newsize*sizeof(PTRTYPE),resizedown); }
+    PTRTYPE *Resize(int newsize, bool resizedown = true) { return (PTRTYPE *)m_hb.Resize(newsize*sizeof(PTRTYPE),resizedown); }
+    PTRTYPE *ResizeOK(int newsize, bool resizedown = true) { return (PTRTYPE *)m_hb.ResizeOK(newsize*sizeof(PTRTYPE), resizedown);  }
 
     PTRTYPE *GetAligned(int align) const  { return (PTRTYPE *) m_hb.GetAligned(align); }
 
@@ -337,7 +330,7 @@ template<class PTRTYPE> class WDL_TypedBuf
         PTRTYPE* p=Resize(sz+1);
         if (p && GetSize() == sz+1)
         {
-          memmove(p+idx+1, p+idx, (sz-idx)*sizeof(PTRTYPE));
+          memmove(p+idx+1, p+idx, (sz-idx)*(unsigned int)sizeof(PTRTYPE));
           p[idx]=val;
           return p+idx;
         }
@@ -345,16 +338,15 @@ template<class PTRTYPE> class WDL_TypedBuf
       return 0;
     }
 
-    PTRTYPE* Delete(int idx)
+    void Delete(int idx)
     {
       PTRTYPE* p=Get();
       int sz=GetSize();
       if (idx >= 0 && idx < sz)
       {
         memmove(p+idx, p+idx+1, (sz-idx-1)*sizeof(PTRTYPE));
-        return Resize(sz-1);
+        Resize(sz-1,false);
       }
-      return p;
     }
 
     void SetGranul(int gran) { m_hb.SetGranul(gran); }
