@@ -217,6 +217,34 @@ LICE_IBitmap* IGraphicsMac::OSLoadBitmap(int ID, const char* name)
   return LoadImgFromResourceOSX(GetBundleID(), name);
 }
 
+#ifdef IPLUG_RETINA_SUPPORT
+void IGraphicsMac::CheckIfRetina()
+{
+#ifdef __ppc__
+  mRetina = false;
+#endif
+  CGContextRef pCGC = 0;
+  
+  if (mGraphicsCocoa)
+  {
+    pCGC = (CGContextRef) [[NSGraphicsContext currentContext] graphicsPort];  // Leak?
+    NSGraphicsContext* gc = [NSGraphicsContext graphicsContextWithGraphicsPort: pCGC flipped: YES];
+    pCGC = (CGContextRef) [gc graphicsPort];
+  }
+#ifndef IPLUG_NO_CARBON_SUPPORT
+  else if (mGraphicsCarbon)
+  {
+    pCGC = mGraphicsCarbon->GetCGContext();
+  }
+#endif
+  if (!pCGC)
+  {
+    mRetina = false;
+  }
+  mRetina = CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9;
+}
+#endif
+
 bool IGraphicsMac::DrawScreen(IRECT* pR)
 {
   CGContextRef pCGC = 0;
@@ -277,6 +305,12 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
 #ifndef __ppc__
   if (CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9)
   {
+#ifdef IPLUG_RETINA_SUPPORT
+    p = (const unsigned char *)mDrawBitmap_2x->getBits();
+    sw = (w*2+3)&~3;
+    w *= 2;
+    h *= 2;
+#else
     const int newspan = (w*2+3)&~3;
     const int newsz=sizeof(unsigned int) * newspan*h*2 + 32;
     mRetinaUpscaleBuf.Resize(newsz,false);
@@ -293,6 +327,7 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
       w *= 2;
       h *= 2;
     }
+#endif
   }
 #endif
   

@@ -51,6 +51,10 @@ public:
   bool Draw(IRECT* pR);           // The system announces what needs to be redrawn.  Ordering and drawing logic.
   virtual bool DrawScreen(IRECT* pR) = 0;  // Tells the OS class to put the final bitmap on the screen.
 
+#ifdef IPLUG_RETINA_SUPPORT
+  bool IsRetina() { return mRetina; }
+#endif
+	
   // Methods for the drawing implementation class.
   bool DrawBitmap(IBitmap* pBitmap, IRECT* pDest, int srcX, int srcY, const IChannelBlend* pBlend = 0);
   bool DrawRotatedBitmap(IBitmap* pBitmap, int destCtrX, int destCtrY, double angle, int yOffsetZeroDeg = 0, const IChannelBlend* pBlend = 0);
@@ -146,6 +150,7 @@ public:
   IBitmap LoadIBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);
   IBitmap ScaleBitmap(IBitmap* pSrcBitmap, int destW, int destH);
   IBitmap CropBitmap(IBitmap* pSrcBitmap, IRECT* pR);
+
   void AttachBackground(int ID, const char* name);
   void AttachPanelBackground(const IColor *pColor);
   void AttachKeyCatcher(IControl* pControl);
@@ -232,8 +237,14 @@ public:
   void RetainBitmap(IBitmap* pBitmap);
   void ReleaseBitmap(IBitmap* pBitmap);
   LICE_pixel* GetBits();
+#ifdef IPLUG_RETINA_SUPPORT
+  LICE_pixel* GetBits_2x();
+#endif
   // For controls that need to interface directly with LICE.
   inline LICE_SysBitmap* GetDrawBitmap() const { return mDrawBitmap; }
+#ifdef IPLUG_RETINA_SUPPORT
+  inline LICE_SysBitmap* GetDrawBitmap_2x() const { return mDrawBitmap_2x; }
+#endif
 
   WDL_Mutex mMutex;
 
@@ -260,6 +271,11 @@ protected:
   virtual LICE_IBitmap* OSLoadBitmap(int ID, const char* name) = 0;
   
   LICE_SysBitmap* mDrawBitmap;
+#ifdef IPLUG_RETINA_SUPPORT
+  bool mRetina;
+  LICE_SysBitmap* mDrawBitmap_2x;
+  virtual void CheckIfRetina() { mRetina = false; }
+#endif
   LICE_IFont* CacheFont(IText* pTxt);
   
 #ifdef AAX_API
