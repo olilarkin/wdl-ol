@@ -1,10 +1,10 @@
 #include "IGraphics.h"
 
-#define DEFAULT_FPS 25
+#define DEFAULT_FPS 120
 
 // If not dirty for this many timer ticks, we call OnGUIIDle.
 // Only looked at if USE_IDLE_CALLS is defined.
-#define IDLE_TICKS 20
+#define IDLE_TICKS 120
 
 #ifndef CONTROL_BOUNDS_COLOR
   #define CONTROL_BOUNDS_COLOR COLOR_GREEN
