@@ -54,6 +54,7 @@ public:
   // Methods for the drawing implementation class.
   bool DrawBitmap(IBitmap* pBitmap, IRECT* pDest, int srcX, int srcY, const IChannelBlend* pBlend = 0);
   bool DrawRotatedBitmap(IBitmap* pBitmap, int destCtrX, int destCtrY, double angle, int yOffsetZeroDeg = 0, const IChannelBlend* pBlend = 0);
+  bool BlurBitmap(IBitmap* pISrc, int dstx, int dsty, IRECT x);
   bool DrawRotatedMask(IBitmap* pBase, IBitmap* pMask, IBitmap* pTop, int x, int y, double angle, const IChannelBlend* pBlend = 0);
   bool DrawPoint(const IColor* pColor, float x, float y, const IChannelBlend* pBlend = 0, bool antiAlias = false);
   // Live ammo!  Will crash if out of bounds!  etc.
@@ -63,6 +64,8 @@ public:
   bool DrawCircle(const IColor* pColor, float cx, float cy, float r, const IChannelBlend* pBlend = 0, bool antiAlias = false);
   bool RoundRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend, int cornerradius, bool aa);
   bool FillRoundRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend, int cornerradius, bool aa);
+  bool FillCBezier(IColor* pColor, float xstart, float ystart, float xctl1, float yctl1,
+	  float xctl2, float yctl2, float xend, float yend, int yfill, float alpha = 1.0f, int mode = 0, float tol = 0.0f);
 
   bool FillIRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend = 0);
   bool FillCircle(const IColor* pColor, int cx, int cy, float r, const IChannelBlend* pBlend = 0, bool antiAlias = false);
