@@ -1554,9 +1554,8 @@
 		089C1669FE841209C02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0610;
+				LastUpgradeCheck = 0620;
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 0500;
 			};
 			buildConfigurationList = 1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "IPlugText" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -2135,6 +2134,7 @@
 				);
 				INFOPLIST_FILE = "resources/IPlugText-VST2-Info.plist";
 				SKIP_INSTALL = NO;
+				WARNING_CFLAGS = "-Wno-main";
 				WRAPPER_EXTENSION = vst;
 			};
 			name = Debug;
@@ -2149,6 +2149,7 @@
 				);
 				INFOPLIST_FILE = "resources/IPlugText-VST2-Info.plist";
 				SKIP_INSTALL = NO;
+				WARNING_CFLAGS = "-Wno-main";
 				WRAPPER_EXTENSION = vst;
 			};
 			name = Release;
@@ -2163,6 +2164,7 @@
 				);
 				INFOPLIST_FILE = "resources/IPlugText-VST2-Info.plist";
 				SKIP_INSTALL = NO;
+				WARNING_CFLAGS = "-Wno-main";
 				WRAPPER_EXTENSION = vst;
 			};
 			name = Tracer;
