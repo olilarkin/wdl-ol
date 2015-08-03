@@ -2045,7 +2045,7 @@ void IPlugAU::GetTime(ITimeInfo* pTimeInfo)
     mHostCallbacks.beatAndTempoProc(mHostCallbacks.hostUserData, &currentBeat, &tempo);
 
     if (tempo > 0.0) pTimeInfo->mTempo = tempo;
-    if (currentBeat> 0.0) pTimeInfo->mPPQPos = currentBeat;
+    if (currentBeat>= 0.0) pTimeInfo->mPPQPos = currentBeat;
   }
 
   if (mHostCallbacks.transportStateProc)
@@ -2055,7 +2055,7 @@ void IPlugAU::GetTime(ITimeInfo* pTimeInfo)
     mHostCallbacks.transportStateProc(mHostCallbacks.hostUserData, &playing, &changed, &samplePos,
                                       &looping, &loopStartBeat, &loopEndBeat);
 
-    if (samplePos>0.0)pTimeInfo->mSamplePos = samplePos;
+    if (samplePos>=0.0)pTimeInfo->mSamplePos = samplePos;
     if (loopStartBeat>0.0) pTimeInfo->mCycleStart = loopStartBeat;
     if (loopEndBeat>0.0) pTimeInfo->mCycleEnd = loopEndBeat;
     pTimeInfo->mTransportIsRunning = playing;

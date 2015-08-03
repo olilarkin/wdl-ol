@@ -390,6 +390,7 @@ void IPlugBase::AttachInputBuffers(int idx, int n, float** ppData, int nFrames)
   int iEnd = IPMIN(idx + n, mInChannels.GetSize());
   for (int i = idx; i < iEnd; ++i)
   {
+		printf("attaching channel %d ...", i);
     InChannel* pInChannel = mInChannels.Get(i);
     if (pInChannel->mConnected)
     {
@@ -397,6 +398,7 @@ void IPlugBase::AttachInputBuffers(int idx, int n, float** ppData, int nFrames)
       CastCopy(pScratch, *(ppData++), nFrames);
       *(pInChannel->mSrc) = pScratch;
     }
+		printf("done\n");
   }
 }
 
@@ -539,13 +541,18 @@ void IPlugBase::SetParameterFromGUI(int idx, double normalizedValue)
   OnParamChange(idx);
 }
 
-void IPlugBase::OnParamReset()
+void IPlugBase::OnParamReset(bool fromSessionLoading = false)
 {
   for (int i = 0; i < mParams.GetSize(); ++i)
   {
-    OnParamChange(i);
+    OnParamChange(i, fromSessionLoading);
   }
   //Reset();
+}
+
+void IPlugBase::OnParamReset()
+{
+	OnParamReset(false);
 }
 
 // Default passthrough.
@@ -932,7 +939,8 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
 #endif
 #endif
   }
-  OnParamReset();
+	// set true the fromSessionLoading flagto inform the plug in that we are being restored from a save
+  OnParamReset(true);
   return pos;
 }
 
@@ -1324,18 +1332,11 @@ bool IPlugBase::LoadProgramFromFXP(WDL_String* fileName)
         pos = pgm.Get(&chunkSize, pos);
         chunkSize = WDL_bswap_if_le(chunkSize);
 
-<<<<<<< HEAD
-          GetIPlugVerFromChunk(&pgm, &pos);
-          UnserializeState(&pgm, pos);
-          ModifyCurrentPreset(prgName);
-          InformHostOfProgramChange();
-=======
-        GetIPlugVerFromChunk(&pgm, &pos);
-        UnserializeState(&pgm, pos);
-        ModifyCurrentPreset(prgName);
-        RestorePreset(GetCurrentPresetIdx());
-        InformHostOfProgramChange();
->>>>>>> 40a9501653e643457693d23541f3992903ac30b8
+				GetIPlugVerFromChunk(&pgm, &pos);
+				UnserializeState(&pgm, pos);
+				ModifyCurrentPreset(prgName);
+				RestorePreset(GetCurrentPresetIdx());
+				InformHostOfProgramChange();
 
         return true;
       }

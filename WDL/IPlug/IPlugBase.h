@@ -49,8 +49,8 @@ public:
 
   // Implementations should set a mutex lock like in the no-op!
   virtual void Reset() { TRACE; IMutexLock lock(this); }
-  virtual void OnParamChange(int paramIdx) { IMutexLock lock(this); }
-
+  virtual void OnParamChange(int paramIdx, bool fromSessionLoading = false) { IMutexLock lock(this); }
+	
   // Default passthrough.  Inputs and outputs are [nChannel][nSample].
   // Mutex is already locked.
   virtual void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
@@ -235,7 +235,8 @@ protected:
   // ----------------------------------------
   // Internal IPlug stuff (but API classes need to get at it).
 
-  void OnParamReset();  // Calls OnParamChange(each param) + Reset().
+	void OnParamReset();
+  void OnParamReset(bool fromSessionLoading);  // Calls OnParamChange(each param) + Reset().
 
   void PruneUninitializedPresets();
 
@@ -258,8 +259,8 @@ protected:
   void ProcessBuffers(float sampleType, int nFrames);
   void ProcessBuffers(double sampleType, int nFrames);
   void ProcessBuffersAccumulating(float sampleType, int nFrames);
-  void ZeroScratchBuffers();
-  
+	void ZeroScratchBuffers();
+	
 public:
   void ModifyCurrentPreset(const char* name = 0);     // Sets the currently active preset to whatever current params are.
   int NPresets() { return mPresets.GetSize(); }

@@ -95,7 +95,11 @@ void IParam::SetNormalized(double normalizedValue)
   if (mType != kTypeDouble)
   {
     mValue = floor(0.5 + mValue / mStep) * mStep;
-  }
+	} else {
+		if (mStep == 1.0) {
+			mValue = round(mValue);
+		}
+	}
   
   mValue = IPMIN(mValue, mMax);
 }

@@ -1,3 +1,4 @@
+#include "resource.h"
 #include "IPlugAAX.h"
 
 #include "AAX_CBinaryTaperDelegate.h"
@@ -21,7 +22,7 @@ void AAX_CEffectGUI_IPLUG::CreateViewContents()
   
   IGraphics* gui = ((IPlugAAX*) GetEffectParameters())->GetGUI();
   
-  if (gui) 
+  if (gui)
   {
     mGraphics = gui;
   }
@@ -127,13 +128,13 @@ IPlugAAX::IPlugAAX(IPlugInstanceInfo instanceInfo,
 
   SetInputChannelConnections(0, NInChannels(), true);
   SetOutputChannelConnections(0, NOutChannels(), true);
-  
+	
   if (NInChannels()) 
   {
     mDelay = new NChanDelayLine(NInChannels(), NOutChannels());
     mDelay->SetDelayTime(latency);
   }
-  
+	
   SetBlockSize(DEFAULT_BLOCK_SIZE);
   SetHost("ProTools", vendorVersion); // TODO:vendor version correct?  
 }
@@ -292,36 +293,64 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
   Controller()->GetInputStemFormat(&inFormat);
   Controller()->GetOutputStemFormat(&outFormat);
   
-  if (DoesMIDI()) 
-  {
-    AAX_IMIDINode* midiIn = ioRenderInfo->mInputNode;
-    AAX_CMidiStream* midiBuffer = midiIn->GetNodeBuffer();
-    AAX_CMidiPacket* midiBufferPtr = midiBuffer->mBuffer;
-    uint32_t packets_count = midiBuffer->mBufferSize;
-    
+//  if (DoesMIDI()) 
+//  {
+//    AAX_IMIDINode* midiIn = ioRenderInfo->mInputNode;
+//    AAX_CMidiStream* midiBuffer = midiIn->GetNodeBuffer();
+//    AAX_CMidiPacket* midiBufferPtr = midiBuffer->mBuffer;
+//    uint32_t packets_count = midiBuffer->mBufferSize;
+	
     // Setup MIDI Out node pointers 
 //		AAX_IMIDINode* midiNodeOut = instance->mMIDINodeOutP;
 //		AAX_CMidiStream* midiBufferOut = midiNodeOut->GetNodeBuffer();
 //		AAX_CMidiPacket* midiBufferOutPtr = midiBufferOut->mBuffer;
         
-    for (int i = 0; i<packets_count; i++, midiBufferPtr++) 
-    {
-      IMidiMsg msg(midiBufferPtr->mTimestamp, midiBufferPtr->mData[0], midiBufferPtr->mData[1], midiBufferPtr->mData[2]);
-      ProcessMidiMsg(&msg);
-    }
-  }
-  
+//    for (int i = 0; i<packets_count; i++, midiBufferPtr++) 
+//    {
+//      IMidiMsg msg(midiBufferPtr->mTimestamp, midiBufferPtr->mData[0], midiBufferPtr->mData[1], midiBufferPtr->mData[2]);
+//      ProcessMidiMsg(&msg);
+//    }
+//  }
+	
   AAX_IMIDINode* transportNode = ioRenderInfo->mTransportNode;
   mTransport = transportNode->GetTransport();
 
   int32_t numSamples = *(ioRenderInfo->mNumSamples);
   int32_t numInChannels = AAX_STEM_FORMAT_CHANNEL_COUNT(inFormat);
   int32_t numOutChannels = AAX_STEM_FORMAT_CHANNEL_COUNT(outFormat);
-
-  SetInputChannelConnections(0, numInChannels, true);
-  SetInputChannelConnections(numInChannels, NInChannels() - numInChannels, false);
-  AttachInputBuffers(0, NInChannels(), ioRenderInfo->mAudioInputs, numSamples);
-  
+	
+	ZeroScratchBuffers();
+	SetInputChannelConnections(0, NInChannels(), false);
+	
+	// Check Sidechain
+//#if PLUG_SC_CHANS > 0
+//	int32_t sideChainChannel = *(ioRenderInfo->mAudioSideChainAddr);
+//#else
+//	int32_t sideChainChannel = NULL;
+//#endif
+	
+#ifdef PLUG_SC_CHANS
+	if (ioRenderInfo->mAudioSideChainAddr) {
+		printf("sidechain\n");
+		SetInputChannelConnections(0, numInChannels, true);
+		SetInputChannelConnections(NInChannels() - PLUG_SC_CHANS, 1, true);
+	} else {
+		printf("no sidechain\n");
+		SetInputChannelConnections(0, numInChannels, true);
+		//SetInputChannelConnections(numInChannels, NInChannels() - numInChannels, false);
+	}
+#else
+	SetInputChannelConnections(0, numInChannels, true);
+#endif
+	printf("attach input buffers: 0 - %d\n", NInChannels());
+	AttachInputBuffers(0, NInChannels(), ioRenderInfo->mAudioInputs, numSamples);
+	
+	 //AttachInputBuffers(numInChannels, NInChannels() - numInChannels, ioRenderInfo->mAudioInputs, numSamples);
+	
+	//SetInputChannelConnections(0, numInChannels, true);
+	//SetInputChannelConnections(numInChannels, NInChannels() - numInChannels, false);
+	//AttachInputBuffers(0, NInChannels(), ioRenderInfo->mAudioInputs, numSamples);
+	
   SetOutputChannelConnections(0, numOutChannels, true);
   SetOutputChannelConnections(numOutChannels, NOutChannels() - numOutChannels, false);
   

@@ -422,7 +422,7 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
 
 IBitmap IGraphics::LoadIBitmap(int ID, const char* name, int nStates, bool framesAreHoriztonal)
 {
-  LICE_IBitmap* lb = s_bitmapCache.Find(ID);
+	LICE_IBitmap* lb = s_bitmapCache.Find(ID);
   if (!lb)
   {
     lb = OSLoadBitmap(ID, name);
