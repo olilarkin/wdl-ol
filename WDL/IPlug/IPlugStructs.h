@@ -13,8 +13,12 @@ enum EFileAction { kFileOpen, kFileSave };
 struct IBitmap
 {
   void* mData;
+#ifdef IPLUG_RETINA_SUPPORT
+  void* mData_2x;
+#endif
   int W, H, N;    // N = number of states (for multibitmaps).
   bool mFramesAreHorizontal;
+#ifndef IPLUG_RETINA_SUPPORT
   IBitmap(void* pData = 0, int w = 0, int h = 0, int n = 1, bool framesAreHorizontal = false)
     : mData(pData)
     , W(w)
@@ -22,7 +26,17 @@ struct IBitmap
     , N(n)
     , mFramesAreHorizontal(framesAreHorizontal)
   {}
-
+#else
+  IBitmap(void* pData = 0, void* pData_2x = 0, int w = 0, int h = 0, int n = 1, bool framesAreHorizontal = false)
+    : mData(pData)
+    , mData_2x(pData_2x)
+    , W(w)
+    , H(h)
+    , N(n)
+    , mFramesAreHorizontal(framesAreHorizontal)
+	{}
+#endif
+	
   inline int frameHeight() const { return H / N; }
 };
 

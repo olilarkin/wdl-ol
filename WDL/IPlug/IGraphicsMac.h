@@ -6,7 +6,7 @@
 #endif
 
 // carbon support uses quickdraw methods that have been removed in SDKs > 10.6
-#if __MAC_OS_X_VERSION_MAX_ALLOWED > 1060
+#if !defined(IPLUG_NO_CARBON_SUPPORT) && __MAC_OS_X_VERSION_MAX_ALLOWED > 1060
   #warning Carbon GUIs work best with the 10.6 sdk
 #endif
 
@@ -117,7 +117,10 @@ public:
 
 protected:
   virtual LICE_IBitmap* OSLoadBitmap(int ID, const char* name);
-  
+#ifdef IPLUG_RETINA_SUPPORT
+  void CheckIfRetina();
+#endif
+	
 private:
 #ifndef IPLUG_NO_CARBON_SUPPORT
   IGraphicsCarbon* mGraphicsCarbon;

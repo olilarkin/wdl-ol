@@ -172,6 +172,10 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mHandleMouseOver(false)
   , mStrict(true)
   , mDrawBitmap(0)
+#ifdef IPLUG_RETINA_SUPPORT
+  , mDrawBitmap_2x(0)
+  , mRetina(false)
+#endif
   , mTmpBitmap(0)
   , mLastClickedParam(-1)
   , mKeyCatcher(0)
@@ -191,6 +195,9 @@ IGraphics::~IGraphics()
 
   mControls.Empty(true);
   DELETE_NULL(mDrawBitmap);
+#ifdef IPLUG_RETINA_SUPPORT
+  DELETE_NULL(mDrawBitmap_2x);
+#endif
   DELETE_NULL(mTmpBitmap);
 }
 
@@ -201,6 +208,9 @@ void IGraphics::Resize(int w, int h)
   ReleaseMouseCapture();
   mControls.Empty(true);
   DELETE_NULL(mDrawBitmap);
+#ifdef IPLUG_RETINA_SUPPORT
+  DELETE_NULL(mDrawBitmap_2x);
+#endif
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
   mPlug->ResizeGraphics(w, h);
@@ -229,7 +239,6 @@ void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, cha
     pControl->SetValueFromUserInput(pParam->GetNormalized(v));
   }
 }
-
 
 void IGraphics::AttachBackground(int ID, const char* name)
 {
@@ -432,7 +441,29 @@ IBitmap IGraphics::LoadIBitmap(int ID, const char* name, int nStates, bool frame
     assert(imgResourceFound); // Protect against typos in resource.h and .rc files.
     s_bitmapCache.Add(lb, ID);
   }
+#ifndef IPLUG_RETINA_SUPPORT
   return IBitmap(lb, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal);
+#else
+  int ID_2x = -ID;
+  LICE_IBitmap* lb_2x = s_bitmapCache.Find(ID_2x);
+  if (!lb_2x)
+  {
+    char name_2x[strlen(name)+3];
+    char *ext = strrchr(name, '.');
+    int extpos = int(ext - name);
+    strncpy(name_2x, name, extpos);
+    strcpy(&name_2x[extpos], "@2x");
+    strcpy(&name_2x[extpos+3], ext);
+    
+    lb_2x = OSLoadBitmap(ID_2x, name_2x);
+    #ifndef NDEBUG
+    bool imgResourceFound = lb_2x;
+    #endif
+    assert(imgResourceFound); // Retina bitmap not found: use "bitmap@2x.png" naming convention
+    s_bitmapCache.Add(lb_2x, ID_2x);
+  }
+  return IBitmap(lb, lb_2x, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal);
+#endif
 }
 
 void IGraphics::RetainBitmap(IBitmap* pBitmap)
@@ -448,15 +479,28 @@ void IGraphics::ReleaseBitmap(IBitmap* pBitmap)
 void IGraphics::PrepDraw()
 {
   mDrawBitmap = new LICE_SysBitmap(Width(), Height());
+#ifdef IPLUG_RETINA_SUPPORT
+  mDrawBitmap_2x = new LICE_SysBitmap(2 * Width(), 2 * Height());
+#endif
   mTmpBitmap = new LICE_MemBitmap();
 }
 
 bool IGraphics::DrawBitmap(IBitmap* pIBitmap, IRECT* pDest, int srcX, int srcY, const IChannelBlend* pBlend)
 {
-  LICE_IBitmap* pLB = (LICE_IBitmap*) pIBitmap->mData;
   IRECT r = pDest->Intersect(&mDrawRECT);
   srcX += r.L - pDest->L;
   srcY += r.T - pDest->T;
+
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    LICE_IBitmap* pLB_2x = (LICE_IBitmap*) pIBitmap->mData_2x;
+    _LICE::LICE_Blit(mDrawBitmap_2x, pLB_2x, r.L * 2, r.T * 2, srcX * 2, srcY * 2, r.W() * 2, r.H() * 2, LiceWeight(pBlend), LiceBlendMode(pBlend));
+    return true;
+  }
+#endif
+  
+  LICE_IBitmap* pLB = (LICE_IBitmap*) pIBitmap->mData;
   _LICE::LICE_Blit(mDrawBitmap, pLB, r.L, r.T, srcX, srcY, r.W(), r.H(), LiceWeight(pBlend), LiceBlendMode(pBlend));
   return true;
 }
@@ -464,6 +508,23 @@ bool IGraphics::DrawBitmap(IBitmap* pIBitmap, IRECT* pDest, int srcX, int srcY, 
 bool IGraphics::DrawRotatedBitmap(IBitmap* pIBitmap, int destCtrX, int destCtrY, double angle, int yOffsetZeroDeg,
                                   const IChannelBlend* pBlend)
 {
+  int W = pIBitmap->W;
+  int H = pIBitmap->H;
+  int destX = destCtrX - W / 2;
+  int destY = destCtrY - H / 2;
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    LICE_IBitmap* pLB = (LICE_IBitmap*) pIBitmap->mData_2x;
+  
+    _LICE::LICE_RotatedBlit(mDrawBitmap_2x, pLB, destX * 2, destY * 2, W * 2, H * 2, 0.0f, 0.0f, float(W * 2), float(H * 2), (float) angle,
+                          false, LiceWeight(pBlend), LiceBlendMode(pBlend) | LICE_BLIT_FILTER_BILINEAR, 0.0f, float(yOffsetZeroDeg * 2));
+    
+    return true;
+  }
+#endif
+  
   LICE_IBitmap* pLB = (LICE_IBitmap*) pIBitmap->mData;
 
   //double dA = angle * PI / 180.0;
@@ -475,11 +536,6 @@ bool IGraphics::DrawRotatedBitmap(IBitmap* pIBitmap, int destCtrX, int destCtrY,
   //int W = int(h * sinA + w * cosA);
   //int H = int(h * cosA + w * sinA);
 
-  int W = pIBitmap->W;
-  int H = pIBitmap->H;
-  int destX = destCtrX - W / 2;
-  int destY = destCtrY - H / 2;
-
   _LICE::LICE_RotatedBlit(mDrawBitmap, pLB, destX, destY, W, H, 0.0f, 0.0f, (float) W, (float) H, (float) angle,
                           false, LiceWeight(pBlend), LiceBlendMode(pBlend) | LICE_BLIT_FILTER_BILINEAR, 0.0f, (float) yOffsetZeroDeg);
 
@@ -489,22 +545,45 @@ bool IGraphics::DrawRotatedBitmap(IBitmap* pIBitmap, int destCtrX, int destCtrY,
 bool IGraphics::DrawRotatedMask(IBitmap* pIBase, IBitmap* pIMask, IBitmap* pITop, int x, int y, double angle,
                                 const IChannelBlend* pBlend)
 {
-  LICE_IBitmap* pBase = (LICE_IBitmap*) pIBase->mData;
-  LICE_IBitmap* pMask = (LICE_IBitmap*) pIMask->mData;
-  LICE_IBitmap* pTop = (LICE_IBitmap*) pITop->mData;
-
+  
   double dA = angle * PI / 180.0;
   int W = pIBase->W;
   int H = pIBase->H;
   //	RECT srcR = { 0, 0, W, H };
   float xOffs = (W % 2 ? -0.5f : 0.0f);
-
+  
   if (!mTmpBitmap)
   {
     mTmpBitmap = new LICE_MemBitmap();
   }
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    LICE_IBitmap* pBase = (LICE_IBitmap*) pIBase->mData_2x;
+    LICE_IBitmap* pMask = (LICE_IBitmap*) pIMask->mData_2x;
+    LICE_IBitmap* pTop = (LICE_IBitmap*) pITop->mData_2x;
+
+    _LICE::LICE_Copy(mTmpBitmap, pBase);
+    
+    _LICE::LICE_RotatedBlit(mTmpBitmap, pMask, 0, 0, W * 2, H * 2, 0.0f, 0.0f, float(W * 2), float(H * 2), (float) dA,
+                            true, 1.0f, LICE_BLIT_MODE_ADD | LICE_BLIT_FILTER_BILINEAR | LICE_BLIT_USE_ALPHA, xOffs, 0.0f);
+    _LICE::LICE_RotatedBlit(mTmpBitmap, pTop, 0, 0, W * 2, H * 2, 0.0f, 0.0f, float(W * 2), float(H * 2), (float) dA,
+                            true, 1.0f, LICE_BLIT_MODE_COPY | LICE_BLIT_FILTER_BILINEAR | LICE_BLIT_USE_ALPHA, xOffs, 0.0f);
+
+    IRECT r = IRECT(x, y, x + W, y + H).Intersect(&mDrawRECT);
+    _LICE::LICE_Blit(mDrawBitmap_2x, mTmpBitmap, r.L * 2, r.T * 2, (r.L - x) * 2, (r.T - y) * 2, (r.R - r.L) * 2, (r.B - r.T) * 2,
+                     LiceWeight(pBlend), LiceBlendMode(pBlend));
+    return true;
+  }
+#endif
+
+  LICE_IBitmap* pBase = (LICE_IBitmap*) pIBase->mData;
+  LICE_IBitmap* pMask = (LICE_IBitmap*) pIMask->mData;
+  LICE_IBitmap* pTop = (LICE_IBitmap*) pITop->mData;
+
   _LICE::LICE_Copy(mTmpBitmap, pBase);
-  _LICE::LICE_ClearRect(mTmpBitmap, 0, 0, W, H, LICE_RGBA(255, 255, 255, 0));
+  //  _LICE::LICE_ClearRect(mTmpBitmap, 0, 0, W, H, LICE_RGBA(255, 255, 255, 0));
 
   _LICE::LICE_RotatedBlit(mTmpBitmap, pMask, 0, 0, W, H, 0.0f, 0.0f, (float) W, (float) H, (float) dA,
                           true, 1.0f, LICE_BLIT_MODE_ADD | LICE_BLIT_FILTER_BILINEAR | LICE_BLIT_USE_ALPHA, xOffs, 0.0f);
@@ -521,13 +600,40 @@ bool IGraphics::DrawRotatedMask(IBitmap* pIBase, IBitmap* pIMask, IBitmap* pITop
 bool IGraphics::DrawPoint(const IColor* pColor, float x, float y,
                           const IChannelBlend* pBlend, bool antiAlias)
 {
-  float weight = (pBlend ? pBlend->mWeight : 1.0f);
-  _LICE::LICE_PutPixel(mDrawBitmap, int(x + 0.5f), int(y + 0.5f), LiceColor(pColor), weight, LiceBlendMode(pBlend));
+  float weight = LiceWeight(pBlend);
+  LICE_pixel color = LiceColor(pColor);
+  int mode = LiceBlendMode(pBlend);
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    int X = int(x + 0.5f) * 2, Y = int(y + 0.5f) * 2;
+    _LICE::LICE_PutPixel(mDrawBitmap_2x, X  , Y  , color, weight, mode);
+    _LICE::LICE_PutPixel(mDrawBitmap_2x, X+1, Y  , color, weight, mode);
+    _LICE::LICE_PutPixel(mDrawBitmap_2x, X  , Y+1, color, weight, mode);
+    _LICE::LICE_PutPixel(mDrawBitmap_2x, X+1, Y+1, color, weight, mode);
+    return true;
+  }
+#endif
+  
+  _LICE::LICE_PutPixel(mDrawBitmap, int(x + 0.5f), int(y + 0.5f), color, weight, mode);
   return true;
 }
 
 bool IGraphics::ForcePixel(const IColor* pColor, int x, int y)
 {
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    LICE_pixel* pxTL, *pxTR, *pxBL, *pxBR;
+    pxTL = mDrawBitmap_2x->getBits() + 2 * x + 2 * y * mDrawBitmap_2x->getRowSpan();
+    pxTR = pxTL + 1;
+    pxBL = pxTL + mDrawBitmap_2x->getRowSpan();
+    pxBR = pxBL + 1;
+    *pxTL = *pxTR = *pxBL = *pxBR = LiceColor(pColor);
+    return true;
+  }
+#endif
   LICE_pixel* px = mDrawBitmap->getBits();
   px += x + y * mDrawBitmap->getRowSpan();
   *px = LiceColor(pColor);
@@ -537,76 +643,196 @@ bool IGraphics::ForcePixel(const IColor* pColor, int x, int y)
 bool IGraphics::DrawLine(const IColor* pColor, float x1, float y1, float x2, float y2,
                          const IChannelBlend* pBlend, bool antiAlias)
 {
-  _LICE::LICE_Line(mDrawBitmap, (int) x1, (int) y1, (int) x2, (int) y2, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend), antiAlias);
+  float weight = LiceWeight(pBlend);
+  LICE_pixel color = LiceColor(pColor);
+  int mode = LiceBlendMode(pBlend);
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    int X1 = int(x1) * 2, X2 = int(x2) * 2, Y1 = int(y1) * 2, Y2 = int(y2) * 2;
+    _LICE::LICE_Line(mDrawBitmap_2x, X1  , Y1  , X2  , Y2  , color, weight, mode, antiAlias);
+    _LICE::LICE_Line(mDrawBitmap_2x, X1+1, Y1  , X2+1, Y2  , color, weight, mode, antiAlias);
+    _LICE::LICE_Line(mDrawBitmap_2x, X1  , Y1+1, X2  , Y2+1, color, weight, mode, antiAlias);
+    _LICE::LICE_Line(mDrawBitmap_2x, X1+1, Y1+1, X2+1, Y2+1, color, weight, mode, antiAlias);
+    return true;
+  }
+#endif
+  
+  _LICE::LICE_Line(mDrawBitmap, (int) x1, (int) y1, (int) x2, (int) y2, color, weight, mode, antiAlias);
   return true;
 }
 
 bool IGraphics::DrawArc(const IColor* pColor, float cx, float cy, float r, float minAngle, float maxAngle,
                         const IChannelBlend* pBlend, bool antiAlias)
 {
-  _LICE::LICE_Arc(mDrawBitmap, cx, cy, r, minAngle, maxAngle, LiceColor(pColor),
-                  LiceWeight(pBlend), LiceBlendMode(pBlend), antiAlias);
+  int mode = LiceBlendMode(pBlend);
+  float weight = LiceWeight(pBlend);
+  LICE_pixel color = LiceColor(pColor);
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    float cX = cx * 2.f;
+    float cY = cy * 2.f;
+    float R = r * 2.f;
+    _LICE::LICE_Arc(mDrawBitmap_2x, cX, cY, R, minAngle, maxAngle, color, weight, mode, antiAlias);
+    _LICE::LICE_Arc(mDrawBitmap_2x, cX, cY, R - 1.f, minAngle, maxAngle, color, weight, mode, antiAlias);
+    return true;
+  }
+#endif
+  
+  _LICE::LICE_Arc(mDrawBitmap, cx, cy, r, minAngle, maxAngle, color, weight, mode, antiAlias);
   return true;
 }
 
 bool IGraphics::DrawCircle(const IColor* pColor, float cx, float cy, float r,
                            const IChannelBlend* pBlend, bool antiAlias)
 {
-  _LICE::LICE_Circle(mDrawBitmap, cx, cy, r, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend), antiAlias);
+  int mode = LiceBlendMode(pBlend);
+  float weight = LiceWeight(pBlend);
+  LICE_pixel color = LiceColor(pColor);
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    float cX = cx * 2.f;
+    float cY = cy * 2.f;
+    float R = r * 2.f;
+    _LICE::LICE_Circle(mDrawBitmap_2x, cX, cY, R, color, weight, mode, antiAlias);
+    _LICE::LICE_Circle(mDrawBitmap_2x, cX, cY, R - 1.f, color, weight, mode, antiAlias);
+    return true;
+  }
+#endif
+
+  _LICE::LICE_Circle(mDrawBitmap, cx, cy, r, color, weight, mode, antiAlias);
   return true;
 }
 
 bool IGraphics::RoundRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend, int cornerradius, bool aa)
 {
+  int mode = LiceBlendMode(pBlend);
+  float weight = LiceWeight(pBlend);
+  LICE_pixel color = LiceColor(pColor);
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    int x1 = pR->L * 2;
+    int y1 = pR->T * 2;
+    int h = pR->H() * 2;
+    int w = pR->W() * 2;
+    int r = cornerradius * 2;
+    _LICE::LICE_RoundRect(mDrawBitmap_2x, (float) x1, (float) y1, (float) w, (float) h, r, color, weight, mode, aa);
+    _LICE::LICE_RoundRect(mDrawBitmap_2x, float(x1 + 1), float(y1 + 1), float(w - 2), float(h - 2), r - 1, color, weight, mode, aa);
+    return true;
+  }
+#endif
+  
   _LICE::LICE_RoundRect(mDrawBitmap, (float) pR->L, (float) pR->T, (float) pR->W(), (float) pR->H(), cornerradius,
-                        LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend), aa);
+                        color, weight, mode, aa);
   return true;
 }
 
 bool IGraphics::FillRoundRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend, int cornerradius, bool aa)
 {
-  int x1 = pR->L;
-  int y1 = pR->T;
-  int h = pR->H();
-  int w = pR->W();
-  
   int mode = LiceBlendMode(pBlend);
   float weight = LiceWeight(pBlend);
   LICE_pixel color = LiceColor(pColor);
   
-  _LICE::LICE_FillRect(mDrawBitmap, x1+cornerradius, y1, w-2*cornerradius, h, color, weight, mode);
-  _LICE::LICE_FillRect(mDrawBitmap, x1, y1+cornerradius, cornerradius, h-2*cornerradius,color, weight, mode);
-  _LICE::LICE_FillRect(mDrawBitmap, x1+w-cornerradius, y1+cornerradius, cornerradius, h-2*cornerradius, color, weight, mode);
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    int x1 = pR->L * 2;
+    int y1 = pR->T * 2;
+    int h = pR->H() * 2;
+    int w = pR->W() * 2;
+    int r = cornerradius * 2;
+    
+    _LICE::LICE_FillRect(mDrawBitmap_2x, x1+r, y1, w-2*r, h, color, weight, mode);
+    _LICE::LICE_FillRect(mDrawBitmap_2x, x1, y1+r, r, h-2*r,color, weight, mode);
+    _LICE::LICE_FillRect(mDrawBitmap_2x, x1+w-r, y1+r, r, h-2*r, color, weight, mode);
+    
+    //void LICE_FillCircle(LICE_IBitmap* dest, float cx, float cy, float r, LICE_pixel color, float alpha, int mode, bool aa)
+    _LICE::LICE_FillCircle(mDrawBitmap_2x, float(x1+r), float(y1+r), (float) r, color, weight, mode, aa);
+    _LICE::LICE_FillCircle(mDrawBitmap_2x, float(x1+w-r-1), float(y1+h-r-1), (float) r, color, weight, mode, aa);
+    _LICE::LICE_FillCircle(mDrawBitmap_2x, float(x1+w-r-1), float(y1+r), (float) r, color, weight, mode, aa);
+    _LICE::LICE_FillCircle(mDrawBitmap_2x, float(x1+r), float(y1+h-r-1), (float) r, color, weight, mode, aa);
+    
+    return true;
+  }
+#endif
+  
+  int x1 = pR->L;
+  int y1 = pR->T;
+  int h = pR->H();
+  int w = pR->W();
+  int r = cornerradius;
+  
+  _LICE::LICE_FillRect(mDrawBitmap, x1+r, y1, w-2*r, h, color, weight, mode);
+  _LICE::LICE_FillRect(mDrawBitmap, x1, y1+r, r, h-2*r,color, weight, mode);
+  _LICE::LICE_FillRect(mDrawBitmap, x1+w-r, y1+r, r, h-2*r, color, weight, mode);
 
   //void LICE_FillCircle(LICE_IBitmap* dest, float cx, float cy, float r, LICE_pixel color, float alpha, int mode, bool aa)
-  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+cornerradius, (float) y1+cornerradius, (float) cornerradius, color, weight, mode, aa);
-  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+w-cornerradius-1, (float) y1+h-cornerradius-1, (float) cornerradius, color, weight, mode, aa);
-  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+w-cornerradius-1, (float) y1+cornerradius, (float) cornerradius, color, weight, mode, aa);
-  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+cornerradius, (float) y1+h-cornerradius-1, (float) cornerradius, color, weight, mode, aa);
+  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+r, (float) y1+r, (float) r, color, weight, mode, aa);
+  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+w-r-1, (float) y1+h-r-1, (float) r, color, weight, mode, aa);
+  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+w-r-1, (float) y1+r, (float) r, color, weight, mode, aa);
+  _LICE::LICE_FillCircle(mDrawBitmap, (float) x1+r, (float) y1+h-r-1, (float) r, color, weight, mode, aa);
   
   return true;
 }
 
 bool IGraphics::FillIRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend)
 {
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    _LICE::LICE_FillRect(mDrawBitmap_2x, pR->L * 2, pR->T * 2, pR->W() * 2, pR->H() * 2, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
+    return true;
+  }
+#endif
   _LICE::LICE_FillRect(mDrawBitmap, pR->L, pR->T, pR->W(), pR->H(), LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
   return true;
 }
 
 bool IGraphics::FillCircle(const IColor* pColor, int cx, int cy, float r, const IChannelBlend* pBlend, bool antiAlias)
 {
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    _LICE::LICE_FillCircle(mDrawBitmap_2x, float(cx * 2), float(cy * 2), r * 2.f, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend), antiAlias);
+    return true;
+  }
+#endif
   _LICE::LICE_FillCircle(mDrawBitmap, (float) cx, (float) cy, r, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend), antiAlias);
   return true;
 }
 
 bool IGraphics::FillTriangle(const IColor* pColor, int x1, int y1, int x2, int y2, int x3, int y3, IChannelBlend* pBlend)
 {
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    _LICE::LICE_FillTriangle(mDrawBitmap_2x, x1 * 2, y1 * 2, x2 * 2, y2 * 2, x3 * 2, y3 * 2, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
+    return true;
+  }
+#endif
   _LICE::LICE_FillTriangle(mDrawBitmap, x1, y1, x2, y2, x3, y3, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
   return true;
 }
 
 bool IGraphics::FillIConvexPolygon(const IColor* pColor, int* x, int* y, int npoints, const IChannelBlend* pBlend)
 {
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    int X[npoints], Y[npoints];
+    for (int i = 0; i < npoints; ++i)
+      X[i] = x[i] * 2, Y[i] = y[i] * 2;
+    _LICE::LICE_FillConvexPolygon(mDrawBitmap_2x, X, Y, npoints, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
+    return true;
+  }
+#endif
   _LICE::LICE_FillConvexPolygon(mDrawBitmap, x, y, npoints, LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
   return true;
 }
@@ -635,8 +861,17 @@ IBitmap IGraphics::ScaleBitmap(IBitmap* pIBitmap, int destW, int destH)
   LICE_MemBitmap* pDest = new LICE_MemBitmap(destW, destH);
   _LICE::LICE_ScaledBlit(pDest, pSrc, 0, 0, destW, destH, 0.0f, 0.0f, (float) pIBitmap->W, (float) pIBitmap->H, 1.0f,
                          LICE_BLIT_MODE_COPY | LICE_BLIT_FILTER_BILINEAR);
-
+#ifndef IPLUG_RETINA_SUPPORT
   IBitmap bmp(pDest, destW, destH, pIBitmap->N);
+#else
+  LICE_IBitmap* pSrc_2x = (LICE_IBitmap*) pIBitmap->mData_2x;
+  LICE_MemBitmap* pDest_2x = new LICE_MemBitmap(destW * 2, destH * 2);
+  _LICE::LICE_ScaledBlit(pDest_2x, pSrc_2x, 0, 0, destW * 2, destH * 2, 0.0f, 0.0f, float(pIBitmap->W * 2), float(pIBitmap->H * 2), 1.0f,
+                         LICE_BLIT_MODE_COPY | LICE_BLIT_FILTER_BILINEAR);
+  
+  IBitmap bmp(pDest, pDest_2x, destW, destH, pIBitmap->N);
+#endif
+  
   RetainBitmap(&bmp);
   return bmp;
 }
@@ -648,7 +883,18 @@ IBitmap IGraphics::CropBitmap(IBitmap* pIBitmap, IRECT* pR)
   LICE_MemBitmap* pDest = new LICE_MemBitmap(destW, destH);
   _LICE::LICE_Blit(pDest, pSrc, 0, 0, pR->L, pR->T, destW, destH, 1.0f, LICE_BLIT_MODE_COPY);
 
+#ifndef IPLUG_RETINA_SUPPORT
   IBitmap bmp(pDest, destW, destH, pIBitmap->N);
+#else
+  LICE_IBitmap* pSrc_2x = (LICE_IBitmap*) pIBitmap->mData_2x;
+  LICE_MemBitmap* pDest_2x = new LICE_MemBitmap(destW * 2, destH * 2);
+  _LICE::LICE_Blit(pDest_2x, pSrc_2x, 0, 0, pR->L * 2, pR->T * 2, destW * 2, destH * 2, 1.0f, LICE_BLIT_MODE_COPY);
+  
+  IBitmap bmp(pDest, pDest_2x, destW, destH, pIBitmap->N);
+#endif
+  
+  
+  
   RetainBitmap(&bmp);
   return bmp;
 }
@@ -657,6 +903,13 @@ LICE_pixel* IGraphics::GetBits()
 {
   return mDrawBitmap->getBits();
 }
+
+#ifdef IPLUG_RETINA_SUPPORT
+LICE_pixel* IGraphics::GetBits_2x()
+{
+  return mDrawBitmap_2x->getBits();
+}
+#endif
 
 bool IGraphics::DrawBitmap(IBitmap* pBitmap, IRECT* pR, int bmpState, const IChannelBlend* pBlend)
 {
@@ -762,6 +1015,10 @@ bool IGraphics::Draw(IRECT* pR)
   {
     return true;
   }
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  CheckIfRetina();
+#endif
 
   if (mStrict)
   {
@@ -1102,6 +1359,16 @@ bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
     font = CacheFont(pTxt);
     if (!font) return false;
   }
+  
+#ifdef IPLUG_RETINA_SUPPORT
+  if (IsRetina())
+  {
+    IText pTxt_2x(*pTxt);
+    pTxt_2x.mSize *= 2;
+    font = CacheFont(&pTxt_2x);
+    if (!font) return false;
+  }
+#endif
 
   LICE_pixel color = LiceColor(&pTxt->mColor);
   font->SetTextColor(color);
@@ -1138,9 +1405,16 @@ bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
     
     pR->B = pR->T + R.bottom;
   }
-  else 
+#ifdef IPLUG_RETINA_SUPPORT
+  else if (IsRetina())
   {
-    RECT R = { pR->L, pR->T, pR->R, pR->B };
+    RECT R = { pR->L * 2, pR->T * 2, pR->R * 2, pR->B * 2 };
+    font->DrawText(mDrawBitmap_2x, str, -1, &R, fmt);
+  }
+#endif
+  else
+  {
+  	RECT R = { pR->L, pR->T, pR->R, pR->B };
     font->DrawText(mDrawBitmap, str, -1, &R, fmt);
   }
 
@@ -1172,11 +1446,11 @@ LICE_IFont* IGraphics::CacheFont(IText* pTxt)
     else // if (pTxt->mQuality == IText::kQualityNonAntiAliased)
       q = NONANTIALIASED_QUALITY;
 
-    #ifdef __APPLE__
-    bool resized = false;
-    Resize:
-    if (h < 2) h = 2;
-    #endif
+//    #ifdef __APPLE__
+//    bool resized = false;
+//    Resize:
+//    if (h < 2) h = 2;
+//    #endif
     HFONT hFont = CreateFont(h, 0, esc, esc, wt, it, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, q, DEFAULT_PITCH, pTxt->mFont);
     if (!hFont)
     {
@@ -1184,14 +1458,14 @@ LICE_IFont* IGraphics::CacheFont(IText* pTxt)
       return 0;
     }
     font->SetFromHFont(hFont, LICE_FONT_FLAG_OWNS_HFONT | LICE_FONT_FLAG_FORCE_NATIVE);
-    #ifdef __APPLE__
-    if (!resized && font->GetLineHeight() != h)
-    {
-      h = int((double)(h * h) / (double)font->GetLineHeight() + 0.5);
-      resized = true;
-      goto Resize;
-    }
-    #endif
+//    #ifdef __APPLE__
+//    if (!resized && font->GetLineHeight() != h)
+//    {
+//      h = int((double)(h * h) / (double)font->GetLineHeight() + 0.5);
+//      resized = true;
+//      goto Resize;
+//    }
+//    #endif
     s_fontCache.Add(font, pTxt);
   }
   pTxt->mCached = font;
