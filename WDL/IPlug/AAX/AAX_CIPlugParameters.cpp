@@ -1,4 +1,5 @@
 #include "AAX_CIPlugParameters.h"
+#include "resource.h"
 
 AAX_Result AAX_CIPlugParameters::ResetFieldData (AAX_CFieldIndex iFieldIndex, void * oData, uint32_t iDataSize) const  //override from CEffectParameters.
 {   
@@ -22,7 +23,8 @@ AAX_Result AAX_CIPlugParameters::ResetFieldData (AAX_CFieldIndex iFieldIndex, vo
 
 //StaticDescribeAlgorithm does all of the basic context setup and pointer passing work.  Call this from Describe.
 AAX_Result  AAX_CIPlugParameters::StaticDescribe(AAX_IEffectDescriptor * ioDescriptor, const AAX_SIPlugSetupInfo & setupInfo)
-{ 
+{
+	
   AAX_Result err = AAX_SUCCESS;
   AAX_IComponentDescriptor *  compDesc = ioDescriptor->NewComponentDescriptor ();
   
@@ -61,7 +63,10 @@ AAX_Result  AAX_CIPlugParameters::StaticDescribe(AAX_IEffectDescriptor * ioDescr
   
   //Add outputs, meters, info, etc
   err |= compDesc->AddAudioIn( AAX_FIELD_INDEX (AAX_SIPlugRenderInfo, mAudioInputs) );
-  err |= compDesc->AddAudioOut( AAX_FIELD_INDEX (AAX_SIPlugRenderInfo, mAudioOutputs) );              
+  err |= compDesc->AddAudioOut( AAX_FIELD_INDEX (AAX_SIPlugRenderInfo, mAudioOutputs) );
+#ifdef PLUG_SC_CHANS
+	err |= compDesc->AddSideChainIn(AAX_FIELD_INDEX(AAX_SIPlugRenderInfo, mAudioSideChainAddr));
+#endif
   err |= compDesc->AddAudioBufferLength( AAX_FIELD_INDEX (AAX_SIPlugRenderInfo, mNumSamples) );         
   if (setupInfo.mNumMeters > 0)
     err |= compDesc->AddMeters( AAX_FIELD_INDEX (AAX_SIPlugRenderInfo, mMeters), setupInfo.mMeterIDs, setupInfo.mNumMeters ); 
@@ -97,10 +102,14 @@ AAX_Result  AAX_CIPlugParameters::StaticDescribe(AAX_IEffectDescriptor * ioDescr
   if (setupInfo.mAudioSuiteID != 'none') {
     err |= properties->AddProperty ( AAX_eProperty_PlugInID_AudioSuite, setupInfo.mAudioSuiteID );
   }
+	
+#ifdef PLUG_SC_CHANS
+		err |= properties->AddProperty(AAX_eProperty_SupportsSideChainInput, true);
+#endif
   
   err |= compDesc->AddProcessProc_Native( AAX_CIPlugParameters::StaticRenderAudio, properties );          
   err |= ioDescriptor->AddComponent( compDesc );    
-  
+	
   return err;
 } 
 

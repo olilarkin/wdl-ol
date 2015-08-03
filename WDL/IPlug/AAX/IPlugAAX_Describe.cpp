@@ -94,7 +94,11 @@ AAX_Result GetEffectDescriptions( AAX_ICollection * outCollection )
   
   int ioConfigIdx = 0;
   int nSIn = 0;//(PLUG_SC_CHANS > 0); // force it to 1
-  
+	
+#ifdef PLUG_SC_CHANS
+	nSIn = 1;
+#endif
+	
   while (channelIOStr) 
   {
     int nIn = 0, nOut = 0;
@@ -104,6 +108,12 @@ AAX_Result GetEffectDescriptions( AAX_ICollection * outCollection )
       // if we have a 1-N config + sidechain we don't want to include the sidechain
       if (nIn > 1)
         nIn -= nSIn;
+			
+			if (nIn < 1) {
+				nIn = 1;
+			}
+			
+			printf("***** inputs %d *****\n", nIn);
       
       AAX_CTypeID typeId = PLUG_TYPE_IDS[ioConfigIdx];
 

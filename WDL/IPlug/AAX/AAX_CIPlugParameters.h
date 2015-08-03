@@ -94,6 +94,7 @@ struct AAX_SIPlugRenderInfo
 {
   float** mAudioInputs;           // Audio input buffers
   float** mAudioOutputs;          // Audio output buffers
+	int32_t* mAudioSideChainAddr = NULL;
   int32_t* mNumSamples;           // Number of samples in each buffer.  Bounded as per \ref AAE_EAudioBufferLengthNative.  The exact value can vary from buffer to buffer.
   AAX_CTimestamp* mClock;         // Pointer to the global running time clock.
 
