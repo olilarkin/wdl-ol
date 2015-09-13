@@ -98,13 +98,13 @@ struct IText
         const IColor* pTEFGColor = 0)
     : mSize(size)
     , mColor(pColor ? *pColor : DEFAULT_TEXT_COLOR)
+    , mTextEntryBGColor(pTEBGColor ? *pTEBGColor : DEFAULT_TEXT_ENTRY_BGCOLOR)
+    , mTextEntryFGColor(pTEFGColor ? *pTEFGColor : DEFAULT_TEXT_ENTRY_FGCOLOR)
     , mStyle(style)
     , mAlign(align)
     , mOrientation(orientation)
     , mQuality(quality)
     , mCached(0)
-    , mTextEntryBGColor(pTEBGColor ? *pTEBGColor : DEFAULT_TEXT_ENTRY_BGCOLOR)
-    , mTextEntryFGColor(pTEFGColor ? *pTEFGColor : DEFAULT_TEXT_ENTRY_FGCOLOR)
   {
     strcpy(mFont, (font ? font : DEFAULT_FONT));
   }
@@ -112,13 +112,13 @@ struct IText
   IText(const IColor* pColor)
     : mSize(DEFAULT_TEXT_SIZE)
     , mColor(*pColor)
+    , mTextEntryBGColor(DEFAULT_TEXT_ENTRY_BGCOLOR)
+    , mTextEntryFGColor(DEFAULT_TEXT_ENTRY_FGCOLOR)
     , mStyle(kStyleNormal)
     , mAlign(kAlignCenter)
     , mOrientation(0)
     , mQuality(kQualityDefault)
     , mCached(0)
-    , mTextEntryBGColor(DEFAULT_TEXT_ENTRY_BGCOLOR)
-    , mTextEntryFGColor(DEFAULT_TEXT_ENTRY_FGCOLOR)
   {
     strcpy(mFont, DEFAULT_FONT);
   }
@@ -138,7 +138,7 @@ struct IRECT
   int L, T, R, B;
 
   IRECT() { L = T = R = B = 0; }
-  IRECT(int l, int t, int r, int b) : L(l), R(r), T(t), B(b) {}
+  IRECT(int l, int t, int r, int b) : L(l), T(t), R(r), B(b) {}
   IRECT(int x, int y, IBitmap* pBitmap) : L(x), T(y), R(x + pBitmap->W), B(y + pBitmap->H / pBitmap->N) {}
 
   bool Empty() const
@@ -422,7 +422,7 @@ struct ITimeInfo
 
   ITimeInfo()
   {
-    mSamplePos = mSamplePos = mTempo = mPPQPos = mLastBar = mCycleStart = mCycleEnd = -1.0;
+    mSamplePos = mTempo = mPPQPos = mLastBar = mCycleStart = mCycleEnd = -1.0;
     mTempo = 120.;
     mNumerator = mDenominator = 4;
     mTransportIsRunning = mTransportLoopEnabled = false;
@@ -434,7 +434,7 @@ struct ISysEx
   int mOffset, mSize;
   const BYTE* mData;
 
-  ISysEx(int offs = 0, const BYTE* pData = NULL, int size = 0) : mOffset(offs), mData(pData), mSize(size) {}
+  ISysEx(int offs = 0, const BYTE* pData = NULL, int size = 0) : mOffset(offs), mSize(size), mData(pData) {}
 
   void Clear();
   void LogMsg();

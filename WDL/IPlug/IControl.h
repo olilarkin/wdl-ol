@@ -19,10 +19,11 @@ class IControl
 public:
   // If paramIdx is > -1, this control will be associated with a plugin parameter.
   IControl(IPlugBase* pPlug, IRECT pR, int paramIdx = -1, IChannelBlend blendMethod = IChannelBlend::kBlendNone)
-    : mPlug(pPlug), mRECT(pR), mTargetRECT(pR), mParamIdx(paramIdx), mValue(0.0), mDefaultValue(-1.0),
-      mBlend(blendMethod), mDirty(true), mHide(false), mGrayed(false), mDisablePrompt(true), mDblAsSingleClick(false),
-      mClampLo(0.0), mClampHi(1.0), mMOWhenGreyed(false), mTextEntryLength(DEFAULT_TEXT_ENTRY_LEN), 
-      mValDisplayControl(0), mNameDisplayControl(0), mTooltip("") {}
+    : mTextEntryLength(DEFAULT_TEXT_ENTRY_LEN),
+      mPlug(pPlug), mRECT(pR), mTargetRECT(pR), mParamIdx(paramIdx), mValue(0.0), mDefaultValue(-1.0),
+      mClampLo(0.0), mClampHi(1.0), mDirty(true), mHide(false), mGrayed(false), mDisablePrompt(true),
+      mDblAsSingleClick(false), mMOWhenGreyed(false),
+      mBlend(blendMethod), mValDisplayControl(0), mNameDisplayControl(0), mTooltip("") {}
 
   virtual ~IControl() {}
 
@@ -466,7 +467,7 @@ public:
   IFileSelectorControl(IPlugBase* pPlug, IRECT pR, int paramIdx, IBitmap* pBitmap,
                        EFileAction action, char* dir = "", char* extensions = "")     // extensions = "txt wav" for example.
     : IControl(pPlug, pR, paramIdx), mBitmap(*pBitmap),
-      mFileAction(action), mDir(dir), mExtensions(extensions), mState(kFSNone) {}
+      mDir(dir), mExtensions(extensions), mFileAction(action), mState(kFSNone) {}
   ~IFileSelectorControl() {}
 
   void OnMouseDown(int x, int y, IMouseMod* pMod);
