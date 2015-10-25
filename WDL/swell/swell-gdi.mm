@@ -117,11 +117,7 @@ CGColorSpaceRef __GetDisplayColorSpace()
     // use monitor profile for 10.7+
     if (SWELL_GDI_GetOSXVersion() >= 0x1070)
     {
-      CMProfileRef systemMonitorProfile = NULL;
       cs = ::CGDisplayCopyColorSpace(::CGMainDisplayID());
-      
-      if (!cs)
-        cs = CGColorSpaceCreateDeviceRGB();
     }
   }
   if (!cs) 
