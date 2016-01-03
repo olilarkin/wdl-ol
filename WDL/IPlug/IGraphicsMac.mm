@@ -220,7 +220,6 @@ LICE_IBitmap* IGraphicsMac::OSLoadBitmap(int ID, const char* name)
 bool IGraphicsMac::DrawScreen(IRECT* pR)
 {
   CGContextRef pCGC = 0;
-  CGRect r = CGRectMake(0, 0, Width(), Height());
 
   if (mGraphicsCocoa)
   {
@@ -238,6 +237,26 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
   {
     return false;
   }
+  
+  bool isRetina = CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9;
+  
+  if (isRetina != GetIsRetina())
+  {
+    if (isRetina)
+    {
+      mScalingFactor = 2.;
+      IGraphics::Resize(Width() * 2., Height() * 2.);
+    }
+    else
+    {
+      mScalingFactor = 1.;
+      IGraphics::Resize(Width() * 0.5, Height() * 0.5);
+    }
+    
+    GetPlug()->OnWindowResize();
+  }
+  
+  CGRect r = CGRectMake(0, 0, Width() / GetScalingFactor(), Height() / GetScalingFactor());
   
   if (!mColorSpace)
   {
@@ -469,7 +488,7 @@ void IGraphicsMac::Resize(int w, int h)
   #endif
   if (mGraphicsCocoa)
   {
-    NSSize size = { static_cast<CGFloat>(w), static_cast<CGFloat>(h) };
+    NSSize size = { static_cast<CGFloat>(w / mScalingFactor), static_cast<CGFloat>(h  / mScalingFactor) };
     [(IGRAPHICS_COCOA*) mGraphicsCocoa setFrameSize: size ];
   }
 }
