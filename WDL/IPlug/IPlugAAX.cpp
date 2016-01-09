@@ -267,7 +267,7 @@ AAX_Result IPlugAAX::UpdateParameterNormalizedValue(AAX_CParamID iParameterID, d
       GetGUI()->SetParameterFromPlug(paramIdx, iValue, true);
     }
     
-    OnParamChange(paramIdx);      
+    OnParamChange(paramIdx, kAutomation);
   }
   
   // Now the control has changed

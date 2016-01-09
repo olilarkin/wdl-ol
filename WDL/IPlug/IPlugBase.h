@@ -25,6 +25,9 @@ class IGraphics;
 class IPlugBase
 {
 public:
+    
+  enum ParamChangeSource { kReset, kAutomation, kPresetRecall, kGUI, kUnknown };
+    
   // Use IPLUG_CTOR instead of calling directly (defined in IPlug_include_in_plug_src.h).
   IPlugBase(int nParams,
             const char* channelIOStr,
@@ -49,7 +52,7 @@ public:
 
   // Implementations should set a mutex lock like in the no-op!
   virtual void Reset() { TRACE; IMutexLock lock(this); }
-  virtual void OnParamChange(int paramIdx) { IMutexLock lock(this); }
+  virtual void OnParamChange(int paramIdx, ParamChangeSource source = kUnknown) { IMutexLock lock(this); }
 
   // Default passthrough.  Inputs and outputs are [nChannel][nSample].
   // Mutex is already locked.
@@ -235,7 +238,7 @@ protected:
   // ----------------------------------------
   // Internal IPlug stuff (but API classes need to get at it).
 
-  void OnParamReset();  // Calls OnParamChange(each param) + Reset().
+  void OnParamReset(ParamChangeSource source);  // Calls OnParamChange(each param) + Reset().
 
   void PruneUninitializedPresets();
 

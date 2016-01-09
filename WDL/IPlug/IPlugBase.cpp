@@ -537,14 +537,14 @@ void IPlugBase::SetParameterFromGUI(int idx, double normalizedValue)
   WDL_MutexLock lock(&mMutex);
   GetParam(idx)->SetNormalized(normalizedValue);
   InformHostOfParamChange(idx, normalizedValue);
-  OnParamChange(idx);
+  OnParamChange(idx, kGUI);
 }
 
-void IPlugBase::OnParamReset()
+void IPlugBase::OnParamReset(ParamChangeSource source)
 {
   for (int i = 0; i < mParams.GetSize(); ++i)
   {
-    OnParamChange(i);
+    OnParamChange(i, source);
   }
   //Reset();
 }
@@ -920,7 +920,7 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
     pos = pChunk->Get(&v, pos);
     pParam->Set(v);
   }
-  OnParamReset();
+  OnParamReset(kPresetRecall);
   return pos;
 }
 

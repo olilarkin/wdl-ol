@@ -238,7 +238,7 @@ void IPlugRTAS::SetParameter(int idx)
       GetGUI()->SetParameterFromPlug(idx - kPTParamIdxOffset, value, false);
 
     pParam->Set(value);
-    OnParamChange(idx - kPTParamIdxOffset);
+    OnParamChange(idx - kPTParamIdxOffset, kAutomation);
   }
 }
 
