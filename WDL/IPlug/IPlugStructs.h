@@ -4,7 +4,6 @@
 #include "Containers.h"
 #include "IPlugOSDetect.h"
 
-#ifndef OS_IOS
 #include "../swell/swell.h"
 #include "../lice/lice_text.h"
 
@@ -300,8 +299,6 @@ struct IMouseMod
   IMouseMod(bool l = false, bool r = false, bool s = false, bool c = false, bool a = false)
     : L(l), R(r), S(s), C(c), A(a) {}
 };
-
-#endif // !OS_IOS
 
 struct IMidiMsg
 {

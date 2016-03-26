@@ -180,6 +180,7 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mHiddenMousePointY(-1)
   , mEnableTooltips(false)
   , mShowControlBounds(false)
+  , mScalingFactor(1.)
 {
   mFPS = (refreshFPS > 0 ? refreshFPS : DEFAULT_FPS);
 }
