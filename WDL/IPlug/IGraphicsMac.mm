@@ -240,7 +240,7 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
     return false;
   }
   
-  bool isRetina = CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9;
+    bool isRetina = CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9;
   
   if (isRetina != GetIsRetina())
   {
@@ -254,8 +254,17 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
       mScalingFactor = 1.;
       IGraphics::Resize(Width() * 0.5, Height() * 0.5);
     }
-    
-    GetPlug()->OnWindowResize();
+      
+    // Draw everything
+      
+    IControl* pBG = mControls.Get(0);
+    mDrawRECT = *(pBG->GetRECT());
+    for (int j = 0; j < mControls.GetSize(); ++j)
+    {
+        IControl* pControl2 = mControls.Get(j);
+        if (!j || !(pControl2->IsHidden()))
+            pControl2->Draw(this);
+    }
   }
   
   CGRect r = CGRectMake(0, 0, Width() / GetScalingFactor(), Height() / GetScalingFactor());
