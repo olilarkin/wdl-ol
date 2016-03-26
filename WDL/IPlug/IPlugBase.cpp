@@ -82,6 +82,7 @@ IPlugBase::IPlugBase(int nParams,
   , mIsInst(plugIsInst)
   , mDoesMIDI(plugDoesMidi)
   , mAPI(plugAPI)
+  , mHasReceivedAudio(false)
   , mIsBypassed(false)
   , mDelay(0)
   , mTailSize(0)
@@ -460,6 +461,8 @@ void IPlugBase::PassThroughBuffers(float sampleType, int nFrames)
 
 void IPlugBase::ProcessBuffers(double sampleType, int nFrames)
 {
+  mHasReceivedAudio = true;
+    
   ProcessDoubleReplacing(mInData.Get(), mOutData.Get(), nFrames);
 }
 
@@ -468,7 +471,9 @@ void IPlugBase::ProcessBuffers(float sampleType, int nFrames)
   ProcessDoubleReplacing(mInData.Get(), mOutData.Get(), nFrames);
   int i, n = NOutChannels();
   OutChannel** ppOutChannel = mOutChannels.GetList();
-  
+    
+  mHasReceivedAudio = true;
+    
   for (i = 0; i < n; ++i, ++ppOutChannel)
   {
     OutChannel* pOutChannel = *ppOutChannel;
@@ -486,6 +491,8 @@ void IPlugBase::ProcessBuffersAccumulating(float sampleType, int nFrames)
   int i, n = NOutChannels();
   OutChannel** ppOutChannel = mOutChannels.GetList();
   
+  mHasReceivedAudio = true;
+    
   for (i = 0; i < n; ++i, ++ppOutChannel)
   {
     OutChannel* pOutChannel = *ppOutChannel;
@@ -546,7 +553,9 @@ void IPlugBase::OnParamReset(ParamChangeSource source)
   {
     OnParamChange(i, source);
   }
-  //Reset();
+  
+  if (source == kReset || !mHasReceivedAudio)
+    Reset();
 }
 
 // Default passthrough.
