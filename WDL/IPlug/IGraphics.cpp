@@ -181,6 +181,7 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mEnableTooltips(false)
   , mShowControlBounds(false)
   , mScalingFactor(1.)
+  , mAllowRetina(true)
 {
   mFPS = (refreshFPS > 0 ? refreshFPS : DEFAULT_FPS);
 }
@@ -200,6 +201,7 @@ void IGraphics::Resize(int w, int h)
   mWidth = w;
   mHeight = h;
   ReleaseMouseCapture();
+  mMouseOver = -1;
   mControls.Empty(true);
   DELETE_NULL(mDrawBitmap);
   DELETE_NULL(mTmpBitmap);

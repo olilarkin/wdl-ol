@@ -240,7 +240,7 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
     return false;
   }
   
-    bool isRetina = CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9;
+    bool isRetina = mAllowRetina && CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9;
   
   if (isRetina != GetIsRetina())
   {

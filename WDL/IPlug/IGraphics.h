@@ -142,7 +142,9 @@ public:
   int FPS() { return mFPS; }
   bool GetIsRetina() { return (mScalingFactor == 2.); }
   double GetScalingFactor() { return mScalingFactor; }
-  
+
+  void SetAllowRetina(bool allowRetina) { mAllowRetina = allowRetina; }
+
   IPlugBase* GetPlug() { return mPlug; }
 
   IBitmap LoadIBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);
@@ -250,7 +252,7 @@ protected:
   WDL_PtrList<IControl> mControls;
   IPlugBase* mPlug;
   IRECT mDrawRECT;
-  bool mCursorHidden;
+  bool mCursorHidden, mAllowRetina;
   double mScalingFactor;
   int mHiddenMousePointX, mHiddenMousePointY;
 
