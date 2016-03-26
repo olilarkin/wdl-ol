@@ -1089,7 +1089,7 @@ void IGraphics::OnGUIIdle()
   }
 }
 
-bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
+bool IGraphics::DrawIText(IText* pTxt, const char* str, IRECT* pR, bool measure)
 {
   if (!str || str[0] == '\0')
   {
