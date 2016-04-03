@@ -417,8 +417,12 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
   // TODO: what if there are Int/Double Params with a display text e.g. -96db = "mute"
   else // type == IParam::kTypeInt || type == IParam::kTypeDouble
   {
+    IText text = *(pControl->GetText());
+    if (GetIsRetina())
+        text.mSize /= 2;
+      
     pParam->GetDisplayForHostNoDisplayText(currentText);
-    CreateTextEntry(pControl, pControl->GetText(), pTextRect, currentText, pParam );
+    CreateTextEntry(pControl, &text, pTextRect, currentText, pParam );
   }
 
 }
