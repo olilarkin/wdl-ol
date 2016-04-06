@@ -57,6 +57,7 @@ void IParam::InitDouble(const char* name, double defaultVal, double minVal, doub
   mMax = IPMAX(maxVal, minVal + step);
   mStep = step;
   mDefault = defaultVal;
+  mSignDisplay = false;
 
   for (mDisplayPrecision = 0;
        mDisplayPrecision < MAX_PARAM_DISPLAY_PRECISION && step != floor(step);
