@@ -981,6 +981,7 @@ void IPlugVST3::ResizeGraphics(int w, int h)
   if (GetGUI())
   {
     viewsArray.at(0)->resize(w, h);
+    OnWindowResize();
   }
 }
 
