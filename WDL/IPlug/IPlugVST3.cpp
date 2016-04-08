@@ -402,9 +402,14 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
             default:
               if (idx >= 0 && idx < NParams())
               {
-                GetParam(idx)->SetNormalized((double)value);
-                if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, (double)value, true);
-                OnParamChange(idx, kAutomation);
+                // Filter repeat values
+                
+                if (((float) GetParam(idx)->GetNormalized()) != value)
+                {
+                    GetParam(idx)->SetNormalized((double)value);
+                    if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, (double)value, true);
+                    OnParamChange(idx, kAutomation);
+                }
               }
               break;
           }

@@ -901,11 +901,16 @@ void VSTCALLBACK IPlugVST::VSTSetParameter(AEffect *pEffect, VstInt32 idx, float
   IMutexLock lock(_this);
   if (idx >= 0 && idx < _this->NParams())
   {
-    if (_this->GetGUI())
+    // Filter repeat values
+      
+    if (((float)_this->GetParam(idx)->GetNormalized()) != value)
     {
-      _this->GetGUI()->SetParameterFromPlug(idx, value, true);
+        if (_this->GetGUI())
+        {
+            _this->GetGUI()->SetParameterFromPlug(idx, value, true);
+        }
+        _this->GetParam(idx)->SetNormalized(value);
+        _this->OnParamChange(idx, kAutomation);
     }
-    _this->GetParam(idx)->SetNormalized(value);
-    _this->OnParamChange(idx, kAutomation);
   }
 }
