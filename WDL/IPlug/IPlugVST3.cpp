@@ -404,10 +404,10 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
               {
                 // Filter repeat values
                 
-                if (((float) GetParam(idx)->GetNormalized()) != value)
+                if (GetParam(idx)->GetNormalized() != value)
                 {
-                    GetParam(idx)->SetNormalized((double)value);
-                    if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, (double)value, true);
+                    GetParam(idx)->SetNormalized(value);
+                    if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, value, true);
                     OnParamChange(idx, kAutomation);
                 }
               }
