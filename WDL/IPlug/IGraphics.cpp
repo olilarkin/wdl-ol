@@ -206,7 +206,7 @@ void IGraphics::Resize(int w, int h)
   DELETE_NULL(mDrawBitmap);
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
-  mPlug->ResizeGraphics(w, h);
+    mPlug->ResizeGraphics(GetIsRetina() ? w/2 : w, GetIsRetina() ? h/2 : h);
 }
 
 void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, char *txt)

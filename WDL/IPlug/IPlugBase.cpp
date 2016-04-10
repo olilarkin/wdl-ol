@@ -594,7 +594,7 @@ IPreset* GetNextUninitializedPreset(WDL_PtrList<IPreset>* pPresets)
   return 0;
 }
 
-void IPlugBase::MakeDefaultPreset(char* name, int nPresets)
+void IPlugBase::MakeDefaultPreset(const char* name, int nPresets)
 {
   for (int i = 0; i < nPresets; ++i)
   {
@@ -626,7 +626,7 @@ void IPlugBase::MakeDefaultPreset(char* name, int nPresets)
   } \
 }
 
-void IPlugBase::MakePreset(char* name, ...)
+void IPlugBase::MakePreset(const char* name, ...)
 {
   IPreset* pPreset = GetNextUninitializedPreset(&mPresets);
   if (pPreset)
@@ -649,7 +649,7 @@ void IPlugBase::MakePreset(char* name, ...)
 
 #define PARAM_UNINIT 99.99e-9
 
-void IPlugBase::MakePresetFromNamedParams(char* name, int nParamsNamed, ...)
+void IPlugBase::MakePresetFromNamedParams(const char* name, int nParamsNamed, ...)
 {
   TRACE;
   IPreset* pPreset = GetNextUninitializedPreset(&mPresets);
@@ -692,7 +692,7 @@ void IPlugBase::MakePresetFromNamedParams(char* name, int nParamsNamed, ...)
   }
 }
 
-void IPlugBase::MakePresetFromChunk(char* name, ByteChunk* pChunk)
+void IPlugBase::MakePresetFromChunk(const char* name, ByteChunk* pChunk)
 {
   IPreset* pPreset = GetNextUninitializedPreset(&mPresets);
   if (pPreset)
@@ -704,7 +704,7 @@ void IPlugBase::MakePresetFromChunk(char* name, ByteChunk* pChunk)
   }
 }
 
-void IPlugBase::MakePresetFromBlob(char* name, const char* blob, int sizeOfChunk)
+void IPlugBase::MakePresetFromBlob(const char* name, const char* blob, int sizeOfChunk)
 {
   ByteChunk presetChunk;
   presetChunk.Resize(sizeOfChunk);
