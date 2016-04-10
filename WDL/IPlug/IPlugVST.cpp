@@ -227,13 +227,11 @@ void IPlugVST::AttachGraphics(IGraphics* pGraphics)
 
 void IPlugVST::ResizeGraphics(int w, int h)
 {
-  IGraphics* pGraphics = GetGUI();
-
-  if (pGraphics)
+  if (GetGUI())
   {
     mEditRect.left = mEditRect.top = 0;
-    mEditRect.right = pGraphics->Width();
-    mEditRect.bottom = pGraphics->Height();
+    mEditRect.right = w;
+    mEditRect.bottom = h;
 
     OnWindowResize();
   }

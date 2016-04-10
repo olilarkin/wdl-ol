@@ -54,7 +54,7 @@ void IPlugStandalone::ResizeGraphics(int w, int h)
     #define TITLEBAR_BODGE 22
     RECT r;
     GetWindowRect(gHWND, &r);
-    SetWindowPos(gHWND, 0, r.left, r.bottom - pGraphics->Height() - TITLEBAR_BODGE, pGraphics->Width(), pGraphics->Height() + TITLEBAR_BODGE, 0);
+    SetWindowPos(gHWND, 0, r.left, r.bottom - h - TITLEBAR_BODGE, w, h + TITLEBAR_BODGE, 0);
     #endif
     OnWindowResize();
   }
