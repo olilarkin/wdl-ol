@@ -229,9 +229,9 @@ public:
   // Updates tooltips after (un)hiding controls.
   virtual void UpdateTooltips() = 0;
 
-	// This is an idle call from the GUI thread, as opposed to 
-	// IPlug::OnIdle which is called from the audio processing thread.
-	void OnGUIIdle();
+  // This is an idle call from the GUI thread, as opposed to
+  // IPlug::OnIdle which is called from the audio processing thread.
+  void OnGUIIdle();
 
   void RetainBitmap(IBitmap* pBitmap);
   void ReleaseBitmap(IBitmap* pBitmap);
