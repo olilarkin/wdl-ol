@@ -247,12 +247,12 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
     if (isRetina)
     {
       mScalingFactor = 2.;
-      IGraphics::Resize(Width() * 2., Height() * 2.);
+      IGraphics::Resize(Width(false) * 2., Height(false) * 2.);
     }
     else
     {
       mScalingFactor = 1.;
-      IGraphics::Resize(Width() * 0.5, Height() * 0.5);
+      IGraphics::Resize(Width(false) * 0.5, Height(false) * 0.5);
     }
       
     // Draw everything
@@ -267,7 +267,7 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
     }
   }
   
-  CGRect r = CGRectMake(0, 0, Width() / GetScalingFactor(), Height() / GetScalingFactor());
+  CGRect r = CGRectMake(0, 0, Width(true), Height(true));
   
   if (!mColorSpace)
   {
@@ -410,12 +410,12 @@ void IGraphicsMac::AttachSubWindow(void* hostWindowRef)
 
   int xOffset = 0;
 
-  if (w.size.width > Width())
+  if (w.size.width > Width(false))
   {
-    xOffset = (int) floor((w.size.width - Width()) / 2.);
+    xOffset = (int) floor((w.size.width - Width(false)) / 2.);
   }
 
-  NSRect windowRect = NSMakeRect(w.origin.x + xOffset, w.origin.y, Width(), Height());
+  NSRect windowRect = NSMakeRect(w.origin.x + xOffset, w.origin.y, Width(false), Height(false));
   CUSTOM_COCOA_WINDOW *childWindow = [[CUSTOM_COCOA_WINDOW alloc] initWithContentRect:windowRect
                                                                             styleMask:( NSBorderlessWindowMask )
                                                                               backing:NSBackingStoreBuffered defer:NO];
@@ -489,7 +489,7 @@ bool IGraphicsMac::WindowIsOpen()
 
 void IGraphicsMac::Resize(int w, int h)
 {
-  if (w == Width() && h == Height()) return;
+  if (w == Width(false) && h == Height(false)) return;
 
   IGraphics::Resize(w, h);
 

@@ -1110,7 +1110,7 @@ tresult PLUGIN_API IPlugVST3View::getSize(ViewRect* size)
 
   if (mPlug->GetGUI())
   {
-    *size = ViewRect(0, 0, mPlug->GetGUI()->Width(), mPlug->GetGUI()->Height());
+    *size = ViewRect(0, 0, mPlug->GetGUI()->Width(true), mPlug->GetGUI()->Height(true));
 
     return kResultTrue;
   }

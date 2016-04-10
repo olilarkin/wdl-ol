@@ -220,8 +220,8 @@ void IPlugVST::AttachGraphics(IGraphics* pGraphics)
     IPlugBase::AttachGraphics(pGraphics);
     mAEffect.flags |= effFlagsHasEditor;
     mEditRect.left = mEditRect.top = 0;
-    mEditRect.right = pGraphics->Width();
-    mEditRect.bottom = pGraphics->Height();
+    mEditRect.right = pGraphics->Width(true);
+    mEditRect.bottom = pGraphics->Height(true);
   }
 }
 

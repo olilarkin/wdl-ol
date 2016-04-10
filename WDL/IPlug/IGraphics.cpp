@@ -206,7 +206,7 @@ void IGraphics::Resize(int w, int h)
   DELETE_NULL(mDrawBitmap);
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
-  mPlug->ResizeGraphics(GetIsRetina() ? w/2 : w, GetIsRetina() ? h/2 : h);
+  mPlug->ResizeGraphics(Width(true), Height(true));
 }
 
 void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, char *txt)
@@ -454,7 +454,7 @@ void IGraphics::ReleaseBitmap(IBitmap* pBitmap)
 
 void IGraphics::PrepDraw()
 {
-  mDrawBitmap = new LICE_SysBitmap(Width(), Height());
+  mDrawBitmap = new LICE_SysBitmap(Width(false), Height(false));
   mTmpBitmap = new LICE_MemBitmap();
 }
 

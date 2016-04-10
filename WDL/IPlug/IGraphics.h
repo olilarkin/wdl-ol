@@ -137,8 +137,8 @@ public:
   IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS = 0);
   virtual ~IGraphics();
 
-  int Width() { return mWidth; }
-  int Height() { return mHeight; }
+  int Width(bool screenSize) { return screenSize ? mWidth/mScalingFactor : mWidth; }
+  int Height(bool screenSize) { return screenSize ? mHeight/mScalingFactor : mHeight; }
   int FPS() { return mFPS; }
   bool GetIsRetina() { return (mScalingFactor == 2.); }
   double GetScalingFactor() { return mScalingFactor; }
