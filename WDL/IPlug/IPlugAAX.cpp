@@ -56,8 +56,8 @@ AAX_Result AAX_CEffectGUI_IPLUG::GetViewSize(AAX_Point *oEffectViewSize) const
 {
   if (mGraphics)
   {
-    oEffectViewSize->horz = (float) mGraphics->Width();
-    oEffectViewSize->vert = (float) mGraphics->Height();
+    oEffectViewSize->horz = (float) mGraphics->Width(true);
+    oEffectViewSize->vert = (float) mGraphics->Height(true);
   }
   
   return AAX_SUCCESS; 

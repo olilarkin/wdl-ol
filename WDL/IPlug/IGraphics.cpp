@@ -843,7 +843,7 @@ bool IGraphics::Draw(IRECT* pR)
     WDL_String str;
     str.SetFormatted(32, "x: %i, y: %i", mMouseX, mMouseY);
     IText txt(20, &CONTROL_BOUNDS_COLOR);
-    IRECT rect(Width() - 150, Height() - 20, Width(), Height());
+    IRECT rect(Width(false) - 150, Height(false) - 20, Width(false), Height(false));
     DrawIText(&txt, str.Get(), &rect);
   }
 #endif

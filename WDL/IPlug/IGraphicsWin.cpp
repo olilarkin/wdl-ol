@@ -546,9 +546,9 @@ void IGraphicsWin::ForceEndUserEdit()
 
 void IGraphicsWin::Resize(int w, int h)
 {
-  if (w == Width() && h == Height()) return;
+  if (w == Width(false) && h == Height(false)) return;
 
-  int dw = w - Width(), dh = h - Height();
+  int dw = w - Width(false), dh = h - Height(false);
   IGraphics::Resize(w, h);
 
   if (WindowIsOpen())
@@ -585,7 +585,7 @@ void IGraphicsWin::Resize(int w, int h)
       }
     }
 
-    RECT r = { 0, 0, Width(), Height() };
+    RECT r = { 0, 0, Width(false), Height(false) };
     InvalidateRect(mPlugWnd, &r, FALSE);
   }
 }
@@ -632,7 +632,7 @@ bool IGraphicsWin::DrawScreen(IRECT* pR)
 
 void* IGraphicsWin::OpenWindow(void* pParentWnd)
 {
-  int x = 0, y = 0, w = Width(), h = Height();
+  int x = 0, y = 0, w = Width(false), h = Height(false);
   mParentWnd = (HWND) pParentWnd;
 
   if (mPlugWnd)
@@ -944,7 +944,7 @@ IPopupMenu* IGraphicsWin::CreateIPopupMenu(IPopupMenu* pMenu, IRECT* pAreaRect)
     }
     DestroyMenu(hMenu);
 
-    RECT r = { 0, 0, Width(), Height() };
+    RECT r = { 0, 0, Width(false), Height(false) };
     InvalidateRect(mPlugWnd, &r, FALSE);
   }
   return result;
