@@ -1051,7 +1051,7 @@ int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
     }
     else
     {
-      allow = !pControl->IsGrayed();
+        allow = true; // !pControl->IsGrayed();
     }
 
     if (!pControl->IsHidden() && allow && pControl->IsHit(x, y))

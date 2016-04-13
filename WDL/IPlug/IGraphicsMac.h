@@ -84,7 +84,8 @@ public:
   void Resize(int w, int h);
 
   void HideMouseCursor();
-  void ShowMouseCursor();
+  void ShowMouseCursor(bool restore = true);
+  void MoveMouseCursor(int x, int y);
 
   int ShowMessageBox(const char* pText, const char* pCaption, int type);
   void ForceEndUserEdit();

@@ -193,8 +193,9 @@ public:
   bool OnKeyDown(int x, int y, int key);
 
   virtual void HideMouseCursor() {};
-  virtual void ShowMouseCursor() {};
-
+  virtual void ShowMouseCursor(bool restore = true) {};
+  virtual void MoveMouseCursor(int x, int y) {};
+    
   int GetParamIdxForPTAutomation(int x, int y);
   int GetLastClickedParamForPTAutomation();
 

@@ -605,14 +605,20 @@ void IGraphicsWin::HideMouseCursor()
   }
 }
 
-void IGraphicsWin::ShowMouseCursor()
+void IGraphicsWin::ShowMouseCursor(bool restore)
 {
   if (mCursorHidden)
   {
-    SetCursorPos(mHiddenMousePointX, mHiddenMousePointY);
+    if (restore)
+        SetCursorPos(mHiddenMousePointX, mHiddenMousePointY);
     ShowCursor(true);
     mCursorHidden=false;
   }
+}
+
+void IGraphicsWin::MoveMouseCursor(int x, int y)
+{
+    SetCursorPos(x, y);
 }
 
 int IGraphicsWin::ShowMessageBox(const char* pText, const char* pCaption, int type)

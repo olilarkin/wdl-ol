@@ -518,15 +518,24 @@ void IGraphicsMac::HideMouseCursor()
   }
 }
 
-void IGraphicsMac::ShowMouseCursor()
+void IGraphicsMac::ShowMouseCursor(bool restore)
 {
   if (mCursorHidden)
   {
-    CGPoint point; point.x = mHiddenMousePointX; point.y = mHiddenMousePointY;
-    CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+    if (restore)
+    {
+        CGPoint point; point.x = mHiddenMousePointX; point.y = mHiddenMousePointY;
+        CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+    }
 
     if (CGDisplayShowCursor(CGMainDisplayID()) == CGDisplayNoErr) mCursorHidden = false;
   }
+}
+
+void IGraphicsMac::MoveMouseCursor(int x, int y)
+{
+    CGPoint point; point.x = x; point.y = y;
+    CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 }
 
 int IGraphicsMac::ShowMessageBox(const char* pText, const char* pCaption, int type)
