@@ -79,7 +79,7 @@ const int FONT_LEN = 32;
 struct IText
 {
   char mFont[FONT_LEN];
-  int mSize;
+  int mSize, mCachedSize;
   IColor mColor, mTextEntryBGColor, mTextEntryFGColor;
   enum EStyle { kStyleNormal, kStyleBold, kStyleItalic } mStyle;
   enum EAlign { kAlignNear, kAlignCenter, kAlignFar } mAlign;
@@ -97,6 +97,7 @@ struct IText
         const IColor* pTEBGColor = 0,
         const IColor* pTEFGColor = 0)
     : mSize(size)
+    , mCachedSize(0)
     , mColor(pColor ? *pColor : DEFAULT_TEXT_COLOR)
     , mStyle(style)
     , mAlign(align)
@@ -111,6 +112,7 @@ struct IText
 
   IText(const IColor* pColor)
     : mSize(DEFAULT_TEXT_SIZE)
+    , mCachedSize(0)
     , mColor(*pColor)
     , mStyle(kStyleNormal)
     , mAlign(kAlignCenter)

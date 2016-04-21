@@ -93,7 +93,7 @@ public:
     for (i = 0; i < n; ++i)
     {
       FontKey* key = m_fonts.Get(i);
-      if (key->size == pTxt->mSize && key->orientation == pTxt->mOrientation && key->style == pTxt->mStyle && !strcmp(key->face, pTxt->mFont)) return key->font;
+      if (key->size == pTxt->mCachedSize && key->orientation == pTxt->mOrientation && key->style == pTxt->mStyle && !strcmp(key->face, pTxt->mFont)) return key->font;
     }
     return 0;
   }
@@ -417,10 +417,7 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
   // TODO: what if there are Int/Double Params with a display text e.g. -96db = "mute"
   else // type == IParam::kTypeInt || type == IParam::kTypeDouble
   {
-    IText text = *(pControl->GetText());
-    if (GetIsRetina())
-        text.mSize /= 2;
-      
+    IText text = *(pControl->GetText());      
     pParam->GetDisplayForHostNoDisplayText(currentText);
     CreateTextEntry(pControl, &text, pTextRect, currentText, pParam );
   }
@@ -1104,8 +1101,9 @@ bool IGraphics::DrawIText(IText* pTxt, const char* str, IRECT* pR, bool measure)
 
   LICE_IFont* font = pTxt->mCached;
   
-  if (!font)
+  if (!font || (pTxt->mCachedSize != (int) (GetScalingFactor() * pTxt->mSize)))
   {
+    pTxt->mCachedSize = GetScalingFactor() * pTxt->mSize;
     font = CacheFont(pTxt);
     if (!font) return false;
   }
@@ -1160,7 +1158,7 @@ LICE_IFont* IGraphics::CacheFont(IText* pTxt)
   if (!font)
   {
     font = new LICE_CachedFont;
-    int h = pTxt->mSize;
+    int h = pTxt->mCachedSize;
     int esc = 10 * pTxt->mOrientation;
     int wt = (pTxt->mStyle == IText::kStyleBold ? FW_BOLD : FW_NORMAL);
     int it = (pTxt->mStyle == IText::kStyleItalic ? TRUE : FALSE);
