@@ -16,7 +16,6 @@ public:
   void OnGUIOpen();
 
 private:
-  double mGain;
   IGraphics* pGraphics;
   IPlugGUIResize* pGUIResize;
 };

@@ -8,12 +8,12 @@ const int kNumPrograms = 2;
 enum EParams
 {
   kGain = 0,
-  kGain1 = 0,
+  kGain1 = 1,
   kNumParams
 };
 
 IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
-  :	IPLUG_CTOR(kNumParams, kNumPrograms, instanceInfo), mGain(1.)
+  :	IPLUG_CTOR(kNumParams, kNumPrograms, instanceInfo)
 {
   TRACE;
 
@@ -88,8 +88,12 @@ void IPlugBetterGUIResize::OnParamChange(int paramIdx)
   switch (paramIdx)
   {
     case kGain:
-      mGain = GetParam(kGain)->Value() / 100.;
+      GetParam(kGain)->Value() / 100.;
       break;
+
+	case kGain1:
+	  GetParam(kGain1)->Value() / 100.;
+	  break;
 
     default:
       break;
