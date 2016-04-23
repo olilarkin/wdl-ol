@@ -1,14 +1,18 @@
 #include "IGraphics.h"
 
-#define DEFAULT_FPS 25
+
+#define DEFAULT_FPS 120
 
 // If not dirty for this many timer ticks, we call OnGUIIDle.
 // Only looked at if USE_IDLE_CALLS is defined.
-#define IDLE_TICKS 20
+
+#define USE_IDLE_CALLS
+#define IDLE_TICKS 1
 
 #ifndef CONTROL_BOUNDS_COLOR
   #define CONTROL_BOUNDS_COLOR COLOR_GREEN
 #endif
+
 
 class BitmapStorage
 {
@@ -69,6 +73,69 @@ public:
   }
 };
 
+class GUIResizeBitmapStorage
+{
+private:
+	int current_size = 0;
+public:
+
+	struct BitmapKey
+	{
+		int id;
+		const char *name;
+		IBitmap* bitmap;
+	};
+
+	WDL_PtrList<BitmapKey> m_bitmaps;
+	WDL_Mutex m_mutex;
+
+	IBitmap* GetBitmap(int index)
+	{
+		BitmapKey* key = m_bitmaps.Get(index);
+		return key->bitmap;
+	}
+
+	int GetID(int index)
+	{
+		BitmapKey* key = m_bitmaps.Get(index);
+		return key->id;
+	}
+
+	const char *GetName(int index)
+	{
+		BitmapKey* key = m_bitmaps.Get(index);
+		return key->name;
+	}
+	
+	int GetSize()
+	{
+		return current_size;
+	}
+
+	void Add(IBitmap* bitmap, int id , const char *pName)
+	{
+		WDL_MutexLock lock(&m_mutex);
+		BitmapKey* key = m_bitmaps.Add(new BitmapKey);
+		key->id = id;
+		key->name = pName;
+		key->bitmap = bitmap;
+
+		current_size++;
+	}
+
+
+	~GUIResizeBitmapStorage()
+	{
+		int i, n = m_bitmaps.GetSize();
+		for (i = 0; i < n; ++i)
+		{
+			delete(m_bitmaps.Get(i)->bitmap);
+		}
+		m_bitmaps.Empty(true);
+	}
+};
+
+static GUIResizeBitmapStorage storeLoadedBitmap;
 static BitmapStorage s_bitmapCache;
 
 class FontStorage
@@ -194,17 +261,217 @@ IGraphics::~IGraphics()
   DELETE_NULL(mTmpBitmap);
 }
 
+
+void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
+{
+	int a, b, c, d, x, y, index;
+	double x_ratio = ((double)(w1 - 1)) / w2;
+	double y_ratio = ((double)(h1 - 1)) / h2;
+	double x_diff, y_diff, blue, red, green, alpha;
+	int offset = 0, offset_src = 0, offset_dst = 0;
+
+	for (int i = 0; i<h2; i++)
+	{
+		for (int j = 0; j<w2; j++)
+		{
+			x = (int)(x_ratio * j);
+			y = (int)(y_ratio * i);
+			x_diff = (x_ratio * j) - x;
+			y_diff = (y_ratio * i) - y;
+
+			if (framesAreHoriztonal)
+			{
+				index = (y*src_width + x);
+				a = input[index];
+				b = input[index + 1];
+				c = input[index + src_width];
+				d = input[index + src_width + 1];
+			}
+			else
+			{
+				index = (y*w1 + x);
+				a = input[index];
+				b = input[index + 1];
+				c = input[index + w1];
+				d = input[index + w1 + 1];
+			}
+
+			// blue element
+			// Yb = Ab(1-w1)(1-h1) + Bb(w1)(1-h1) + Cb(h1)(1-w1) + Db(wh)
+			blue = (a & 0xff)*(1 - x_diff)*(1 - y_diff) + (b & 0xff)*(x_diff)*(1 - y_diff) +
+				(c & 0xff)*(y_diff)*(1 - x_diff) + (d & 0xff)*(x_diff*y_diff);
+
+			// green element
+			// Yg = Ag(1-w1)(1-h1) + Bg(w1)(1-h1) + Cg(h1)(1-w1) + Dg(wh)
+			green = ((a >> 8) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 8) & 0xff)*(x_diff)*(1 - y_diff) +
+				((c >> 8) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 8) & 0xff)*(x_diff*y_diff);
+
+			// red element
+			// Yr = Ar(1-w1)(1-h1) + Br(w1)(1-h1) + Cr(h1)(1-w1) + Dr(wh)
+			red = ((a >> 16) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 16) & 0xff)*(x_diff)*(1 - y_diff) +
+				((c >> 16) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 16) & 0xff)*(x_diff*y_diff);
+
+			// alpha
+			// Ya = Ara(1 - w1)(1 - h1) + Ba(w1)(1 - h1) + Ca(h1)(1 - w1) + Da(wh)
+			alpha = ((a >> 24) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 24) & 0xff)*(x_diff)*(1 - y_diff) +
+				((c >> 24) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 24) & 0xff)*(x_diff*y_diff);
+
+			// Prevent writing out of destination buffer because of glitch fix (IMPORTANT!!!)
+			if (verticalFix)
+			{
+				if (i != h2 - 1)
+				{
+					out[offset++] =
+						((((int)alpha) << 24) & 0xff000000) |
+						((((int)red) << 16) & 0xff0000) |
+						((((int)green) << 8) & 0xff00) |
+						((int)blue);
+				}
+			}
+			else if (horisontalFix)
+			{
+				if (j != w2 - 1)
+				{
+					out[offset] =
+						((((int)alpha) << 24) & 0xff000000) |
+						((((int)red) << 16) & 0xff0000) |
+						((((int)green) << 8) & 0xff00) |
+						((int)blue);
+				}
+
+				offset++;
+			}
+			else
+			{
+				out[offset++] =
+					((((int)alpha) << 24) & 0xff000000) |
+					((((int)red) << 16) & 0xff0000) |
+					((((int)green) << 8) & 0xff00) |
+					((int)blue);
+			}
+		}
+
+		if (framesAreHoriztonal)
+		{
+			offset += dst_width - w2;
+		}
+	}
+}
+
+void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, bool framesAreHoriztonal)
+{
+	int* pointer_to_source = (int*)source->getBits();
+	int srcX = 0;
+	int srcY = 0;
+
+	int* pointer_to_destination = (int*)destination->getBits();
+	int dstX = 0;
+	int dstY = 0;
+	
+	if (nStates > 1)
+	{
+		if (framesAreHoriztonal)
+		{
+			int src_width = (int)((double)source->getWidth() / nStates);
+			int dst_width = (int)((double)destination->getWidth() / nStates);
+
+			// Set whole destination bitmap to 0 alpha. This is to fix some graphical glitches on different knob positions
+			LICE_Clear(destination, 0);
+
+			for (int i = 0; i < nStates; i++)
+			{
+				srcX = int(0.5 + (double)source->getWidth() * (double)(i) / (double)nStates);
+				dstX = int(0.5 + (double)destination->getWidth() * (double)(i) / (double)nStates) + 1; // ( + 1) Fix for graphical glitch where you would see top of next knob frame
+
+				pointer_to_source = pointer_to_source + srcX;
+				pointer_to_destination = pointer_to_destination + dstX;
+
+				ResizeBilinear(pointer_to_source, pointer_to_destination, src_width, source->getHeight(), dst_width, destination->getHeight(), false, true, true, source->getWidth(), destination->getWidth());
+
+				pointer_to_source = pointer_to_source - srcX;
+				pointer_to_destination = pointer_to_destination - dstX;
+			}
+		}
+		else
+		{
+
+			int src_height = (int)((double)source->getHeight() / nStates);
+			int dst_height = (int)((double)destination->getHeight() / nStates);
+
+			// Set whole destination bitmap to 0 alpha. This is to fix some graphical glitches on different knob positions
+			LICE_Clear(destination, 0);
+
+			for (int i = 0; i < nStates; i++)
+			{
+				srcY = int(0.5 + (double)source->getHeight() * (double)(i) / (double)nStates);
+				dstY = int(0.5 + (double)destination->getHeight() * (double)(i) / (double)nStates) + 1; // ( + 1) Fix for graphical glitch where you would see top of next knob frame
+
+				pointer_to_source = pointer_to_source + (srcY * source->getWidth());
+				pointer_to_destination = pointer_to_destination + (dstY * destination->getWidth());
+
+				ResizeBilinear(pointer_to_source, pointer_to_destination, source->getWidth(), src_height, destination->getWidth(), dst_height, true);
+
+				pointer_to_source = pointer_to_source - (srcY * source->getWidth());
+				pointer_to_destination = pointer_to_destination - (dstY * destination->getWidth());
+			}
+		}
+	}
+	else
+	{
+		ResizeBilinear(pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight());
+	}
+}
+
+void IGraphics::RescaleBitmaps(int w, int h, double widthRatio, double heightRatio)
+{		
+	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
+	{
+		// Load bitmas from binary 
+		LICE_IBitmap* lb = OSLoadBitmap(storeLoadedBitmap.GetID(i), storeLoadedBitmap.GetName(i));
+				
+		// Get new bitmap width and height
+		int new_width = (int)(widthRatio * (double)lb->getWidth());
+		int new_height = (int)(heightRatio * (double)lb->getHeight());
+
+		// Get current bitmap
+		LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;
+
+		// Get current bitmap propeties
+		int nStates = storeLoadedBitmap.GetBitmap(i)->N;
+		bool framesAreHoriztonal = storeLoadedBitmap.GetBitmap(i)->mFramesAreHorizontal;
+			
+		// Create new LICE_IBitmap to use after resizing
+		LICE_IBitmap* newBitmap;
+
+		newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height, 0);
+
+		// Resize old content and write to new bitmap
+	    ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal);
+
+		// Copy resized image to cached bitmap that all plugins are using
+		LICE_Copy(currentBitmap, newBitmap);
+
+		// Store new window size
+		storeLoadedBitmap.GetBitmap(i)->W = new_width;
+		storeLoadedBitmap.GetBitmap(i)->H = new_height;
+
+		// Delete tmpBitmap and bitmap that was loaded from binary
+		delete newBitmap;
+		delete lb;
+	}
+}
+
 void IGraphics::Resize(int w, int h)
 {
-  mWidth = w;
-  mHeight = h;
-  ReleaseMouseCapture();
-  mControls.Empty(true);
+	mWidth = w;
+	mHeight = h;
+
   DELETE_NULL(mDrawBitmap);
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
   mPlug->ResizeGraphics(w, h);
 }
+
 
 void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, char *txt)
 {
@@ -233,8 +500,9 @@ void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, cha
 
 void IGraphics::AttachBackground(int ID, const char* name)
 {
-  IBitmap bg = LoadIBitmap(ID, name);
-  IControl* pBG = new IBitmapControl(mPlug, 0, 0, -1, &bg, IChannelBlend::kBlendClobber);
+  IBitmap *bg = LoadPointerToBitmap(ID, name);
+
+  IControl* pBG = new IBitmapControl(mPlug, 0, 0, -1, bg, IChannelBlend::kBlendClobber);
   mControls.Insert(0, pBG);
 }
 
@@ -420,19 +688,22 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
 
 }
 
-IBitmap IGraphics::LoadIBitmap(int ID, const char* name, int nStates, bool framesAreHoriztonal)
+
+IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, bool framesAreHoriztonal)
 {
-  LICE_IBitmap* lb = s_bitmapCache.Find(ID);
-  if (!lb)
-  {
-    lb = OSLoadBitmap(ID, name);
-    #ifndef NDEBUG
-    bool imgResourceFound = lb;
-    #endif
-    assert(imgResourceFound); // Protect against typos in resource.h and .rc files.
-    s_bitmapCache.Add(lb, ID);
-  }
-  return IBitmap(lb, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal);
+	LICE_IBitmap* lb = s_bitmapCache.Find(ID);
+	if (!lb)
+	{
+		lb = OSLoadBitmap(ID, name);
+#ifndef NDEBUG
+        bool imgResourceFound = lb;
+#endif
+        assert(imgResourceFound); // Protect against typos in resource.h and .rc files.
+		s_bitmapCache.Add(lb, ID);
+	}
+	storeLoadedBitmap.Add(new IBitmap(lb, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal), ID, name);
+	
+	return storeLoadedBitmap.GetBitmap(storeLoadedBitmap.GetSize() - 1);
 }
 
 void IGraphics::RetainBitmap(IBitmap* pBitmap)
@@ -662,7 +933,7 @@ bool IGraphics::DrawBitmap(IBitmap* pBitmap, IRECT* pR, int bmpState, const ICha
 {
   int srcX = 0;
   int srcY = 0;
-
+ 
   if (pBitmap->N > 1 && bmpState > 1)
   {
     if (pBitmap->mFramesAreHorizontal)
@@ -746,7 +1017,6 @@ bool IGraphics::IsDirty(IRECT* pR)
     mIdleTicks = 0;
   }
 #endif
-
   return dirty;
 }
 
@@ -1196,4 +1466,18 @@ LICE_IFont* IGraphics::CacheFont(IText* pTxt)
   }
   pTxt->mCached = font;
   return font;
+}
+
+bool IGraphics::BlurBitmap(IBitmap* pISrc, int dstx, int dsty, IRECT x)
+{
+	LICE_IBitmap* pSrc = (LICE_IBitmap*)pISrc->mData;
+	LICE_Blur(mDrawBitmap, pSrc, dstx, dsty, x.L, x.T, x.W(), x.H());
+	return true;
+}
+
+bool IGraphics::FillCBezier(IColor* pColor, float xstart, float ystart, float xctl1, float yctl1,
+	float xctl2, float yctl2, float xend, float yend, int yfill, float alpha, int mode, float tol)
+{
+	LICE_FillCBezier(mDrawBitmap, xstart, ystart, xctl1, yctl1, xctl2, yctl2, xend, yend, yfill, LiceColor(pColor), alpha, mode, tol);
+	return true;
 }

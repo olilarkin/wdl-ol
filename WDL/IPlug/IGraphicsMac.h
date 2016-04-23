@@ -137,6 +137,7 @@ private:
   
 public: //TODO: make this private
   void* mHostNSWindow;
+  void* mChildNSWindow;
 };
 
 inline CFStringRef MakeCFString(const char* cStr)

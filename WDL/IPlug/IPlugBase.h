@@ -86,6 +86,7 @@ public:
   
   #ifndef OS_IOS
   virtual void OnWindowResize() {}
+  virtual void CreateControls(IGraphics* pGraphics) {}
   #endif
   // implement this and return true to trigger your custom about box, when someone clicks about in the menu of a standalone
   virtual bool HostRequestingAboutBox() { return false; }

@@ -62,10 +62,11 @@ public:
   void SetTextEntryLength(int len) { mTextEntryLength = len;  }
   void SetText(IText* txt) { mText = *txt; }
   IRECT* GetRECT() { return &mRECT; }       // The draw area for this control.
+  void SetDrawArea(IRECT pR) { mRECT = pR; }
   IRECT* GetTargetRECT() { return &mTargetRECT; } // The mouse target area (default = draw area).
   void SetTargetArea(IRECT pR) { mTargetRECT = pR; }
   virtual void TextFromTextEntry( const char* txt ) { return; } // does nothing by default
-
+  
   virtual void Hide(bool hide);
   bool IsHidden() const { return mHide; }
 
@@ -159,18 +160,19 @@ class IBitmapControl : public IControl
 public:
   IBitmapControl(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap,
                  IChannelBlend::EBlendMethod blendMethod = IChannelBlend::kBlendNone)
-    : IControl(pPlug, IRECT(x, y, pBitmap), paramIdx, blendMethod), mBitmap(*pBitmap) {}
+	  : IControl(pPlug, IRECT(x, y, pBitmap), paramIdx, blendMethod) { mBitmap = pBitmap; }
 
   IBitmapControl(IPlugBase* pPlug, int x, int y, IBitmap* pBitmap,
                  IChannelBlend::EBlendMethod blendMethod = IChannelBlend::kBlendNone)
-    : IControl(pPlug, IRECT(x, y, pBitmap), -1, blendMethod), mBitmap(*pBitmap) {}
+    : IControl(pPlug, IRECT(x, y, pBitmap), -1, blendMethod) { mBitmap = pBitmap; }
 
   virtual ~IBitmapControl() {}
 
   virtual bool Draw(IGraphics* pGraphics);
 
+  
 protected:
-  IBitmap mBitmap;
+	IBitmap *mBitmap;
 };
 
 // A switch.  Click to cycle through the bitmap states.
@@ -242,7 +244,7 @@ public:
 
 protected:
   WDL_TypedBuf<IRECT> mRECTs;
-  IBitmap mBitmap;
+  IBitmap *mBitmap;
 };
 
 // A switch that reverts to 0.0 when released.
@@ -280,12 +282,13 @@ public:
   
   virtual bool IsHit(int x, int y);
 
+ 
 protected:
   virtual void SnapToMouse(int x, int y);
   int mLen, mHandleHeadroom;
-  IBitmap mBitmap;
   EDirection mDirection;
   bool mOnlyHandle; // if true only by clicking on the handle do you click the slider
+  IBitmap *mBitmap;
 };
 
 const double DEFAULT_GEARING = 4.0;
@@ -333,15 +336,15 @@ public:
                       double minAngle = -0.75 * PI, double maxAngle = 0.75 * PI, int yOffsetZeroDeg = 0,
                       EDirection direction = kVertical, double gearing = DEFAULT_GEARING)
     : IKnobControl(pPlug, IRECT(x, y, pBitmap), paramIdx, direction, gearing),
-      mBitmap(*pBitmap), mMinAngle(minAngle), mMaxAngle(maxAngle), mYOffset(yOffsetZeroDeg) {}
+       mMinAngle(minAngle), mMaxAngle(maxAngle), mYOffset(yOffsetZeroDeg), mBitmap(pBitmap) {}
   ~IKnobRotaterControl() {}
 
   bool Draw(IGraphics* pGraphics);
 
 protected:
-  IBitmap mBitmap;
   double mMinAngle, mMaxAngle;
   int mYOffset;
+  IBitmap *mBitmap;
 };
 
 // A multibitmap knob.  The bitmap cycles through states as the mouse drags.
@@ -350,13 +353,13 @@ class IKnobMultiControl : public IKnobControl
 public:
   IKnobMultiControl(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap,
                     EDirection direction = kVertical, double gearing = DEFAULT_GEARING)
-    : IKnobControl(pPlug, IRECT(x, y, pBitmap), paramIdx, direction, gearing), mBitmap(*pBitmap) {}
+    : IKnobControl(pPlug, IRECT(x, y, pBitmap), paramIdx, direction, gearing), mBitmap(pBitmap){}
   ~IKnobMultiControl() {}
 
   bool Draw(IGraphics* pGraphics);
 
 protected:
-  IBitmap mBitmap;
+	IBitmap *mBitmap;
 };
 
 // A knob that consists of a static base, a rotating mask, and a rotating top.
@@ -369,13 +372,13 @@ public:
                            double minAngle = -0.75 * PI, double maxAngle = 0.75 * PI,
                            EDirection direction = kVertical, double gearing = DEFAULT_GEARING)
     : IKnobControl(pPlug, IRECT(x, y, pBase), paramIdx, direction, gearing),
-      mBase(*pBase), mMask(*pMask), mTop(*pTop), mMinAngle(minAngle), mMaxAngle(maxAngle) {}
+      mBase(pBase), mMask(pMask), mTop(pTop), mMinAngle(minAngle), mMaxAngle(maxAngle) {}
   ~IKnobRotatingMaskControl() {}
 
   bool Draw(IGraphics* pGraphics);
 
 protected:
-  IBitmap mBase, mMask, mTop;
+  IBitmap *mBase, *mMask, *mTop;
   double mMinAngle, mMaxAngle;
 };
 
@@ -465,8 +468,8 @@ public:
 
   IFileSelectorControl(IPlugBase* pPlug, IRECT pR, int paramIdx, IBitmap* pBitmap,
                        EFileAction action, char* dir = "", char* extensions = "")     // extensions = "txt wav" for example.
-    : IControl(pPlug, pR, paramIdx), mBitmap(*pBitmap),
-      mFileAction(action), mDir(dir), mExtensions(extensions), mState(kFSNone) {}
+    : IControl(pPlug, pR, paramIdx), 
+      mFileAction(action), mDir(dir), mExtensions(extensions), mState(kFSNone), mBitmap(pBitmap) {}
   ~IFileSelectorControl() {}
 
   void OnMouseDown(int x, int y, IMouseMod* pMod);
@@ -478,10 +481,10 @@ public:
   bool IsDirty();
 
 protected:
-  IBitmap mBitmap;
   WDL_String mDir, mFile, mExtensions;
   EFileAction mFileAction;
   EFileSelectorState mState;
+  IBitmap *mBitmap;
 };
 
 #endif

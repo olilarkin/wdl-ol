@@ -254,6 +254,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       return 0;
     }
     case WM_LBUTTONUP:
+	case WM_MBUTTONUP:
     case WM_RBUTTONUP:
     {
       ReleaseCapture();
@@ -569,7 +570,7 @@ void IGraphicsWin::Resize(int w, int h)
       }
     }
 
-    SetWindowPos(mPlugWnd, 0, 0, 0, plugW + dw, plugH + dh, SETPOS_FLAGS);
+    SetWindowPos(mPlugWnd, 0, 0, 0, plugW + dw, plugH + dh, SWP_NOREDRAW);
 
     // don't want to touch the host window in VST3 or RTAS
     if(mPlug->GetAPI() != kAPIVST3 && mPlug->GetAPI() != kAPIRTAS)
@@ -585,8 +586,10 @@ void IGraphicsWin::Resize(int w, int h)
       }
     }
 
-    RECT r = { 0, 0, Width(), Height() };
+	RECT r = { 0, 0, Width(), Height() };
+
     InvalidateRect(mPlugWnd, &r, FALSE);
+	UpdateWindow(mPlugWnd);
   }
 }
 

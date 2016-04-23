@@ -17,6 +17,8 @@ BASE_SDK = macosx10.5
 //BASE_SDK = macosx10.7 // Carbon GUIs do not work fully with the 10.7 or higher sdks
 //BASE_SDK = macosx10.8
 //BASE_SDK = macosx10.9
+//BASE_SDK = macosx10.10
+//BASE_SDK = macosx10.11
 
 //CLANG_CXX_LANGUAGE_STANDARD = c++0x
 //CLANG_CXX_LIBRARY = libc++

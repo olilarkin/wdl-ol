@@ -192,19 +192,19 @@ bool IPanelControl::Draw(IGraphics* pGraphics)
 bool IBitmapControl::Draw(IGraphics* pGraphics)
 {
   int i = 1;
-  if (mBitmap.N > 1)
+  if (mBitmap->N > 1)
   {
-    i = 1 + int(0.5 + mValue * (double) (mBitmap.N - 1));
-    i = BOUNDED(i, 1, mBitmap.N);
+    i = 1 + int(0.5 + mValue * (double) (mBitmap->N - 1));
+    i = BOUNDED(i, 1, mBitmap->N);
   }
-  return pGraphics->DrawBitmap(&mBitmap, &mRECT, i, &mBlend);
+  return pGraphics->DrawBitmap(mBitmap, &mRECT, i, &mBlend);
 }
 
 void ISwitchControl::OnMouseDown(int x, int y, IMouseMod* pMod)
 {
-  if (mBitmap.N > 1)
+  if (mBitmap->N > 1)
   {
-    mValue += 1.0 / (double) (mBitmap.N - 1);
+    mValue += 1.0 / (double) (mBitmap->N - 1);
   }
   else
   {
@@ -238,9 +238,9 @@ ISwitchFramesControl::ISwitchFramesControl(IPlugBase* pPlug, int x, int y, int p
   for(int i = 0; i < pBitmap->N; i++)
   {
     if (imagesAreHorizontal)
-      mRECTs.Add(mRECT.SubRectHorizontal(pBitmap->N, i)); 
+      mRECTs.Add(mRECT.SubRectHorizontal(pBitmap->N, i));
     else
-      mRECTs.Add(mRECT.SubRectVertical(pBitmap->N, i)); 
+      mRECTs.Add(mRECT.SubRectVertical(pBitmap->N, i));
   }
 }
 
@@ -281,8 +281,9 @@ void IInvisibleSwitchControl::OnMouseDown(int x, int y, IMouseMod* pMod)
 
 IRadioButtonsControl::IRadioButtonsControl(IPlugBase* pPlug, IRECT pR, int paramIdx, int nButtons,
     IBitmap* pBitmap, EDirection direction, bool reverse)
-  :   IControl(pPlug, pR, paramIdx), mBitmap(*pBitmap)
+  :   IControl(pPlug, pR, paramIdx)
 {
+  mBitmap = pBitmap;
   mRECTs.Resize(nButtons);
   int h = int((double) pBitmap->H / (double) pBitmap->N);
   
@@ -382,11 +383,11 @@ bool IRadioButtonsControl::Draw(IGraphics* pGraphics)
   {
     if (i == active)
     {
-      pGraphics->DrawBitmap(&mBitmap, &mRECTs.Get()[i], 2, &mBlend);
+      pGraphics->DrawBitmap(mBitmap, &mRECTs.Get()[i], 2, &mBlend);
     }
     else
     {
-      pGraphics->DrawBitmap(&mBitmap, &mRECTs.Get()[i], 1, &mBlend);
+      pGraphics->DrawBitmap(mBitmap, &mRECTs.Get()[i], 1, &mBlend);
     }
   }
   return true;
@@ -399,17 +400,18 @@ void IContactControl::OnMouseUp(int x, int y, IMouseMod* pMod)
 }
 
 IFaderControl::IFaderControl(IPlugBase* pPlug, int x, int y, int len, int paramIdx, IBitmap* pBitmap, EDirection direction, bool onlyHandle)
-  : IControl(pPlug, IRECT(), paramIdx), mLen(len), mBitmap(*pBitmap), mDirection(direction), mOnlyHandle(onlyHandle)
+  : IControl(pPlug, IRECT(), paramIdx), mLen(len), mDirection(direction), mOnlyHandle(onlyHandle)
 {
+	mBitmap = pBitmap;
   if (direction == kVertical)
   {
-    mHandleHeadroom = mBitmap.H;
-    mRECT = mTargetRECT = IRECT(x, y, x + mBitmap.W, y + len);
+    mHandleHeadroom = mBitmap->H;
+    mRECT = mTargetRECT = IRECT(x, y, x + mBitmap->W, y + len);
   }
   else
   {
-    mHandleHeadroom = mBitmap.W;
-    mRECT = mTargetRECT = IRECT(x, y, x + len, y + mBitmap.H);
+    mHandleHeadroom = mBitmap->W;
+    mRECT = mTargetRECT = IRECT(x, y, x + len, y + mBitmap->H);
   }
 }
 
@@ -419,7 +421,7 @@ IRECT IFaderControl::GetHandleRECT(double value) const
   {
     value = mValue;
   }
-  IRECT r(mRECT.L, mRECT.T, mRECT.L + mBitmap.W, mRECT.T + mBitmap.H);
+  IRECT r(mRECT.L, mRECT.T, mRECT.L + mBitmap->W, mRECT.T + mBitmap->H);
   if (mDirection == kVertical)
   {
     int offs = int((1.0 - value) * (double) (mLen - mHandleHeadroom));
@@ -500,7 +502,7 @@ void IFaderControl::SnapToMouse(int x, int y)
 bool IFaderControl::Draw(IGraphics* pGraphics)
 {
   IRECT r = GetHandleRECT();
-  return pGraphics->DrawBitmap(&mBitmap, &r, 1, &mBlend);
+  return pGraphics->DrawBitmap(mBitmap, &r, 1, &mBlend);
 }
 
 bool IFaderControl::IsHit(int x, int y) 
@@ -596,21 +598,21 @@ bool IKnobRotaterControl::Draw(IGraphics* pGraphics)
   int cX = (mRECT.L + mRECT.R) / 2;
   int cY = (mRECT.T + mRECT.B) / 2;
   double angle = mMinAngle + mValue * (mMaxAngle - mMinAngle);
-  return pGraphics->DrawRotatedBitmap(&mBitmap, cX, cY, angle, mYOffset, &mBlend);
+  return pGraphics->DrawRotatedBitmap(mBitmap, cX, cY, angle, mYOffset, &mBlend);
 }
 
 // Same as IBitmapControl::Draw.
 bool IKnobMultiControl::Draw(IGraphics* pGraphics)
 {
-  int i = 1 + int(0.5 + mValue * (double) (mBitmap.N - 1));
-  i = BOUNDED(i, 1, mBitmap.N);
-  return pGraphics->DrawBitmap(&mBitmap, &mRECT, i, &mBlend);
+  int i = 1 + int(0.5 + mValue * (double) (mBitmap->N - 1));
+  i = BOUNDED(i, 1, mBitmap->N);
+  return pGraphics->DrawBitmap(mBitmap, &mRECT, i, &mBlend);
 }
 
 bool IKnobRotatingMaskControl::Draw(IGraphics* pGraphics)
 {
   double angle = mMinAngle + mValue * (mMaxAngle - mMinAngle);
-  return pGraphics->DrawRotatedMask(&mBase, &mMask, &mTop, mRECT.L, mRECT.T, angle, &mBlend);
+  return pGraphics->DrawRotatedMask(mBase, mMask, mTop, mRECT.L, mRECT.T, angle, &mBlend);
 }
 
 bool IBitmapOverlayControl::Draw(IGraphics* pGraphics)
@@ -739,7 +741,7 @@ bool IFileSelectorControl::Draw(IGraphics* pGraphics)
 {
   if (mState == kFSSelecting)
   {
-    pGraphics->DrawBitmap(&mBitmap, &mRECT, 0, 0);
+    pGraphics->DrawBitmap(mBitmap, &mRECT, 0, 0);
   }
   return true;
 }

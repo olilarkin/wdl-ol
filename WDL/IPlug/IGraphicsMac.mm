@@ -302,7 +302,8 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
   
   CGDataProviderRef provider = CGDataProviderCreateWithData(NULL,retina_buf ? retina_buf : p,4*sw*h,NULL);
   img = CGImageCreate(w,h,8,32,4*sw,(CGColorSpaceRef)mColorSpace,
-                                 kCGImageAlphaNoneSkipFirst,
+                                 (kCGImageAlphaPremultipliedFirst),
+                      //(kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little),
                                  provider,NULL,NO,kCGRenderingIntentDefault);
   CGDataProviderRelease(provider);
 #endif
@@ -342,7 +343,7 @@ void* IGraphicsMac::OpenCocoaWindow(void* pParentView)
   TRACE;
   CloseWindow();
   mGraphicsCocoa = (IGRAPHICS_COCOA*) [[IGRAPHICS_COCOA alloc] initWithIGraphics: this];
-  
+    
   if (pParentView) // Cocoa VST host.
   {
     [(NSView*) pParentView addSubview: (IGRAPHICS_COCOA*) mGraphicsCocoa];
@@ -405,6 +406,7 @@ void IGraphicsMac::AttachSubWindow(void* hostWindowRef)
   [childWindow performSelector:@selector(orderFront:) withObject :(id) nil afterDelay :0.05];
 
   mHostNSWindow = (void*) hostWindow;
+  mChildNSWindow = (void*) childWindow;
 }
 
 void IGraphicsMac::RemoveSubWindow()
@@ -473,7 +475,14 @@ void IGraphicsMac::Resize(int w, int h)
   if (mGraphicsCocoa)
   {
     NSSize size = { static_cast<CGFloat>(w), static_cast<CGFloat>(h) };
+  
     [(IGRAPHICS_COCOA*) mGraphicsCocoa setFrameSize: size ];
+   
+    // Cocoa window redraw fix (VST2), and disable stupid resize animation
+    NSRect rectNewFrame = [[(IGRAPHICS_COCOA*) mGraphicsCocoa window] frameRectForContentRect:NSMakeRect(0, 0, w, h)];
+    NSRect rect = [[(IGRAPHICS_COCOA*) mGraphicsCocoa window] frame];
+    rectNewFrame.origin = NSMakePoint(rect.origin.x ,rect.origin.y - (rectNewFrame.size.height - rect.size.height));
+    [[(IGRAPHICS_COCOA*) mGraphicsCocoa window] setFrame:rectNewFrame display:NO animate:NO];
   }
 }
 

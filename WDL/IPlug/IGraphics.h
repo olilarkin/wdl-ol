@@ -6,6 +6,7 @@
 #include "IControl.h"
 #include "../lice/lice.h"
 
+
 // Specialty stuff for calling in to Reaper for Lice functionality.
 #ifdef REAPER_SPECIAL
   #include "../IPlugExt/ReaperExt.h"
@@ -54,6 +55,7 @@ public:
   // Methods for the drawing implementation class.
   bool DrawBitmap(IBitmap* pBitmap, IRECT* pDest, int srcX, int srcY, const IChannelBlend* pBlend = 0);
   bool DrawRotatedBitmap(IBitmap* pBitmap, int destCtrX, int destCtrY, double angle, int yOffsetZeroDeg = 0, const IChannelBlend* pBlend = 0);
+  bool BlurBitmap(IBitmap* pISrc, int dstx, int dsty, IRECT x);
   bool DrawRotatedMask(IBitmap* pBase, IBitmap* pMask, IBitmap* pTop, int x, int y, double angle, const IChannelBlend* pBlend = 0);
   bool DrawPoint(const IColor* pColor, float x, float y, const IChannelBlend* pBlend = 0, bool antiAlias = false);
   // Live ammo!  Will crash if out of bounds!  etc.
@@ -63,6 +65,8 @@ public:
   bool DrawCircle(const IColor* pColor, float cx, float cy, float r, const IChannelBlend* pBlend = 0, bool antiAlias = false);
   bool RoundRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend, int cornerradius, bool aa);
   bool FillRoundRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend, int cornerradius, bool aa);
+  bool FillCBezier(IColor* pColor, float xstart, float ystart, float xctl1, float yctl1,
+	  float xctl2, float yctl2, float xend, float yend, int yfill, float alpha = 1.0f, int mode = 0, float tol = 0.0f);
 
   bool FillIRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend = 0);
   bool FillCircle(const IColor* pColor, int cx, int cy, float r, const IChannelBlend* pBlend = 0, bool antiAlias = false);
@@ -141,9 +145,12 @@ public:
   int Height() { return mHeight; }
   int FPS() { return mFPS; }
 
+  // This is needed for GUI resizing
+  void RescaleBitmaps(int w, int h, double widthRatio, double heightRatio); // Used for resizing
+
   IPlugBase* GetPlug() { return mPlug; }
 
-  IBitmap LoadIBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);
+  IBitmap* LoadPointerToBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);
   IBitmap ScaleBitmap(IBitmap* pSrcBitmap, int destW, int destH);
   IBitmap CropBitmap(IBitmap* pSrcBitmap, IRECT* pR);
   void AttachBackground(int ID, const char* name);
@@ -274,5 +281,6 @@ private:
   bool mHandleMouseOver, mStrict, mEnableTooltips, mShowControlBounds;
   IControl* mKeyCatcher;
 };
+
 
 #endif
