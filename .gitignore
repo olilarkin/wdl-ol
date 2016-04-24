@@ -20,6 +20,8 @@
 *.xcschememanagement.plist
 build-*
 /IPlugExamples/*/*.vcxproj.user
+/.git
+/.sync
 
 PCH/*
 VST3_SDK/*
