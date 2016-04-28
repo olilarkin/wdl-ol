@@ -22,6 +22,7 @@ appreciated but is not required.
 
 */
 
+
 #include <vector>
 #include "IGraphics.h"
 #include "IControl.h"
@@ -108,6 +109,12 @@ public:
 	{
 	}
 
+	void UsingBitmaps(bool fastBitmapResizing = true)
+	{
+		using_bitmaps = true;
+		fast_bitmap_resizing = fastBitmapResizing;
+	}
+
 	void SetIntToFile(const char *name, int x)
 	{
 		sprintf(buf, "%u", x);
@@ -136,11 +143,11 @@ public:
 		{
 			// This updates draw and control rect
 			IControl* pIControl = GetGUI()->GetControl(i);
-			pIControl->SetDrawArea(ResizeIRECT(org_draw_area[i], width_ratio, height_ratio));
-			pIControl->SetTargetArea(ResizeIRECT(org_target_area[i], width_ratio, height_ratio));
+			pIControl->SetDrawArea(ResizeIRECT(org_draw_area[i], scale_ratio, scale_ratio));
+			pIControl->SetTargetArea(ResizeIRECT(org_target_area[i], scale_ratio, scale_ratio));
 
 			// This updates IText size
-			IText tmpText = IText((int)((double)org_text_size[i].mSize * width_ratio), &org_text_size[i].mColor,
+			IText tmpText = IText((int)((double)org_text_size[i].mSize * scale_ratio), &org_text_size[i].mColor,
 				org_text_size[i].mFont, org_text_size[i].mStyle, org_text_size[i].mAlign, org_text_size[i].mOrientation,
 				org_text_size[i].mQuality, &org_text_size[i].mTextEntryBGColor, &org_text_size[i].mTextEntryFGColor);
 
@@ -161,13 +168,24 @@ public:
 
 	}
 
+	void InitializeGUIControls()
+	{
+		// Call GUI initializer
+		for (int i = 0; i < GetGUI()->GetNControls(); i++)
+		{
+			IControl* pIControl = GetGUI()->GetControl(i);
+			pIControl->InitializeGUI(scale_ratio);
+		}
+		GetGUI()->SetAllControlsDirty();
+	}
+
 	void ResizeAtGUIOpen()
 	{
 		int w = GetIntFromFile("guiwidth");
 		int h = GetIntFromFile("guiheight");
 
-		width_ratio = (double)w / (double)default_gui_width;
-		height_ratio = (double)h / (double)default_gui_height;
+		scale_ratio = (double)w / (double)default_gui_width;
+		scale_ratio = (double)h / (double)default_gui_height;
 		
 		global_width = w;
 		global_height = h;
@@ -175,7 +193,11 @@ public:
 		// Prevent resizing if it is not needed
 		if (w != plugin_width || h != plugin_height)
 		{
-			GetGUI()->RescaleBitmaps(w, h, width_ratio, height_ratio);
+			if (using_bitmaps)
+			{
+				GetGUI()->RescaleBitmaps(w, h, scale_ratio);
+			}
+
 			ResizeControlRects();
 			GetGUI()->Resize(w, h);
 
@@ -186,6 +208,8 @@ public:
 
 			gui_should_be_closed = false;
 		}
+
+		InitializeGUIControls();
 	}
 
 	void ResizeGraphics()
@@ -193,12 +217,31 @@ public:
 		SetIntToFile("guiwidth", mouse_x);
 		SetIntToFile("guiheight", mouse_y);
 
-		width_ratio = (double)mouse_x / (double)default_gui_width;
-		height_ratio = (double)mouse_y / (double)default_gui_height;
+		scale_ratio = (double)mouse_x / (double)default_gui_width;
+		scale_ratio = (double)mouse_y / (double)default_gui_height;
 
-		GetGUI()->RescaleBitmaps(mouse_x, mouse_y, width_ratio, height_ratio);
-		ResizeControlRects();
-		GetGUI()->Resize(mouse_x, mouse_y);
+
+		if (using_bitmaps)
+		{
+			if (!fast_bitmap_resizing)
+			{
+				GetGUI()->RescaleBitmaps(mouse_x, mouse_y, scale_ratio);
+				ResizeControlRects();
+				GetGUI()->Resize(mouse_x, mouse_y);
+				InitializeGUIControls();
+			}
+			else
+			{
+				GetGUI()->Resize(mouse_x, mouse_y);
+			}
+		}
+		else
+		{
+			ResizeControlRects();
+			GetGUI()->Resize(mouse_x, mouse_y);
+			InitializeGUIControls();
+		}
+
 
 		global_width = mouse_x;
 		global_height = mouse_y;
@@ -216,6 +259,7 @@ public:
 			SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 
 			// Resize window uniform or not
+			// Scaling will always be uniform
 			if (true)
 			{
 				mouse_x = (x + y) / 2;
@@ -227,11 +271,16 @@ public:
 				mouse_y = y;
 			}
 
-		if (GetGUI()->Width() != mouse_x || GetGUI()->Height() != mouse_y)
-		{
-			ResizeGraphics();
-		}
+			if (GetGUI()->Width() != mouse_x || GetGUI()->Height() != mouse_y)
+			{
+				ResizeGraphics();
+			}
 		mouse_is_dragging = true;
+		}
+
+		if (using_bitmaps && fast_bitmap_resizing)
+		{
+			mTargetRECT = mRECT = IRECT(0, 0, mouse_x, mouse_y);
 		}
 	}
 
@@ -248,52 +297,90 @@ public:
 
 	void OnMouseDown(int x, int y, IMouseMod* pMod)
 	{
-		if(!gui_should_be_closed)
-		SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+		if (!gui_should_be_closed)
+			SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+
+		if (using_bitmaps && fast_bitmap_resizing)
+		{
+			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
+
+			mouse_is_down = true;
+		}
+
+		mouse_x = plugin_width;
+		mouse_y = plugin_height;
 	}
 
-	void OnMouseUp(int x, int y, IMouseMod* pMod) 
+	void OnMouseUp(int x, int y, IMouseMod* pMod)
 	{
 		SetCursor(LoadCursor(NULL, IDC_ARROW));
+
+		if (using_bitmaps && fast_bitmap_resizing)
+		{
+			GetGUI()->RescaleBitmaps(plugin_width, plugin_height, scale_ratio);
+			ResizeControlRects();
+			InitializeGUIControls();
+			mouse_is_down = false;
+
+			GetGUI()->SetAllControlsDirty();
+		}
 	}
 
 	bool Draw(IGraphics* pGraphics)
 	{
-		if (global_width != plugin_width || global_height != plugin_height)
+		if (mouse_is_down)
 		{
-			gui_should_be_closed = true;
-
-			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
-			int textSize = 48;
+			IRECT backgroundRECT = IRECT(0, 0, mouse_x, mouse_y);
 			IColor backgroundColor = IColor(255, 25, 25, 25);
-			IColor textColor = IColor(255, 255, 255, 255);
-			IRECT textPosition = IRECT(0, (plugin_height / 2) - textSize * width_ratio, mRECT.R, mRECT.B);
-			IText textProps = IText(textSize * width_ratio, &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
+			pGraphics->FillIRect(&backgroundColor, &backgroundRECT);
 
-			pGraphics->FillIRect(&backgroundColor, &mRECT);
-			pGraphics->DrawIText(&textProps, "  Reopen plugin interface to get new size...", &textPosition);
 		}
 		else
 		{
-			// Draw trieangle handle for resizing
-			IColor lineColor = IColor(255, 255, 255, 255);
-			double gradient = ((double)lineColor.A / 255.0) / (double)mRECT.W();
-
-			for (int i = 0; i < mRECT.W(); i++)
+			if (global_width != plugin_width || global_height != plugin_height && using_bitmaps)
 			{
-				double alpha = gradient * (double)(mRECT.W() - i);
-				alpha = alpha * alpha;
-				alpha = 1 - alpha;
+				gui_should_be_closed = true;
 
-				LICE_Line(pGraphics->GetDrawBitmap(), mRECT.L + i, mRECT.B, mRECT.R, mRECT.B - mRECT.W() + i, LICE_RGBA(lineColor.R, lineColor.G, lineColor.B, 255), (float)alpha);
+				mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
+				int textSize = 48;
+				IColor backgroundColor = IColor(255, 25, 25, 25);
+				IColor textColor = IColor(255, 255, 255, 255);
+				IRECT textPosition = IRECT(0, (plugin_height / 2) - (int)((double)textSize * scale_ratio), mRECT.R, mRECT.B);
+				IText textProps = IText((int)((double)textSize * scale_ratio), &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
+
+				pGraphics->FillIRect(&backgroundColor, &mRECT);
+				pGraphics->DrawIText(&textProps, "  Reopen plugin interface to get new size...", &textPosition);
 			}
-			
+			else
+			{
+				// Draw triangle handle for resizing
+				IColor lineColor = IColor(255, 255, 255, 255);
+				double gradient = ((double)lineColor.A / 255.0) / (double)mRECT.W();
+
+				for (int i = 0; i < mRECT.W(); i++)
+				{
+					double alpha = gradient * (double)(mRECT.W() - i);
+					alpha = alpha * alpha;
+					alpha = 1 - alpha;
+
+					LICE_Line(pGraphics->GetDrawBitmap(), mRECT.L + i, mRECT.B, mRECT.R, mRECT.B - mRECT.W() + i, LICE_RGBA(lineColor.R, lineColor.G, lineColor.B, 255), (float)alpha);
+				}
+
+			}
 		}
 
-		return true;
+		return false;
 	}
 
-    bool IsDirty() { return plugin_resized; }
+	void ResizeOnReset()
+	{
+		ResizeAtGUIOpen();
+	}
+
+    bool IsDirty() 
+	{ 
+		return mouse_is_down; 
+	}
 
 private:
 	int mouse_x, mouse_y;
@@ -303,12 +390,16 @@ private:
 	bool mouse_is_down = false;
 	bool mouse_is_dragging = false;
 	bool gui_should_be_closed = false;
+	bool using_bitmaps = false;
+	bool fast_bitmap_resizing = false;
 	double* backup_parameters;
-	double width_ratio, height_ratio;
+	double scale_ratio;
 	IRECT gui_resize_area;
 	WDL_String settings_ini_path;
-	int negative_int_limit = -2147483648;
+	int negative_int_limit = -2147483647;
 	char buf[128]; // temp buffer for writing integers to profile strings
+	LICE_IBitmap *draggingDisplay;
+	IRECT mRECT_backup;
 };
 
 #endif

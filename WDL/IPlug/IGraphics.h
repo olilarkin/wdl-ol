@@ -77,7 +77,7 @@ public:
   virtual bool MeasureIText(IText* pTxt, char* str, IRECT* pR) { return DrawIText(pTxt, str, pR, true); } ;
 
   IColor GetPoint(int x, int y);
-  void* GetData();
+  //void* GetData();
 
   void PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pTextRect);
 
@@ -145,8 +145,10 @@ public:
   int Height() { return mHeight; }
   int FPS() { return mFPS; }
 
-  // This is needed for GUI resizing
-  void RescaleBitmaps(int w, int h, double widthRatio, double heightRatio); // Used for resizing
+  // This is needed for GUI resizing------------------------------------------------------------------------
+  void RescaleBitmaps(int w, int h, double scaleRatio);
+  void SetBitmapOversample(unsigned oversample) { bitmapOversample = oversample; }
+  //--------------------------------------------------------------------------------------------------------
 
   IPlugBase* GetPlug() { return mPlug; }
 
@@ -280,6 +282,7 @@ private:
   int mMouseCapture, mMouseOver, mMouseX, mMouseY, mLastClickedParam;
   bool mHandleMouseOver, mStrict, mEnableTooltips, mShowControlBounds;
   IControl* mKeyCatcher;
+  unsigned bitmapOversample = 1;
 };
 
 

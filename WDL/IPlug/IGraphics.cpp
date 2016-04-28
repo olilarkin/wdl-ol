@@ -422,7 +422,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 	}
 }
 
-void IGraphics::RescaleBitmaps(int w, int h, double widthRatio, double heightRatio)
+void IGraphics::RescaleBitmaps(int w, int h, double scaleRatio)
 {		
 	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
 	{
@@ -430,8 +430,8 @@ void IGraphics::RescaleBitmaps(int w, int h, double widthRatio, double heightRat
 		LICE_IBitmap* lb = OSLoadBitmap(storeLoadedBitmap.GetID(i), storeLoadedBitmap.GetName(i));
 				
 		// Get new bitmap width and height
-		int new_width = (int)(widthRatio * (double)lb->getWidth());
-		int new_height = (int)(heightRatio * (double)lb->getHeight());
+		int new_width = (int)(scaleRatio * (double)(lb->getWidth() / bitmapOversample));
+		int new_height = (int)(scaleRatio * (double)(lb->getHeight() / bitmapOversample));
 
 		// Get current bitmap
 		LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;
@@ -692,6 +692,7 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
 IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, bool framesAreHoriztonal)
 {
 	LICE_IBitmap* lb = s_bitmapCache.Find(ID);
+	LICE_IBitmap* newBitmap;
 	if (!lb)
 	{
 		lb = OSLoadBitmap(ID, name);
@@ -699,9 +700,26 @@ IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, b
         bool imgResourceFound = lb;
 #endif
         assert(imgResourceFound); // Protect against typos in resource.h and .rc files.
-		s_bitmapCache.Add(lb, ID);
+
+		// Rescale bitmap if oversample is specified
+		if (bitmapOversample > 1)
+		{
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(lb->getWidth() / bitmapOversample, lb->getHeight() / bitmapOversample, 0);
+			ResizeBilinear((int*)lb->getBits(), (int*)newBitmap->getBits(), lb->getWidth(), lb->getHeight(), newBitmap->getWidth(), newBitmap->getHeight());
+			s_bitmapCache.Add(newBitmap, ID);
+			storeLoadedBitmap.Add(new IBitmap(newBitmap, newBitmap->getWidth(), newBitmap->getHeight(), nStates, framesAreHoriztonal), ID, name);
+			delete lb;
+		}
+		else
+		{
+			s_bitmapCache.Add(lb, ID);
+			storeLoadedBitmap.Add(new IBitmap(lb, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal), ID, name);
+		}	
 	}
-	storeLoadedBitmap.Add(new IBitmap(lb, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal), ID, name);
+	else
+	{
+		storeLoadedBitmap.Add(new IBitmap(lb, lb->getWidth(), lb->getHeight(), nStates, framesAreHoriztonal), ID, name);
+	}
 	
 	return storeLoadedBitmap.GetBitmap(storeLoadedBitmap.GetSize() - 1);
 }
@@ -1222,6 +1240,7 @@ void IGraphics::OnMouseOut()
   }
   mMouseOver = -1;
 }
+
 
 void IGraphics::OnMouseDrag(int x, int y, IMouseMod* pMod)
 {

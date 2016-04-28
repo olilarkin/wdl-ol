@@ -18,9 +18,15 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   TRACE;
 
   pGraphics = MakeGraphics(this, GUI_WIDTH, GUI_HEIGHT);
+
+  // You can now use bitmaps with higher resolution, so that when you resize interface up, everything will be nice
+  pGraphics->SetBitmapOversample(1);
   
   // Your custom controls------------------------------------------------------------------------------------------------------
-  pGraphics->AttachBackground(BACKGROUND_ID, BACKGROUND_FN);
+  pGraphics->AttachPanelBackground(&COLOR_BLACK);
+
+  IBitmap *tube = pGraphics->LoadPointerToBitmap(BACKGROUND_ID, BACKGROUND_FN);
+  pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
   
   //arguments are: name, defaultVal, minVal, maxVal, step, label
   GetParam(kGain)->InitDouble("Gain", 50., 0., 100.0, 0.01, "%");
@@ -38,12 +44,14 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   IText textProps3(24, &COLOR_WHITE, "Arial", IText::kStyleItalic, IText::kAlignNear, 0, IText::kQualityDefault);
   pGraphics->AttachControl(new ITextControl(this, tmpRect3, &textProps3, "This is IPlugGUIResize example by Youlean..."));
 
+  pGraphics->AttachControl(new CustomControl(this, IRECT(625,500,750,700), IColor(255,0,0,100)));
+
   // GUI resize control must be the last one ----------------------------------------------------------------------------------
   pGraphics->AttachControl(pGUIResize = new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, 16, 16));
+  pGUIResize->UsingBitmaps(true); // Use fast resizing or slow. You must call this if you are using bitmaps
   // --------------------------------------------------------------------------------------------------------------------------
-
+  
   AttachGraphics(pGraphics);
-
   pGraphics->ShowControlBounds(true);
 
   //MakePreset("preset 1", ... );
@@ -59,6 +67,7 @@ void IPlugBetterGUIResize::OnGUIOpen()
 
 }
 
+
 void IPlugBetterGUIResize::ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames)
 {
   // Mutex is already locked for us.
@@ -70,8 +79,8 @@ void IPlugBetterGUIResize::ProcessDoubleReplacing(double** inputs, double** outp
 
   for (int s = 0; s < nFrames; ++s, ++in1, ++in2, ++out1, ++out2)
   {
-   // *out1 = *in1 * mGain;
-   // *out2 = *in2 * mGain;
+    *out1 = *in1;
+    *out2 = *in2;
   }
 }
 
@@ -79,6 +88,7 @@ void IPlugBetterGUIResize::Reset()
 {
   TRACE;
   IMutexLock lock(this);
+
 }
 
 void IPlugBetterGUIResize::OnParamChange(int paramIdx)
@@ -88,11 +98,11 @@ void IPlugBetterGUIResize::OnParamChange(int paramIdx)
   switch (paramIdx)
   {
     case kGain:
-      GetParam(kGain)->Value() / 100.;
+      //GetParam(kGain)->Value() / 100.;
       break;
 
 	case kGain1:
-	  GetParam(kGain1)->Value() / 100.;
+	  //GetParam(kGain1)->Value() / 100.;
 	  break;
 
     default:

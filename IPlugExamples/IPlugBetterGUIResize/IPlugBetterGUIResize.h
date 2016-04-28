@@ -20,4 +20,35 @@ private:
   IPlugGUIResize* pGUIResize;
 };
 
+class CustomControl : public IControl
+{
+public:
+	CustomControl(IPlugBase *pPlug, IRECT pR, IColor color)
+		: IControl(pPlug, pR), mColor(color) {}
+
+	~CustomControl() {}
+
+	// Initialize GUI size here. This will be called after gui resize
+	void InitializeGUI(double scaleRatio)
+	{
+		// For example make this rect halph the size of control rect
+		// We could actually just use mRECT, but this is just to demonstrate this function
+
+		drawRect.L = mRECT.L;
+		drawRect.T = mRECT.T;
+		drawRect.R = mRECT.W() / 2 + mRECT.L;
+		drawRect.B = mRECT.B;
+
+	}
+
+	bool Draw(IGraphics* pGraphics)
+	{
+		pGraphics->FillIRect(&mColor, &drawRect);
+		return true;
+	}
+
+private:
+	IRECT drawRect;
+	IColor mColor;
+};
 #endif
