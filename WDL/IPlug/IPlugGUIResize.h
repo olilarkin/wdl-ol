@@ -337,6 +337,7 @@ public:
 		}
 		else
 		{
+			if ((global_width != plugin_width || global_height != plugin_height) && using_bitmaps)
 			{
 				gui_should_be_closed = true;
 
