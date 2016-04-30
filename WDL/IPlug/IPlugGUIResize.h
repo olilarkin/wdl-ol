@@ -227,27 +227,28 @@ public:
 			{
 				GetGUI()->RescaleBitmaps(mouse_x, mouse_y, scale_ratio);
 				ResizeControlRects();
-				GetGUI()->Resize(mouse_x, mouse_y);
 				InitializeGUIControls();
+				GetGUI()->Resize(mouse_x, mouse_y);
 			}
 			else
 			{
+				InitializeGUIControls();
 				GetGUI()->Resize(mouse_x, mouse_y);
 			}
 		}
 		else
 		{
 			ResizeControlRects();
-			GetGUI()->Resize(mouse_x, mouse_y);
 			InitializeGUIControls();
+			GetGUI()->Resize(mouse_x, mouse_y);
 		}
 
 
 		global_width = mouse_x;
 		global_height = mouse_y;
 
-		plugin_width = global_width;
-		plugin_height = global_height;
+		plugin_width = mouse_x;
+		plugin_height = mouse_y;
 
 		plugin_resized = true;
 	}
