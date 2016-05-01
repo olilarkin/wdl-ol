@@ -72,7 +72,10 @@ public:
   AAX_Result GetChunk(AAX_CTypeID chunkID, AAX_SPlugInChunk * oChunk ) const ;   
   AAX_Result SetChunk(AAX_CTypeID chunkID, const AAX_SPlugInChunk * iChunk );
   AAX_Result CompareActiveChunk(const AAX_SPlugInChunk * iChunk, AAX_CBoolean * oIsEqual )  const ;
-  
+#ifdef USE_IDLE_CALLS
+  AAX_Result TimerWakeup() { OnIdle(); return AAX_SUCCESS; }
+#endif
+
   // IPlugBase Overrides
   void BeginInformHostOfParamChange(int idx);
   void InformHostOfParamChange(int idx, double normalizedValue);
