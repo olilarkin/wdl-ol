@@ -4,6 +4,7 @@
 #include "AAX_CBinaryDisplayDelegate.h"
 #include "AAX_CStringDisplayDelegate.h"
 #include "AAX_CLinearTaperDelegate.h"
+#include "AAX_CStateTaperDelegate.h"
 
 // custom taper for IParam::kTypeDouble
 #include "AAX/AAX_CIPlugTaperDelegate.h"
@@ -231,10 +232,10 @@ AAX_Result IPlugAAX::EffectInit()
           displayTexts.insert(std::pair<int, AAX_CString>(value, AAX_CString(text)) );
         }
         
-        param = new AAX_CParameter<int>(paramID->Get(), 
-                                        AAX_CString(p->GetNameForHost()), 
-                                        (int)p->GetDefault(), 
-                                        AAX_CLinearTaperDelegate<int>((int)p->GetMin(), (int)p->GetMax()), 
+        param = new AAX_CParameter<int>(paramID->Get(),
+                                        AAX_CString(p->GetNameForHost()),
+                                        (int)p->GetDefault(),
+                                        AAX_CStateTaperDelegate<int>((int)p->GetMin(), (int)p->GetMax()),
                                         AAX_CStringDisplayDelegate<int>(displayTexts),
                                         p->GetCanAutomate());
         
