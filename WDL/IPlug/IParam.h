@@ -3,17 +3,20 @@
 
 #include "Containers.h"
 #include <math.h>
+#include <functional>
 
 #define MAX_PARAM_NAME_LEN 32 // e.g. "Gain"
 #define MAX_PARAM_LABEL_LEN 32 // e.g. "Percent"
 #define MAX_PARAM_DISPLAY_LEN 32 // e.g. "100" / "Mute"
 #define MAX_PARAM_DISPLAY_PRECISION 6
 
+// Deprecated - Use IParam::ToNormalizedParam
 inline double ToNormalizedParam(double nonNormalizedValue, double min, double max, double shape)
 {
   return pow((nonNormalizedValue - min) / (max - min), 1.0 / shape);
 }
 
+// Deprecated - Use IParam::FromNormalizedParam
 inline double FromNormalizedParam(double normalizedValue, double min, double max, double shape)
 {
   return min + pow((double) normalizedValue, shape) * (max - min);
@@ -84,6 +87,25 @@ public:
   bool GetCanAutomate() { return mCanAutomate; }
   bool GetIsMeta() { return mIsMeta; }
 
+  // Set optional parameter conversion function; fromNormalized true for FromNormalizedParam, false for ToNormalizedParam
+  void SetConvertParamFn(std::function<double (double value, bool fromNormalized)> convertParamFn) {
+    mConvertParamFn = convertParamFn;
+  }
+  inline double ToNormalizedParam(double nonNormalizedValue, double min, double max, double shape)
+  {
+    if (!mConvertParamFn)
+      return pow((nonNormalizedValue - min) / (max - min), 1.0 / shape);
+      
+    return mConvertParamFn((nonNormalizedValue - min) / (max - min), false);
+  }
+  inline double FromNormalizedParam(double normalizedValue, double min, double max, double shape)
+  {
+    if (!mConvertParamFn)
+      return min + pow((double) normalizedValue, shape) * (max - min);
+        
+    return mConvertParamFn(normalizedValue, true) * (max - min) + min;
+  }
+
 private:
   // All we store is the readable values.
   // SetFromHost() and GetForHost() handle conversion from/to (0,1).
@@ -105,6 +127,7 @@ private:
   };
   
   WDL_TypedBuf<DisplayText> mDisplayTexts;
+  std::function<double (double value, bool fromNormalized)> mConvertParamFn = nullptr;
 };
 
 #endif
