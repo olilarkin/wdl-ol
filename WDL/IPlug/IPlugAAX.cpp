@@ -52,6 +52,25 @@ void AAX_CEffectGUI_IPLUG::DeleteViewContainer()
   }
 }
 
+AAX_Result AAX_CEffectGUI_IPLUG::SetControlHighlightInfo (AAX_CParamID iParameterID, AAX_CBoolean iIsHighlighted, AAX_EHighlightColor iColor)
+{
+  // dispatch to control
+  int paramIdx = atoi(iParameterID) - kAAXParamIdxOffset;
+  
+  if (paramIdx >= 0)
+  {
+    for (int idx = 0; idx < mGraphics->GetNControls(); ++idx)
+    {
+      IControl *theControl = mGraphics->GetControl(idx);
+      if (theControl->ParamIdx() == paramIdx)
+      {
+        theControl->SetControlHighlightInfo(iParameterID, iIsHighlighted, iColor);
+      }
+    }
+  }
+  return AAX_SUCCESS;
+}
+
 AAX_Result AAX_CEffectGUI_IPLUG::GetViewSize(AAX_Point *oEffectViewSize) const
 {
   if (mGraphics)

@@ -23,6 +23,7 @@ public:
   AAX_CEffectGUI_IPLUG() {}
   ~AAX_CEffectGUI_IPLUG() {}
   static AAX_IEffectGUI* AAX_CALLBACK Create();
+  AAX_Result SetControlHighlightInfo (AAX_CParamID iParameterID, AAX_CBoolean iIsHighlighted, AAX_EHighlightColor iColor);
   
 private:
   void CreateViewContents();
