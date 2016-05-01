@@ -140,7 +140,6 @@ IPlugAAX::IPlugAAX(IPlugInstanceInfo instanceInfo,
             kAPIAAX)
 
 , AAX_CIPlugParameters()
-, mTransport(0)
 {
   Trace(TRACELOC, "%s%s", effectName, channelIOStr);
 
@@ -330,9 +329,6 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
     }
   }
   
-  AAX_IMIDINode* transportNode = ioRenderInfo->mTransportNode;
-  mTransport = transportNode->GetTransport();
-
   int32_t numSamples = *(ioRenderInfo->mNumSamples);
   int32_t numInChannels = AAX_STEM_FORMAT_CHANNEL_COUNT(inFormat);
   int32_t numOutChannels = AAX_STEM_FORMAT_CHANNEL_COUNT(outFormat);
@@ -483,14 +479,14 @@ void IPlugAAX::EndInformHostOfParamChange(int idx)
 int IPlugAAX::GetSamplePos()
 { 
   int64_t samplePos;
-  mTransport->GetCurrentNativeSampleLocation(&samplePos);
+  Transport()->GetCurrentNativeSampleLocation(&samplePos);
   return (int) samplePos;
 }
 
 double IPlugAAX::GetTempo()
 {
   double tempo;
-  mTransport->GetCurrentTempo(&tempo);
+  Transport()->GetCurrentTempo(&tempo);
   return tempo;
 }
 
@@ -499,20 +495,20 @@ void IPlugAAX::GetTime(ITimeInfo* pTimeInfo)
   int32_t num, denom;
   int64_t ppqPos, samplePos, cStart, cEnd;
 
-  mTransport->GetCurrentTempo(&pTimeInfo->mTempo);
-  mTransport->IsTransportPlaying(&pTimeInfo->mTransportIsRunning);
+  Transport()->GetCurrentTempo(&pTimeInfo->mTempo);
+  Transport()->IsTransportPlaying(&pTimeInfo->mTransportIsRunning);
   
-  mTransport->GetCurrentMeter(&num, &denom);
+  Transport()->GetCurrentMeter(&num, &denom);
   pTimeInfo->mNumerator = (int) num;
   pTimeInfo->mDenominator = (int) denom;
   
-  mTransport->GetCurrentTickPosition(&ppqPos);
+  Transport()->GetCurrentTickPosition(&ppqPos);
   pTimeInfo->mPPQPos = (double) ppqPos / 960000.0;
   
-  mTransport->GetCurrentNativeSampleLocation(&samplePos);
+  Transport()->GetCurrentNativeSampleLocation(&samplePos);
   pTimeInfo->mSamplePos = (double) samplePos;
   
-  mTransport->GetCurrentLoopPosition(&pTimeInfo->mTransportLoopEnabled, &cStart, &cEnd);
+  Transport()->GetCurrentLoopPosition(&pTimeInfo->mTransportLoopEnabled, &cStart, &cEnd);
   pTimeInfo->mCycleStart = (double) cStart / 960000.0;
   pTimeInfo->mCycleEnd = (double) cEnd / 960000.0;
   
@@ -522,7 +518,7 @@ void IPlugAAX::GetTime(ITimeInfo* pTimeInfo)
 void IPlugAAX::GetTimeSig(int* pNum, int* pDenom)
 {
   int32_t num, denom;
-  mTransport->GetCurrentMeter(&num, &denom);
+  Transport()->GetCurrentMeter(&num, &denom);
   *pNum = (int) num;
   *pDenom = (int) denom;
 }

@@ -94,7 +94,6 @@ protected:
 
 private:
   AAX_CParameter<bool>* mBypassParameter;
-  AAX_ITransport* mTransport;
   WDL_PtrList<WDL_String> mParamIDs;
 };
 
