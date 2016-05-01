@@ -47,7 +47,7 @@ public:
   bool DisplayIsNegated() const { return mNegateDisplay; }
 
   //call this to make sure the param display text allways has a sign
-  void SignDisplay() { mSignDisplay = true; }
+  void SignDisplay(bool displaySign = true) { mSignDisplay = displaySign; }
 
   // Accessors / converters.
   // These all return the readable value, not the VST (0,1).
