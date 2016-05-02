@@ -89,7 +89,7 @@ bool LICE_WritePNG(const char *filename, LICE_IBitmap *bmp, bool wantalpha /*=tr
   }
 
 
-  if (LICE_PIXEL_B != 0 || LICE_PIXEL_G != 1 || LICE_PIXEL_R != 2 || LICE_PIXEL_A != 3)
+  if (LICE_PIXEL_R != 0 || LICE_PIXEL_G != 1 || LICE_PIXEL_B != 2 || LICE_PIXEL_A != 3)
   {
     rowbuf=(unsigned char *)malloc(width*4);
     int k;
@@ -100,9 +100,9 @@ bool LICE_WritePNG(const char *filename, LICE_IBitmap *bmp, bool wantalpha /*=tr
       LICE_pixel_chan *bin = (LICE_pixel_chan *) ptr;
       for(x=0;x<width;x++)
       {
-        bout[0] = bin[LICE_PIXEL_B];
+        bout[0] = bin[LICE_PIXEL_R];
         bout[1] = bin[LICE_PIXEL_G];
-        bout[2] = bin[LICE_PIXEL_R];
+        bout[2] = bin[LICE_PIXEL_B];
         bout[3] = bin[LICE_PIXEL_A];        
         bout+=4;
         bin+=4;

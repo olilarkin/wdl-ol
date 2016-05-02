@@ -332,7 +332,7 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
   
   CGDataProviderRef provider = CGDataProviderCreateWithData(NULL,retina_buf ? retina_buf : p,4*sw*h,NULL);
   img = CGImageCreate(w,h,8,32,4*sw,(CGColorSpaceRef)mColorSpace,
-                                 kCGImageAlphaNoneSkipFirst,
+                                 kCGImageAlphaNoneSkipFirst  | kCGBitmapByteOrder32Little,//kCGImageAlphaNoneSkipFirst,
                                  provider,NULL,NO,kCGRenderingIntentDefault);
   CGDataProviderRelease(provider);
 #endif
@@ -524,8 +524,8 @@ void IGraphicsMac::ShowMouseCursor(bool restore)
   {
     if (restore)
     {
-        CGPoint point; point.x = mHiddenMousePointX; point.y = mHiddenMousePointY;
-        CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+      CGPoint point; point.x = mHiddenMousePointX; point.y = mHiddenMousePointY;
+      CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
     }
 
     if (CGDisplayShowCursor(CGMainDisplayID()) == CGDisplayNoErr) mCursorHidden = false;
@@ -534,8 +534,21 @@ void IGraphicsMac::ShowMouseCursor(bool restore)
 
 void IGraphicsMac::MoveMouseCursor(int x, int y)
 {
-    CGPoint point; point.x = x; point.y = y;
+    CGPoint point;
+    NSPoint mouse = [NSEvent mouseLocation];
+    int mouseY = CGDisplayPixelsHigh(CGMainDisplayID()) - mouse.y;
+    point.x = x / GetScalingFactor() + (mouse.x - GetMouseX() / GetScalingFactor());
+    point.y = y / GetScalingFactor() + (mouseY - GetMouseY() / GetScalingFactor());
+
+    if (mCursorHidden)
+    {
+      mHiddenMousePointX = point.x;
+      mHiddenMousePointY = point.y;
+    }
+    
     CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+
+    IGraphics::MoveMouseCursor(x, y);
 }
 
 int IGraphicsMac::ShowMessageBox(const char* pText, const char* pCaption, int type)

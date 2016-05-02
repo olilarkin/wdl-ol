@@ -911,7 +911,8 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 {
   int c = GetMouseControlIdx(x, y);
-  mMouseCapture = mMouseX = mMouseY = -1;
+  mMouseX = x;
+  mMouseY = y;
   if (c >= 0)
   {
     IControl* pControl = mControls.Get(c);
@@ -923,6 +924,7 @@ void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
       mPlug->EndInformHostOfParamChange(paramIdx);
     }
   }
+  ReleaseMouseCapture();
 }
 
 bool IGraphics::OnMouseOver(int x, int y, IMouseMod* pMod)
@@ -1022,6 +1024,17 @@ bool IGraphics::OnKeyDown(int x, int y, int key)
     return false;
 }
 
+void IGraphics::MoveMouseCursor(int x, int y)
+{
+  // Call this with the window-relative coords after doing platform specifc cursor move
+    
+  if (mMouseCapture >= 0)
+  {
+    mMouseX = x;
+    mMouseY = y;
+  }
+}
+
 int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
 {
   if (mMouseCapture >= 0)
@@ -1048,7 +1061,10 @@ int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
     }
     else
     {
-        allow = true; // !pControl->IsGrayed();
+        if (pControl->GetMEWhenGrayed())
+            allow = true;
+        else
+            allow = !pControl->IsGrayed();
     }
 
     if (!pControl->IsHidden() && allow && pControl->IsHit(x, y))

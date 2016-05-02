@@ -618,7 +618,22 @@ void IGraphicsWin::ShowMouseCursor(bool restore)
 
 void IGraphicsWin::MoveMouseCursor(int x, int y)
 {
-    SetCursorPos(x, y);
+    POINT p;
+    int newX, newY;
+
+    GetCursorPos(&p);
+    newX = x / GetScalingFactor() + (p.x - GetMouseX() / GetScalingFactor());
+    newY = y / GetScalingFactor() + (p.y - GetMouseY() / GetScalingFactor());
+    
+    if (mCursorHidden)
+    {
+      mHiddenMousePointX = newX;
+      mHiddenMousePointY = newY;
+    }
+    
+    SetCursorPos(newX, newY);
+    
+    IGraphics::MoveMouseCursor(x, y);
 }
 
 int IGraphicsWin::ShowMessageBox(const char* pText, const char* pCaption, int type)
