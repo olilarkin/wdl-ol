@@ -220,20 +220,18 @@ void IPlugVST::AttachGraphics(IGraphics* pGraphics)
     IPlugBase::AttachGraphics(pGraphics);
     mAEffect.flags |= effFlagsHasEditor;
     mEditRect.left = mEditRect.top = 0;
-    mEditRect.right = pGraphics->Width();
-    mEditRect.bottom = pGraphics->Height();
+    mEditRect.right = pGraphics->Width(true);
+    mEditRect.bottom = pGraphics->Height(true);
   }
 }
 
 void IPlugVST::ResizeGraphics(int w, int h)
 {
-  IGraphics* pGraphics = GetGUI();
-
-  if (pGraphics)
+  if (GetGUI())
   {
     mEditRect.left = mEditRect.top = 0;
-    mEditRect.right = pGraphics->Width();
-    mEditRect.bottom = pGraphics->Height();
+    mEditRect.right = w;
+    mEditRect.bottom = h;
 
     OnWindowResize();
   }
@@ -351,7 +349,7 @@ VstIntPtr VSTCALLBACK IPlugVST::VSTDispatcher(AEffect *pEffect, VstInt32 opCode,
     case effOpen:
     {
       _this->HostSpecificInit();
-      _this->OnParamReset();
+      _this->OnParamReset(kReset);
       return 0;
     }
     case effClose:
@@ -419,7 +417,7 @@ VstIntPtr VSTCALLBACK IPlugVST::VSTDispatcher(AEffect *pEffect, VstInt32 opCode,
           }
           if (_this->GetGUI()) _this->GetGUI()->SetParameterFromPlug(idx, v, false);
           pParam->Set(v);
-          _this->OnParamChange(idx);
+          _this->OnParamChange(idx, kAutomation);
         }
         return 1;
       }
@@ -901,11 +899,16 @@ void VSTCALLBACK IPlugVST::VSTSetParameter(AEffect *pEffect, VstInt32 idx, float
   IMutexLock lock(_this);
   if (idx >= 0 && idx < _this->NParams())
   {
-    if (_this->GetGUI())
+    // Filter repeat values
+      
+    if (((float)_this->GetParam(idx)->GetNormalized()) != value)
     {
-      _this->GetGUI()->SetParameterFromPlug(idx, value, true);
+        if (_this->GetGUI())
+        {
+            _this->GetGUI()->SetParameterFromPlug(idx, value, true);
+        }
+        _this->GetParam(idx)->SetNormalized(value);
+        _this->OnParamChange(idx, kAutomation);
     }
-    _this->GetParam(idx)->SetNormalized(value);
-    _this->OnParamChange(idx);
   }
 }

@@ -1,8 +1,6 @@
 #include "IPlugBase.h"
-#ifndef OS_IOS
 #include "IGraphics.h"
 #include "IControl.h"
-#endif
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
@@ -82,6 +80,7 @@ IPlugBase::IPlugBase(int nParams,
   , mIsInst(plugIsInst)
   , mDoesMIDI(plugDoesMidi)
   , mAPI(plugAPI)
+  , mHasReceivedAudio(false)
   , mIsBypassed(false)
   , mDelay(0)
   , mTailSize(0)
@@ -152,9 +151,7 @@ IPlugBase::IPlugBase(int nParams,
 IPlugBase::~IPlugBase()
 {
   TRACE;
-  #ifndef OS_IOS
   DELETE_NULL(mGraphics);
-  #endif
   mParams.Empty(true);
   mPresets.Empty(true);
   mInChannels.Empty(true);
@@ -224,7 +221,7 @@ void IPlugBase::SetHost(const char* host, int version)
   GetVersionStr(version, vStr);
   Trace(TRACELOC, "host_%sknown:%s:%s", (mHost == kHostUnknown ? "un" : ""), host, vStr);
 }
-#ifndef OS_IOS
+
 void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 {
   if (pGraphics)
@@ -241,7 +238,6 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
     mGraphics = pGraphics;
   }
 }
-#endif
 
 // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
 int IPlugBase::GetEffectVersion(bool decimal)
@@ -460,6 +456,8 @@ void IPlugBase::PassThroughBuffers(float sampleType, int nFrames)
 
 void IPlugBase::ProcessBuffers(double sampleType, int nFrames)
 {
+  mHasReceivedAudio = true;
+    
   ProcessDoubleReplacing(mInData.Get(), mOutData.Get(), nFrames);
 }
 
@@ -468,7 +466,9 @@ void IPlugBase::ProcessBuffers(float sampleType, int nFrames)
   ProcessDoubleReplacing(mInData.Get(), mOutData.Get(), nFrames);
   int i, n = NOutChannels();
   OutChannel** ppOutChannel = mOutChannels.GetList();
-  
+    
+  mHasReceivedAudio = true;
+    
   for (i = 0; i < n; ++i, ++ppOutChannel)
   {
     OutChannel* pOutChannel = *ppOutChannel;
@@ -486,6 +486,8 @@ void IPlugBase::ProcessBuffersAccumulating(float sampleType, int nFrames)
   int i, n = NOutChannels();
   OutChannel** ppOutChannel = mOutChannels.GetList();
   
+  mHasReceivedAudio = true;
+    
   for (i = 0; i < n; ++i, ++ppOutChannel)
   {
     OutChannel* pOutChannel = *ppOutChannel;
@@ -537,16 +539,18 @@ void IPlugBase::SetParameterFromGUI(int idx, double normalizedValue)
   WDL_MutexLock lock(&mMutex);
   GetParam(idx)->SetNormalized(normalizedValue);
   InformHostOfParamChange(idx, normalizedValue);
-  OnParamChange(idx);
+  OnParamChange(idx, kGUI);
 }
 
-void IPlugBase::OnParamReset()
+void IPlugBase::OnParamReset(ParamChangeSource source)
 {
   for (int i = 0; i < mParams.GetSize(); ++i)
   {
-    OnParamChange(i);
+    OnParamChange(i, source);
   }
-  //Reset();
+  
+  if (source == kReset || !mHasReceivedAudio)
+    Reset();
 }
 
 // Default passthrough.
@@ -570,21 +574,6 @@ void IPlugBase::ProcessDoubleReplacing(double** inputs, double** outputs, int nF
   }
 }
 
-// Default passthrough ONLY USED BY IOS.
-void IPlugBase::ProcessSingleReplacing(float** inputs, float** outputs, int nFrames)
-{
-  // Mutex is already locked.
-  int i, nIn = mInChannels.GetSize(), nOut = mOutChannels.GetSize();
-  for (i = 0; i < nIn; ++i)
-  {
-    memcpy(outputs[i], inputs[i], nFrames * sizeof(float));
-  }
-  for (/* same i */; i < nOut; ++i)
-  {
-    memset(outputs[i], 0, nFrames * sizeof(float));
-  }
-}
-
 // Default passthrough.
 void IPlugBase::ProcessMidiMsg(IMidiMsg* pMsg)
 {
@@ -605,7 +594,7 @@ IPreset* GetNextUninitializedPreset(WDL_PtrList<IPreset>* pPresets)
   return 0;
 }
 
-void IPlugBase::MakeDefaultPreset(char* name, int nPresets)
+void IPlugBase::MakeDefaultPreset(const char* name, int nPresets)
 {
   for (int i = 0; i < nPresets; ++i)
   {
@@ -637,7 +626,7 @@ void IPlugBase::MakeDefaultPreset(char* name, int nPresets)
   } \
 }
 
-void IPlugBase::MakePreset(char* name, ...)
+void IPlugBase::MakePreset(const char* name, ...)
 {
   IPreset* pPreset = GetNextUninitializedPreset(&mPresets);
   if (pPreset)
@@ -660,7 +649,7 @@ void IPlugBase::MakePreset(char* name, ...)
 
 #define PARAM_UNINIT 99.99e-9
 
-void IPlugBase::MakePresetFromNamedParams(char* name, int nParamsNamed, ...)
+void IPlugBase::MakePresetFromNamedParams(const char* name, int nParamsNamed, ...)
 {
   TRACE;
   IPreset* pPreset = GetNextUninitializedPreset(&mPresets);
@@ -703,7 +692,7 @@ void IPlugBase::MakePresetFromNamedParams(char* name, int nParamsNamed, ...)
   }
 }
 
-void IPlugBase::MakePresetFromChunk(char* name, ByteChunk* pChunk)
+void IPlugBase::MakePresetFromChunk(const char* name, ByteChunk* pChunk)
 {
   IPreset* pPreset = GetNextUninitializedPreset(&mPresets);
   if (pPreset)
@@ -715,7 +704,7 @@ void IPlugBase::MakePresetFromChunk(char* name, ByteChunk* pChunk)
   }
 }
 
-void IPlugBase::MakePresetFromBlob(char* name, const char* blob, int sizeOfChunk)
+void IPlugBase::MakePresetFromBlob(const char* name, const char* blob, int sizeOfChunk)
 {
   ByteChunk presetChunk;
   presetChunk.Resize(sizeOfChunk);
@@ -788,9 +777,7 @@ bool IPlugBase::RestorePreset(int idx)
     {
       mCurrentPresetIdx = idx;
       PresetsChangedByHost();
-      #ifndef OS_IOS
       RedrawParamControls();
-      #endif
     }
   }
   return restoredOK;
@@ -916,11 +903,11 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
   {
     IParam* pParam = mParams.Get(i);
     double v = 0.0;
-    Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
     pos = pChunk->Get(&v, pos);
     pParam->Set(v);
+    Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
   }
-  OnParamReset();
+  OnParamReset(kPresetRecall);
   return pos;
 }
 
@@ -943,7 +930,6 @@ bool IPlugBase::CompareState(const unsigned char* incomingState, int startPos)
   return isEqual;
 }
 
-#ifndef OS_IOS
 void IPlugBase::RedrawParamControls()
 {
   if (mGraphics)
@@ -956,7 +942,7 @@ void IPlugBase::RedrawParamControls()
     }
   }
 }
-#endif
+
 void IPlugBase::DirtyParameters()
 {
   WDL_MutexLock lock(&mMutex);

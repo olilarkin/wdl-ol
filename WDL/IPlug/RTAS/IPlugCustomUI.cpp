@@ -48,9 +48,9 @@ void IPlugCustomUI::GetRect(short *left, short *top, short *right, short *bottom
   if (mGraphics)
   {
     *left = 0;
-    *right = mGraphics->Width();
+    *right = mGraphics->Width(false);
     *top = 0;
-    *bottom = mGraphics->Height();
+    *bottom = mGraphics->Height(false);
   }
 }
 
@@ -292,9 +292,9 @@ bool IPlugCustomUI::Close()
 void IPlugCustomUI::GetRect(short *left, short *top, short *right, short *bottom)
 {
   *left = 0;
-  *right = mGraphics->Width();
+  *right = mGraphics->Width(true);
   *top = 0;
-  *bottom = mGraphics->Height();
+  *bottom = mGraphics->Height(true);
 
   mPIRect.left=*left; mPIRect.right=*right; mPIRect.top=*top; mPIRect.bottom=*bottom;
 }

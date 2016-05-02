@@ -57,27 +57,11 @@
 		4F8D4B7D13E97425004F7633 /* lice_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B5E13E97425004F7633 /* lice_image.cpp */; };
 		4F8D4B8213E97425004F7633 /* lice_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6313E97425004F7633 /* lice_line.cpp */; };
 		4F8D4B8413E97425004F7633 /* lice_palette.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6513E97425004F7633 /* lice_palette.cpp */; };
-		4F8D4B8713E97425004F7633 /* lice_png.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6813E97425004F7633 /* lice_png.cpp */; };
 		4F8D4B8913E97425004F7633 /* lice_texgen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6A13E97425004F7633 /* lice_texgen.cpp */; };
 		4F8D4B8B13E97425004F7633 /* lice_text.h in Headers */ = {isa = PBXBuildFile; fileRef = 4F8D4B6C13E97425004F7633 /* lice_text.h */; };
 		4F8D4B8C13E97425004F7633 /* lice_textnew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6D13E97425004F7633 /* lice_textnew.cpp */; };
 		4F8D4B8D13E97425004F7633 /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6E13E97425004F7633 /* lice.cpp */; };
 		4F8D4B8E13E97425004F7633 /* lice.h in Headers */ = {isa = PBXBuildFile; fileRef = 4F8D4B6F13E97425004F7633 /* lice.h */; };
-		4F8D4B8F13E9749E004F7633 /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3013E973FA004F7633 /* png.c */; };
-		4F8D4B9013E9749E004F7633 /* pngerror.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3413E973FA004F7633 /* pngerror.c */; };
-		4F8D4B9113E9749E004F7633 /* pngget.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3513E973FA004F7633 /* pngget.c */; };
-		4F8D4B9213E9749E004F7633 /* pngmem.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3813E973FA004F7633 /* pngmem.c */; };
-		4F8D4B9313E9749E004F7633 /* pngpread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3913E973FA004F7633 /* pngpread.c */; };
-		4F8D4B9413E9749E004F7633 /* pngread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3B13E973FA004F7633 /* pngread.c */; };
-		4F8D4B9513E9749E004F7633 /* pngrio.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3C13E973FA004F7633 /* pngrio.c */; };
-		4F8D4B9613E9749E004F7633 /* pngrtran.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3D13E973FA004F7633 /* pngrtran.c */; };
-		4F8D4B9713E9749E004F7633 /* pngrutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3E13E973FA004F7633 /* pngrutil.c */; };
-		4F8D4B9813E9749E004F7633 /* pngset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3F13E973FA004F7633 /* pngset.c */; };
-		4F8D4B9913E9749E004F7633 /* pngtrans.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4113E973FA004F7633 /* pngtrans.c */; };
-		4F8D4B9A13E9749E004F7633 /* pngwio.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4213E973FA004F7633 /* pngwio.c */; };
-		4F8D4B9B13E9749E004F7633 /* pngwrite.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4313E973FA004F7633 /* pngwrite.c */; };
-		4F8D4B9C13E9749E004F7633 /* pngwtran.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4413E973FA004F7633 /* pngwtran.c */; };
-		4F8D4B9D13E9749E004F7633 /* pngwutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4513E973FA004F7633 /* pngwutil.c */; };
 		4F8D4BD713E976A7004F7633 /* crc32.h in Headers */ = {isa = PBXBuildFile; fileRef = 4F8D4AF413E973D9004F7633 /* crc32.h */; };
 		4F8D4BD813E976A7004F7633 /* deflate.h in Headers */ = {isa = PBXBuildFile; fileRef = 4F8D4AF613E973D9004F7633 /* deflate.h */; };
 		4F8D4BD913E976A7004F7633 /* gzguts.h in Headers */ = {isa = PBXBuildFile; fileRef = 4F8D4AF813E973D9004F7633 /* gzguts.h */; };
@@ -134,6 +118,24 @@
 		4F8D4C0D13E976A7004F7633 /* lice_texgen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6A13E97425004F7633 /* lice_texgen.cpp */; };
 		4F8D4C0E13E976A7004F7633 /* lice_textnew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6D13E97425004F7633 /* lice_textnew.cpp */; };
 		4F8D4C0F13E976A7004F7633 /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6E13E97425004F7633 /* lice.cpp */; };
+		B859F17F1CCA61DF0099750A /* lice_png_write.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B859F17D1CCA61DF0099750A /* lice_png_write.cpp */; };
+		B8AFA5881CCC24FF00011C29 /* lice_png.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B6813E97425004F7633 /* lice_png.cpp */; };
+		B8AFA5891CCC250200011C29 /* lice_png_write.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B859F17D1CCA61DF0099750A /* lice_png_write.cpp */; };
+		B8E0FB941CD796800053B15D /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3013E973FA004F7633 /* png.c */; };
+		B8E0FB961CD797090053B15D /* pngerror.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3413E973FA004F7633 /* pngerror.c */; };
+		B8E0FB971CD7970B0053B15D /* pngget.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3513E973FA004F7633 /* pngget.c */; };
+		B8E0FB981CD797100053B15D /* pngmem.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3813E973FA004F7633 /* pngmem.c */; };
+		B8E0FB991CD797120053B15D /* pngpread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3913E973FA004F7633 /* pngpread.c */; };
+		B8E0FB9A1CD7971F0053B15D /* pngread.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3B13E973FA004F7633 /* pngread.c */; };
+		B8E0FB9B1CD797240053B15D /* pngrio.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3C13E973FA004F7633 /* pngrio.c */; };
+		B8E0FB9C1CD7972A0053B15D /* pngrtran.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3D13E973FA004F7633 /* pngrtran.c */; };
+		B8E0FB9D1CD7972D0053B15D /* pngrutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3E13E973FA004F7633 /* pngrutil.c */; };
+		B8E0FB9E1CD7972F0053B15D /* pngset.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B3F13E973FA004F7633 /* pngset.c */; };
+		B8E0FB9F1CD797320053B15D /* pngtrans.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4113E973FA004F7633 /* pngtrans.c */; };
+		B8E0FBA01CD797340053B15D /* pngwio.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4213E973FA004F7633 /* pngwio.c */; };
+		B8E0FBA11CD797350053B15D /* pngwrite.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4313E973FA004F7633 /* pngwrite.c */; };
+		B8E0FBA21CD797380053B15D /* pngwtran.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4413E973FA004F7633 /* pngwtran.c */; };
+		B8E0FBA31CD7973A0053B15D /* pngwutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F8D4B4513E973FA004F7633 /* pngwutil.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -219,6 +221,7 @@
 		4F8D4B6F13E97425004F7633 /* lice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lice.h; path = ../lice/lice.h; sourceTree = "<group>"; };
 		4F8D4BAD13E974CF004F7633 /* lice.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = lice.xcconfig; sourceTree = "<group>"; };
 		4F8D4C1413E976A7004F7633 /* lice32.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = lice32.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B859F17D1CCA61DF0099750A /* lice_png_write.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lice_png_write.cpp; sourceTree = "<group>"; };
 		D2AAC046055464E500DB518D /* lice.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = lice.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -265,6 +268,7 @@
 				4F8D4B6313E97425004F7633 /* lice_line.cpp */,
 				4F8D4B6513E97425004F7633 /* lice_palette.cpp */,
 				4F8D4B6813E97425004F7633 /* lice_png.cpp */,
+				B859F17D1CCA61DF0099750A /* lice_png_write.cpp */,
 				4F8D4B6A13E97425004F7633 /* lice_texgen.cpp */,
 				4F8D4B6C13E97425004F7633 /* lice_text.h */,
 				4F8D4B6D13E97425004F7633 /* lice_textnew.cpp */,
@@ -478,6 +482,7 @@
 				4F8D4BF213E976A7004F7633 /* pngtrans.c in Sources */,
 				4F8D4BF313E976A7004F7633 /* pngwio.c in Sources */,
 				4F8D4BF413E976A7004F7633 /* pngwrite.c in Sources */,
+				B859F17F1CCA61DF0099750A /* lice_png_write.cpp in Sources */,
 				4F8D4BF513E976A7004F7633 /* pngwtran.c in Sources */,
 				4F8D4BF613E976A7004F7633 /* pngwutil.c in Sources */,
 				4F8D4BF713E976A7004F7633 /* adler32.c in Sources */,
@@ -512,21 +517,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F8D4B8F13E9749E004F7633 /* png.c in Sources */,
-				4F8D4B9013E9749E004F7633 /* pngerror.c in Sources */,
-				4F8D4B9113E9749E004F7633 /* pngget.c in Sources */,
-				4F8D4B9213E9749E004F7633 /* pngmem.c in Sources */,
-				4F8D4B9313E9749E004F7633 /* pngpread.c in Sources */,
-				4F8D4B9413E9749E004F7633 /* pngread.c in Sources */,
-				4F8D4B9513E9749E004F7633 /* pngrio.c in Sources */,
-				4F8D4B9613E9749E004F7633 /* pngrtran.c in Sources */,
-				4F8D4B9713E9749E004F7633 /* pngrutil.c in Sources */,
-				4F8D4B9813E9749E004F7633 /* pngset.c in Sources */,
-				4F8D4B9913E9749E004F7633 /* pngtrans.c in Sources */,
-				4F8D4B9A13E9749E004F7633 /* pngwio.c in Sources */,
-				4F8D4B9B13E9749E004F7633 /* pngwrite.c in Sources */,
-				4F8D4B9C13E9749E004F7633 /* pngwtran.c in Sources */,
-				4F8D4B9D13E9749E004F7633 /* pngwutil.c in Sources */,
+				B8E0FB941CD796800053B15D /* png.c in Sources */,
+				B8E0FB961CD797090053B15D /* pngerror.c in Sources */,
+				B8E0FB971CD7970B0053B15D /* pngget.c in Sources */,
+				B8E0FB981CD797100053B15D /* pngmem.c in Sources */,
+				B8E0FB991CD797120053B15D /* pngpread.c in Sources */,
+				B8E0FB9A1CD7971F0053B15D /* pngread.c in Sources */,
+				B8E0FB9B1CD797240053B15D /* pngrio.c in Sources */,
+				B8E0FB9C1CD7972A0053B15D /* pngrtran.c in Sources */,
+				B8E0FB9D1CD7972D0053B15D /* pngrutil.c in Sources */,
+				B8E0FB9E1CD7972F0053B15D /* pngset.c in Sources */,
+				B8E0FB9F1CD797320053B15D /* pngtrans.c in Sources */,
+				B8E0FBA11CD797350053B15D /* pngwrite.c in Sources */,
+				B8E0FBA21CD797380053B15D /* pngwtran.c in Sources */,
+				B8E0FBA31CD7973A0053B15D /* pngwutil.c in Sources */,
+				B8E0FBA01CD797340053B15D /* pngwio.c in Sources */,
 				4F8D4B0B13E973D9004F7633 /* adler32.c in Sources */,
 				4F8D4B0C13E973D9004F7633 /* compress.c in Sources */,
 				4F8D4B0D13E973D9004F7633 /* crc32.c in Sources */,
@@ -548,10 +553,11 @@
 				4F8D4B7D13E97425004F7633 /* lice_image.cpp in Sources */,
 				4F8D4B8213E97425004F7633 /* lice_line.cpp in Sources */,
 				4F8D4B8413E97425004F7633 /* lice_palette.cpp in Sources */,
-				4F8D4B8713E97425004F7633 /* lice_png.cpp in Sources */,
 				4F8D4B8913E97425004F7633 /* lice_texgen.cpp in Sources */,
 				4F8D4B8C13E97425004F7633 /* lice_textnew.cpp in Sources */,
 				4F8D4B8D13E97425004F7633 /* lice.cpp in Sources */,
+				B8AFA5881CCC24FF00011C29 /* lice_png.cpp in Sources */,
+				B8AFA5891CCC250200011C29 /* lice_png_write.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -587,6 +593,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/alexharker/Documents/Plugin,
+					"Work/wdl-ol/Projects/AHMeasure/../HISSTools_Plugin_Common/HISSTools_Graphics/cairo",
+				);
 				PRODUCT_NAME = lice;
 				SKIP_INSTALL = YES;
 				SYMROOT = "build-mac";
@@ -606,6 +617,11 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/alexharker/Documents/Plugin,
+					"Work/wdl-ol/Projects/AHMeasure/../HISSTools_Plugin_Common/HISSTools_Graphics/cairo",
+				);
 				PRODUCT_NAME = lice;
 				SKIP_INSTALL = YES;
 				STRIP_INSTALLED_PRODUCT = YES;
@@ -668,6 +684,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/alexharker/Documents/Plugin,
+					"Work/wdl-ol/Projects/AHMeasure/../HISSTools_Plugin_Common/HISSTools_Graphics/cairo",
+				);
 				PRODUCT_NAME = lice32;
 				SKIP_INSTALL = YES;
 				SYMROOT = "build-mac";
@@ -688,6 +709,11 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/alexharker/Documents/Plugin,
+					"Work/wdl-ol/Projects/AHMeasure/../HISSTools_Plugin_Common/HISSTools_Graphics/cairo",
+				);
 				PRODUCT_NAME = lice32;
 				SKIP_INSTALL = YES;
 				STRIP_INSTALLED_PRODUCT = YES;

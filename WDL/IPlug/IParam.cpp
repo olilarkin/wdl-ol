@@ -57,6 +57,7 @@ void IParam::InitDouble(const char* name, double defaultVal, double minVal, doub
   mMax = IPMAX(maxVal, minVal + step);
   mStep = step;
   mDefault = defaultVal;
+  mSignDisplay = false;
 
   for (mDisplayPrecision = 0;
        mDisplayPrecision < MAX_PARAM_DISPLAY_PRECISION && step != floor(step);
@@ -139,12 +140,12 @@ void IParam::GetDisplayForHost(double value, bool normalized, char* rDisplay, bo
   {
     sprintf(rDisplay, "%d", int(displayValue));
   }
-//   else if(mSignDisplay)
-//   {
-//     char fmt[16];
-//     sprintf(fmt, "%%+.%df", mDisplayPrecision);
-//     sprintf(rDisplay, fmt, displayValue);
-//   }
+  else if(mSignDisplay && displayValue)
+  {
+      char fmt[16];
+      sprintf(fmt, "%%+.%df", mDisplayPrecision);
+      sprintf(rDisplay, fmt, displayValue);
+  }
   else
   {
     sprintf(rDisplay, "%.*f", mDisplayPrecision, displayValue);

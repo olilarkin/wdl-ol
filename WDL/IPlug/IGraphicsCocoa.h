@@ -6,13 +6,24 @@
 
 inline NSRect ToNSRect(IGraphics* pGraphics, IRECT* pR)
 {
-  int B = pGraphics->Height() - pR->B;
-  return NSMakeRect(pR->L, B-1, pR->W()+1, pR->H()+1);
+  double sf = pGraphics->GetScalingFactor();
+  
+  return NSMakeRect(pR->L / sf,
+                    ((pGraphics->Height(false) / sf) - pR->B / sf)-1,
+                    (pR->W() / sf) +1,
+                    (pR->H() / sf) +1);
 }
 
 inline IRECT ToIRECT(IGraphics* pGraphics, NSRect* pR)
 {
-  int x = pR->origin.x, y = pR->origin.y, w = pR->size.width, h = pR->size.height, gh = pGraphics->Height();
+  double sf = pGraphics->GetScalingFactor();
+  
+  int x = pR->origin.x * sf;
+  int y = pR->origin.y * sf;
+  int w = pR->size.width * sf;
+  int h = pR->size.height * sf;
+  int gh = pGraphics->Height(false);
+  
   return IRECT(x, gh - (y + h), x + w, gh - y);
 }
 

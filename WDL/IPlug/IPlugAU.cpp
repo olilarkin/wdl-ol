@@ -100,7 +100,7 @@ ComponentResult IPlugAU::IPlugAUEntry(ComponentParameters *params, void* pPlug)
         return badComponentSelector;
       }
       _this->mActive = true;
-      _this->OnParamReset();
+      _this->OnParamReset(kReset);
       _this->OnActivate(true);
       return noErr;
     }
@@ -1598,7 +1598,7 @@ ComponentResult IPlugAU::SetParamProc(void* pPlug, AudioUnitParameterID paramID,
   {
     _this->GetGUI()->SetParameterFromPlug(paramID, value, false);
   }
-  _this->OnParamChange(paramID);
+  _this->OnParamChange(paramID, kAutomation);
   return noErr;
 }
 

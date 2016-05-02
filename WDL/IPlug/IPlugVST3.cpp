@@ -402,9 +402,14 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
             default:
               if (idx >= 0 && idx < NParams())
               {
-                GetParam(idx)->SetNormalized((double)value);
-                if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, (double)value, true);
-                OnParamChange(idx);
+                // Filter repeat values
+                
+                if (GetParam(idx)->GetNormalized() != value)
+                {
+                    GetParam(idx)->SetNormalized(value);
+                    if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, value, true);
+                    OnParamChange(idx, kAutomation);
+                }
               }
               break;
           }
@@ -981,6 +986,7 @@ void IPlugVST3::ResizeGraphics(int w, int h)
   if (GetGUI())
   {
     viewsArray.at(0)->resize(w, h);
+    OnWindowResize();
   }
 }
 
@@ -1104,7 +1110,7 @@ tresult PLUGIN_API IPlugVST3View::getSize(ViewRect* size)
 
   if (mPlug->GetGUI())
   {
-    *size = ViewRect(0, 0, mPlug->GetGUI()->Width(), mPlug->GetGUI()->Height());
+    *size = ViewRect(0, 0, mPlug->GetGUI()->Width(true), mPlug->GetGUI()->Height(true));
 
     return kResultTrue;
   }

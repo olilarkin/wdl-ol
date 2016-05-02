@@ -93,7 +93,7 @@ public:
     for (i = 0; i < n; ++i)
     {
       FontKey* key = m_fonts.Get(i);
-      if (key->size == pTxt->mSize && key->orientation == pTxt->mOrientation && key->style == pTxt->mStyle && !strcmp(key->face, pTxt->mFont)) return key->font;
+      if (key->size == pTxt->mCachedSize && key->orientation == pTxt->mOrientation && key->style == pTxt->mStyle && !strcmp(key->face, pTxt->mFont)) return key->font;
     }
     return 0;
   }
@@ -180,6 +180,8 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mHiddenMousePointY(-1)
   , mEnableTooltips(false)
   , mShowControlBounds(false)
+  , mScalingFactor(1.)
+  , mAllowRetina(true)
 {
   mFPS = (refreshFPS > 0 ? refreshFPS : DEFAULT_FPS);
 }
@@ -199,11 +201,12 @@ void IGraphics::Resize(int w, int h)
   mWidth = w;
   mHeight = h;
   ReleaseMouseCapture();
+  mMouseOver = -1;
   mControls.Empty(true);
   DELETE_NULL(mDrawBitmap);
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
-  mPlug->ResizeGraphics(w, h);
+  mPlug->ResizeGraphics(Width(true), Height(true));
 }
 
 void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, char *txt)
@@ -414,8 +417,9 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
   // TODO: what if there are Int/Double Params with a display text e.g. -96db = "mute"
   else // type == IParam::kTypeInt || type == IParam::kTypeDouble
   {
+    IText text = *(pControl->GetText());      
     pParam->GetDisplayForHostNoDisplayText(currentText);
-    CreateTextEntry(pControl, pControl->GetText(), pTextRect, currentText, pParam );
+    CreateTextEntry(pControl, &text, pTextRect, currentText, pParam );
   }
 
 }
@@ -447,7 +451,7 @@ void IGraphics::ReleaseBitmap(IBitmap* pBitmap)
 
 void IGraphics::PrepDraw()
 {
-  mDrawBitmap = new LICE_SysBitmap(Width(), Height());
+  mDrawBitmap = new LICE_SysBitmap(Width(false), Height(false));
   mTmpBitmap = new LICE_MemBitmap();
 }
 
@@ -836,7 +840,7 @@ bool IGraphics::Draw(IRECT* pR)
     WDL_String str;
     str.SetFormatted(32, "x: %i, y: %i", mMouseX, mMouseY);
     IText txt(20, &CONTROL_BOUNDS_COLOR);
-    IRECT rect(Width() - 150, Height() - 20, Width(), Height());
+    IRECT rect(Width(false) - 150, Height(false) - 20, Width(false), Height(false));
     DrawIText(&txt, str.Get(), &rect);
   }
 #endif
@@ -907,7 +911,8 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 {
   int c = GetMouseControlIdx(x, y);
-  mMouseCapture = mMouseX = mMouseY = -1;
+  mMouseX = x;
+  mMouseY = y;
   if (c >= 0)
   {
     IControl* pControl = mControls.Get(c);
@@ -919,6 +924,7 @@ void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
       mPlug->EndInformHostOfParamChange(paramIdx);
     }
   }
+  ReleaseMouseCapture();
 }
 
 bool IGraphics::OnMouseOver(int x, int y, IMouseMod* pMod)
@@ -1018,6 +1024,17 @@ bool IGraphics::OnKeyDown(int x, int y, int key)
     return false;
 }
 
+void IGraphics::MoveMouseCursor(int x, int y)
+{
+  // Call this with the window-relative coords after doing platform specifc cursor move
+    
+  if (mMouseCapture >= 0)
+  {
+    mMouseX = x;
+    mMouseY = y;
+  }
+}
+
 int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
 {
   if (mMouseCapture >= 0)
@@ -1044,7 +1061,10 @@ int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
     }
     else
     {
-      allow = !pControl->IsGrayed();
+        if (pControl->GetMEWhenGrayed())
+            allow = true;
+        else
+            allow = !pControl->IsGrayed();
     }
 
     if (!pControl->IsHidden() && allow && pControl->IsHit(x, y))
@@ -1088,7 +1108,7 @@ void IGraphics::OnGUIIdle()
   }
 }
 
-bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
+bool IGraphics::DrawIText(IText* pTxt, const char* str, IRECT* pR, bool measure)
 {
   if (!str || str[0] == '\0')
   {
@@ -1097,8 +1117,9 @@ bool IGraphics::DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure)
 
   LICE_IFont* font = pTxt->mCached;
   
-  if (!font)
+  if (!font || (pTxt->mCachedSize != (int) (GetScalingFactor() * pTxt->mSize)))
   {
+    pTxt->mCachedSize = GetScalingFactor() * pTxt->mSize;
     font = CacheFont(pTxt);
     if (!font) return false;
   }
@@ -1153,7 +1174,7 @@ LICE_IFont* IGraphics::CacheFont(IText* pTxt)
   if (!font)
   {
     font = new LICE_CachedFont;
-    int h = pTxt->mSize;
+    int h = pTxt->mCachedSize;
     int esc = 10 * pTxt->mOrientation;
     int wt = (pTxt->mStyle == IText::kStyleBold ? FW_BOLD : FW_NORMAL);
     int it = (pTxt->mStyle == IText::kStyleItalic ? TRUE : FALSE);

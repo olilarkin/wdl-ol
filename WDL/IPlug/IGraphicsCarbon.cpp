@@ -56,8 +56,8 @@ IGraphicsCarbon::IGraphicsCarbon(IGraphicsMac* pGraphicsMac,
 
   Rect r;   // Client.
   r.left = r.top = 0;
-  r.right = pGraphicsMac->Width();
-  r.bottom = pGraphicsMac->Height();
+  r.right = pGraphicsMac->Width(false);
+  r.bottom = pGraphicsMac->Height(false);
 
   WindowAttributes winAttrs = 0;
   GetWindowAttributes(pWindow, &winAttrs);
@@ -369,7 +369,7 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
       {
         case kEventControlDraw:
         {
-          int gfxW = pGraphicsMac->Width(), gfxH = pGraphicsMac->Height();
+          int gfxW = pGraphicsMac->Width(false), gfxH = pGraphicsMac->Height(false);
 
           IRECT r = GetRegionRect(pEvent, gfxW, gfxH);
 
@@ -401,7 +401,7 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
             
             CGContextTranslateCTM(_this->mCGC, portBounds.left + offsetW, offsetH);
             
-            r = IRECT(0, 0, pGraphicsMac->Width(), pGraphicsMac->Height());
+            r = IRECT(0, 0, pGraphicsMac->Width(false), pGraphicsMac->Height(false));
             pGraphicsMac->Draw(&r); // Carbon non-composited will redraw everything, the IRECT passed here is the entire plugin-gui
             
             QDEndCGContext(port, &(_this->mCGC));
@@ -428,9 +428,9 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
       // adjust x mouse coord if the gui is less wide than the window
 //      int windowWidth = (bounds.right - bounds.left);
 //
-//      if (windowWidth > pGraphicsMac->Width())
+//      if (windowWidth > pGraphicsMac->Width(false))
 //      {
-//        hp.x -= (int) floor((windowWidth - pGraphicsMac->Width()) / 2.);
+//        hp.x -= (int) floor((windowWidth - pGraphicsMac->Width(false)) / 2.);
 //      }
 
       // Title bar Y offset
@@ -601,7 +601,7 @@ pascal void IGraphicsCarbon::TimerHandler(EventLoopTimerRef pTimer, void* pGraph
     }
     else
     {
-//      int h = _this->mGraphicsMac->Height();
+//      int h = _this->mGraphicsMac->Height(false);
 //      SetRectRgn(_this->mRgn, r.L, h - r.B, r.R, h - r.T);
 //      UpdateControls(_this->mWindow, _this->mRgn);
       UpdateControls(_this->mWindow, 0);

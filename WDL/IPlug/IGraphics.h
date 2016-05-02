@@ -69,7 +69,7 @@ public:
   bool FillIConvexPolygon(const IColor* pColor, int* x, int* y, int npoints, const IChannelBlend* pBlend = 0);
   bool FillTriangle(const IColor* pColor, int x1, int y1, int x2, int y2, int x3, int y3, IChannelBlend* pBlend);
 
-  bool DrawIText(IText* pTxt, char* str, IRECT* pR, bool measure = false);
+  bool DrawIText(IText* pTxt, const char* str, IRECT* pR, bool measure = false);
   virtual bool MeasureIText(IText* pTxt, char* str, IRECT* pR) { return DrawIText(pTxt, str, pR, true); } ;
 
   IColor GetPoint(int x, int y);
@@ -129,7 +129,7 @@ public:
 
   virtual void CloseWindow() = 0;
   virtual void* GetWindow() = 0;
-
+  
   virtual bool GetTextFromClipboard(WDL_String* pStr) = 0;
 
   ////////////////////////////////////////
@@ -137,9 +137,13 @@ public:
   IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS = 0);
   virtual ~IGraphics();
 
-  int Width() { return mWidth; }
-  int Height() { return mHeight; }
+  int Width(bool screenSize) { return screenSize ? mWidth/mScalingFactor : mWidth; }
+  int Height(bool screenSize) { return screenSize ? mHeight/mScalingFactor : mHeight; }
   int FPS() { return mFPS; }
+  bool GetIsRetina() { return (mScalingFactor == 2.); }
+  double GetScalingFactor() { return mScalingFactor; }
+
+  void SetAllowRetina(bool allowRetina) { mAllowRetina = allowRetina; }
 
   IPlugBase* GetPlug() { return mPlug; }
 
@@ -189,8 +193,9 @@ public:
   bool OnKeyDown(int x, int y, int key);
 
   virtual void HideMouseCursor() {};
-  virtual void ShowMouseCursor() {};
-
+  virtual void ShowMouseCursor(bool restore = true) {};
+  virtual void MoveMouseCursor(int x, int y);
+    
   int GetParamIdxForPTAutomation(int x, int y);
   int GetLastClickedParamForPTAutomation();
 
@@ -225,9 +230,9 @@ public:
   // Updates tooltips after (un)hiding controls.
   virtual void UpdateTooltips() = 0;
 
-	// This is an idle call from the GUI thread, as opposed to 
-	// IPlug::OnIdle which is called from the audio processing thread.
-	void OnGUIIdle();
+  // This is an idle call from the GUI thread, as opposed to
+  // IPlug::OnIdle which is called from the audio processing thread.
+  void OnGUIIdle();
 
   void RetainBitmap(IBitmap* pBitmap);
   void ReleaseBitmap(IBitmap* pBitmap);
@@ -248,7 +253,8 @@ protected:
   WDL_PtrList<IControl> mControls;
   IPlugBase* mPlug;
   IRECT mDrawRECT;
-  bool mCursorHidden;
+  bool mCursorHidden, mAllowRetina;
+  double mScalingFactor;
   int mHiddenMousePointX, mHiddenMousePointY;
 
   bool CanHandleMouseOver() { return mHandleMouseOver; }

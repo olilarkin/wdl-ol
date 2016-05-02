@@ -21,7 +21,7 @@ public:
   IControl(IPlugBase* pPlug, IRECT pR, int paramIdx = -1, IChannelBlend blendMethod = IChannelBlend::kBlendNone)
     : mPlug(pPlug), mRECT(pR), mTargetRECT(pR), mParamIdx(paramIdx), mValue(0.0), mDefaultValue(-1.0),
       mBlend(blendMethod), mDirty(true), mHide(false), mGrayed(false), mDisablePrompt(true), mDblAsSingleClick(false),
-      mClampLo(0.0), mClampHi(1.0), mMOWhenGreyed(false), mTextEntryLength(DEFAULT_TEXT_ENTRY_LEN), 
+      mClampLo(0.0), mClampHi(1.0), mMOWhenGrayed(false), mMEWhenGrayed(false), mTextEntryLength(DEFAULT_TEXT_ENTRY_LEN),
       mValDisplayControl(0), mNameDisplayControl(0), mTooltip("") {}
 
   virtual ~IControl() {}
@@ -72,8 +72,9 @@ public:
   virtual void GrayOut(bool gray);
   bool IsGrayed() { return mGrayed; }
 
-  bool GetMOWhenGrayed() { return mMOWhenGreyed; }
-
+  bool GetMOWhenGrayed() { return mMOWhenGrayed; }
+  bool GetMEWhenGrayed() { return mMEWhenGrayed; }
+    
   // Override if you want the control to be hit only if a visible part of it is hit, or whatever.
   virtual bool IsHit(int x, int y) { return mTargetRECT.Contains(x, y); }
 
@@ -131,7 +132,7 @@ protected:
   
   WDL_TypedBuf<AuxParam> mAuxParams;
   double mValue, mDefaultValue, mClampLo, mClampHi;
-  bool mDirty, mHide, mGrayed, mRedraw, mDisablePrompt, mClamped, mDblAsSingleClick, mMOWhenGreyed;
+  bool mDirty, mHide, mGrayed, mRedraw, mDisablePrompt, mClamped, mDblAsSingleClick, mMOWhenGrayed, mMEWhenGrayed;
   IChannelBlend mBlend;
   IControl* mValDisplayControl;
   IControl* mNameDisplayControl;

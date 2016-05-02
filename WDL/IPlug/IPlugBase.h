@@ -25,6 +25,9 @@ class IGraphics;
 class IPlugBase
 {
 public:
+    
+  enum ParamChangeSource { kReset, kAutomation, kPresetRecall, kGUI, kUnknown };
+    
   // Use IPLUG_CTOR instead of calling directly (defined in IPlug_include_in_plug_src.h).
   IPlugBase(int nParams,
             const char* channelIOStr,
@@ -49,13 +52,13 @@ public:
 
   // Implementations should set a mutex lock like in the no-op!
   virtual void Reset() { TRACE; IMutexLock lock(this); }
-  virtual void OnParamChange(int paramIdx) { IMutexLock lock(this); }
+  virtual void OnParamChange(int paramIdx, ParamChangeSource source = kUnknown) { IMutexLock lock(this); }
+  virtual void OnParamChange(int paramIdx) { OnParamChange(paramIdx, kUnknown); }
 
   // Default passthrough.  Inputs and outputs are [nChannel][nSample].
   // Mutex is already locked.
   virtual void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
-  virtual void ProcessSingleReplacing(float** inputs, float** outputs, int nFrames);
-
+  
   // In case the audio processing thread needs to do anything when the GUI opens
   // (like for example, set some state dependent initial values for controls).
   virtual void OnGUIOpen() { TRACE; }
@@ -84,9 +87,7 @@ public:
   // Only used by RTAS & AAX, override in plugins that do chunks
   virtual bool CompareState(const unsigned char* incomingState, int startPos);
   
-  #ifndef OS_IOS
   virtual void OnWindowResize() {}
-  #endif
   // implement this and return true to trigger your custom about box, when someone clicks about in the menu of a standalone
   virtual bool HostRequestingAboutBox() { return false; }
 
@@ -193,9 +194,7 @@ protected:
 
   void SetHost(const char* host, int version);   // Version = 0xVVVVRRMM.
   virtual void HostSpecificInit() { return; };
-  #ifndef OS_IOS
   virtual void AttachGraphics(IGraphics* pGraphics);
-  #endif
 
   // If latency changes after initialization (often not supported by the host).
   virtual void SetLatency(int samples);
@@ -211,16 +210,16 @@ protected:
   bool DoesMIDI() { return mDoesMIDI; }
   
   // You can't use these three methods with chunks-based plugins, because there is no way to set the custom data
-  void MakeDefaultPreset(char* name = 0, int nPresets = 1);
+  void MakeDefaultPreset(const char* name = 0, int nPresets = 1);
   // MakePreset(name, param1, param2, ..., paramN)
-  void MakePreset(char* name, ...);
+  void MakePreset(const char* name, ...);
   // MakePresetFromNamedParams(name, nParamsNamed, paramEnum1, paramVal1, paramEnum2, paramVal2, ..., paramEnumN, paramVal2)
   // nParamsNamed may be less than the total number of params.
-  void MakePresetFromNamedParams(char* name, int nParamsNamed, ...);
+  void MakePresetFromNamedParams(const char* name, int nParamsNamed, ...);
 
   // Use these methods with chunks-based plugins
-  void MakePresetFromChunk(char* name, ByteChunk* pChunk);
-  void MakePresetFromBlob(char* name, const char* blob, int sizeOfChunk);
+  void MakePresetFromChunk(const char* name, ByteChunk* pChunk);
+  void MakePresetFromBlob(const char* name, const char* blob, int sizeOfChunk);
 
   bool DoesStateChunks() { return mStateChunks; }
 
@@ -228,14 +227,12 @@ protected:
   bool SerializeParams(ByteChunk* pChunk);
   int UnserializeParams(ByteChunk* pChunk, int startPos); // Returns the new chunk position (endPos)
 
-  #ifndef OS_IOS
   virtual void RedrawParamControls();  // Called after restoring state.
-  #endif
 
   // ----------------------------------------
   // Internal IPlug stuff (but API classes need to get at it).
 
-  void OnParamReset();  // Calls OnParamChange(each param) + Reset().
+  void OnParamReset(ParamChangeSource source);  // Calls OnParamChange(each param) + Reset().
 
   void PruneUninitializedPresets();
 
@@ -322,7 +319,7 @@ private:
   };
 
 protected:
-  bool mStateChunks, mIsInst, mDoesMIDI, mIsBypassed;
+  bool mStateChunks, mIsInst, mDoesMIDI, mIsBypassed, mHasReceivedAudio;
   int mCurrentPresetIdx;
   double mSampleRate;
   int mBlockSize, mLatency;

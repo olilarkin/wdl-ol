@@ -4,7 +4,6 @@
 #include "Containers.h"
 #include "IPlugOSDetect.h"
 
-#ifndef OS_IOS
 #include "../swell/swell.h"
 #include "../lice/lice_text.h"
 
@@ -23,7 +22,8 @@ struct IBitmap
     , mFramesAreHorizontal(framesAreHorizontal)
   {}
 
-  inline int frameHeight() const { return H / N; }
+  inline int frameWidth() const { return mFramesAreHorizontal ? W / N : W; }
+  inline int frameHeight() const { return mFramesAreHorizontal ? H : H / N; }
 };
 
 struct IColor
@@ -79,7 +79,7 @@ const int FONT_LEN = 32;
 struct IText
 {
   char mFont[FONT_LEN];
-  int mSize;
+  int mSize, mCachedSize;
   IColor mColor, mTextEntryBGColor, mTextEntryFGColor;
   enum EStyle { kStyleNormal, kStyleBold, kStyleItalic } mStyle;
   enum EAlign { kAlignNear, kAlignCenter, kAlignFar } mAlign;
@@ -97,6 +97,7 @@ struct IText
         const IColor* pTEBGColor = 0,
         const IColor* pTEFGColor = 0)
     : mSize(size)
+    , mCachedSize(0)
     , mColor(pColor ? *pColor : DEFAULT_TEXT_COLOR)
     , mStyle(style)
     , mAlign(align)
@@ -111,6 +112,7 @@ struct IText
 
   IText(const IColor* pColor)
     : mSize(DEFAULT_TEXT_SIZE)
+    , mCachedSize(0)
     , mColor(*pColor)
     , mStyle(kStyleNormal)
     , mAlign(kAlignCenter)
@@ -139,7 +141,22 @@ struct IRECT
 
   IRECT() { L = T = R = B = 0; }
   IRECT(int l, int t, int r, int b) : L(l), R(r), T(t), B(b) {}
-  IRECT(int x, int y, IBitmap* pBitmap) : L(x), T(y), R(x + pBitmap->W), B(y + pBitmap->H / pBitmap->N) {}
+  
+  IRECT(int x, int y, IBitmap *pBitmap)
+  {
+    L = x;
+    T = y;
+    if (pBitmap->mFramesAreHorizontal)
+    {
+      R = L + pBitmap->W / pBitmap->N;
+      B = T + pBitmap->H;
+    }
+    else
+    {
+      R = L + pBitmap->W;
+      B = T + pBitmap->H / pBitmap->N;
+    }
+  }
 
   bool Empty() const
   {
@@ -285,8 +302,6 @@ struct IMouseMod
   IMouseMod(bool l = false, bool r = false, bool s = false, bool c = false, bool a = false)
     : L(l), R(r), S(s), C(c), A(a) {}
 };
-
-#endif // !OS_IOS
 
 struct IMidiMsg
 {

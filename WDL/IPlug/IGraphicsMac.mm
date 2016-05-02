@@ -187,7 +187,9 @@ LICE_IBitmap* LoadImgFromResourceOSX(const char* bundleID, const char* filename)
   #endif
 
   NSBundle* pBundle = [NSBundle bundleWithIdentifier:ToNSString(bundleID)];
-  NSString* pFile = [[[NSString stringWithCString:filename] lastPathComponent] stringByDeletingPathExtension];
+  //NSString* pFile = [[[NSString stringWithCString:filename] lastPathComponent] stringByDeletingPathExtension];
+  //AH_CHANGE - I don't see why we can't use subfolders here?
+  NSString* pFile = [[NSString stringWithCString:filename] stringByDeletingPathExtension];
   
   if (pBundle && pFile)
   {
@@ -220,7 +222,6 @@ LICE_IBitmap* IGraphicsMac::OSLoadBitmap(int ID, const char* name)
 bool IGraphicsMac::DrawScreen(IRECT* pR)
 {
   CGContextRef pCGC = 0;
-  CGRect r = CGRectMake(0, 0, Width(), Height());
 
   if (mGraphicsCocoa)
   {
@@ -238,6 +239,35 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
   {
     return false;
   }
+  
+  bool isRetina = mAllowRetina && CGContextConvertSizeToDeviceSpace(pCGC, CGSizeMake(1,1)).width > 1.9;
+  
+  if (isRetina != GetIsRetina())
+  {
+    if (isRetina)
+    {
+      mScalingFactor = 2.;
+      IGraphics::Resize(Width(false) * 2., Height(false) * 2.);
+    }
+    else
+    {
+      mScalingFactor = 1.;
+      IGraphics::Resize(Width(false) * 0.5, Height(false) * 0.5);
+    }
+      
+    // Draw everything
+      
+    IControl* pBG = mControls.Get(0);
+    mDrawRECT = *(pBG->GetRECT());
+    for (int j = 0; j < mControls.GetSize(); ++j)
+    {
+        IControl* pControl2 = mControls.Get(j);
+        if (!j || !(pControl2->IsHidden()))
+            pControl2->Draw(this);
+    }
+  }
+  
+  CGRect r = CGRectMake(0, 0, Width(true), Height(true));
   
   if (!mColorSpace)
   {
@@ -302,7 +332,7 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
   
   CGDataProviderRef provider = CGDataProviderCreateWithData(NULL,retina_buf ? retina_buf : p,4*sw*h,NULL);
   img = CGImageCreate(w,h,8,32,4*sw,(CGColorSpaceRef)mColorSpace,
-                                 kCGImageAlphaNoneSkipFirst,
+                                 kCGImageAlphaNoneSkipFirst  | kCGBitmapByteOrder32Little,//kCGImageAlphaNoneSkipFirst,
                                  provider,NULL,NO,kCGRenderingIntentDefault);
   CGDataProviderRelease(provider);
 #endif
@@ -380,12 +410,12 @@ void IGraphicsMac::AttachSubWindow(void* hostWindowRef)
 
   int xOffset = 0;
 
-  if (w.size.width > Width())
+  if (w.size.width > Width(false))
   {
-    xOffset = (int) floor((w.size.width - Width()) / 2.);
+    xOffset = (int) floor((w.size.width - Width(false)) / 2.);
   }
 
-  NSRect windowRect = NSMakeRect(w.origin.x + xOffset, w.origin.y, Width(), Height());
+  NSRect windowRect = NSMakeRect(w.origin.x + xOffset, w.origin.y, Width(false), Height(false));
   CUSTOM_COCOA_WINDOW *childWindow = [[CUSTOM_COCOA_WINDOW alloc] initWithContentRect:windowRect
                                                                             styleMask:( NSBorderlessWindowMask )
                                                                               backing:NSBackingStoreBuffered defer:NO];
@@ -459,7 +489,7 @@ bool IGraphicsMac::WindowIsOpen()
 
 void IGraphicsMac::Resize(int w, int h)
 {
-  if (w == Width() && h == Height()) return;
+  if (w == Width(false) && h == Height(false)) return;
 
   IGraphics::Resize(w, h);
 
@@ -472,7 +502,7 @@ void IGraphicsMac::Resize(int w, int h)
   #endif
   if (mGraphicsCocoa)
   {
-    NSSize size = { static_cast<CGFloat>(w), static_cast<CGFloat>(h) };
+    NSSize size = { static_cast<CGFloat>(w / mScalingFactor), static_cast<CGFloat>(h  / mScalingFactor) };
     [(IGRAPHICS_COCOA*) mGraphicsCocoa setFrameSize: size ];
   }
 }
@@ -488,15 +518,37 @@ void IGraphicsMac::HideMouseCursor()
   }
 }
 
-void IGraphicsMac::ShowMouseCursor()
+void IGraphicsMac::ShowMouseCursor(bool restore)
 {
   if (mCursorHidden)
   {
-    CGPoint point; point.x = mHiddenMousePointX; point.y = mHiddenMousePointY;
-    CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+    if (restore)
+    {
+      CGPoint point; point.x = mHiddenMousePointX; point.y = mHiddenMousePointY;
+      CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+    }
 
     if (CGDisplayShowCursor(CGMainDisplayID()) == CGDisplayNoErr) mCursorHidden = false;
   }
+}
+
+void IGraphicsMac::MoveMouseCursor(int x, int y)
+{
+    CGPoint point;
+    NSPoint mouse = [NSEvent mouseLocation];
+    int mouseY = CGDisplayPixelsHigh(CGMainDisplayID()) - mouse.y;
+    point.x = x / GetScalingFactor() + (mouse.x - GetMouseX() / GetScalingFactor());
+    point.y = y / GetScalingFactor() + (mouseY - GetMouseY() / GetScalingFactor());
+
+    if (mCursorHidden)
+    {
+      mHiddenMousePointX = point.x;
+      mHiddenMousePointY = point.y;
+    }
+    
+    CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+
+    IGraphics::MoveMouseCursor(x, y);
 }
 
 int IGraphicsMac::ShowMessageBox(const char* pText, const char* pCaption, int type)
