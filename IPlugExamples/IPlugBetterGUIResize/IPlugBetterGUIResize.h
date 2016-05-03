@@ -14,10 +14,14 @@ public:
   void OnParamChange(int paramIdx);
   void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
   void OnGUIOpen();
+  void SetGUILayout(int viewMode, double windowWidthRatio, double windowHeightRatio, double guiScaleRatio);
 
 private:
   IGraphics* pGraphics;
   IPlugGUIResize* pGUIResize;
+
+  // Get control numbers. Do this to make gui layout easier
+  int background, redKnob, grayKnob, infoText, customControl;
 };
 
 class CustomControl : public IControl

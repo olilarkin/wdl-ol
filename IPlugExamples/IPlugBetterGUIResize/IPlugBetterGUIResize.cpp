@@ -7,9 +7,23 @@ const int kNumPrograms = 2;
 
 enum EParams
 {
-  kGain = 0,
-  kGain1 = 1,
-  kNumParams
+	// This is reserved for GUI resize
+	viewMode = 0,
+	windowWidth = 1,
+	windowHeight = 2,
+	// -------------------------------
+
+	// Your custom parameters:
+	kGain = 3,
+	kGain1 = 4,
+
+	kNumParams
+};
+
+enum viewSelector
+{
+	miniView,
+	normalView
 };
 
 IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
@@ -26,28 +40,28 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGraphics->AttachPanelBackground(&COLOR_BLACK);
 
   IBitmap *tube = pGraphics->LoadPointerToBitmap(BACKGROUND_ID, BACKGROUND_FN);
-  pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
+  background = pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
   
   //arguments are: name, defaultVal, minVal, maxVal, step, label
   GetParam(kGain)->InitDouble("Gain", 50., 0., 100.0, 0.01, "%");
   GetParam(kGain)->SetShape(2.);
   IBitmap *knob = pGraphics->LoadPointerToBitmap(KNOB_ID, KNOB_FN, 60);
-  pGraphics->AttachControl(new IKnobMultiControl(this, 50, 50, kGain, knob));
+  redKnob = pGraphics->AttachControl(new IKnobMultiControl(this, 50, 50, kGain, knob));
 
   //arguments are: name, defaultVal, minVal, maxVal, step, label
   GetParam(kGain1)->InitDouble("Gain1", 50., 0., 100.0, 0.01, "%");
   GetParam(kGain1)->SetShape(2.);
   IBitmap *knob1 = pGraphics->LoadPointerToBitmap(KNOB1_ID, KNOB1_FN, 60, true);
-  pGraphics->AttachControl(new IKnobMultiControl(this, 600, 200, kGain1, knob1));
+  grayKnob = pGraphics->AttachControl(new IKnobMultiControl(this, 600, 200, kGain1, knob1));
 
   IRECT tmpRect3(20, 760, 800, 800);
   IText textProps3(24, &COLOR_WHITE, "Arial", IText::kStyleItalic, IText::kAlignNear, 0, IText::kQualityDefault);
-  pGraphics->AttachControl(new ITextControl(this, tmpRect3, &textProps3, "This is IPlugGUIResize example by Youlean..."));
+  infoText = pGraphics->AttachControl(new ITextControl(this, tmpRect3, &textProps3, "This is IPlugGUIResize example by Youlean..."));
 
   pGraphics->AttachControl(new CustomControl(this, IRECT(625,500,750,700), IColor(255,0,0,100)));
 
   // GUI resize control must be the last one ----------------------------------------------------------------------------------
-  pGraphics->AttachControl(pGUIResize = new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, 16, 16));
+  customControl = pGraphics->AttachControl(pGUIResize = new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, 16, 16));
   pGUIResize->UsingBitmaps(true); // Use fast resizing or slow. You must call this if you are using bitmaps
   // --------------------------------------------------------------------------------------------------------------------------
   
@@ -65,6 +79,20 @@ void IPlugBetterGUIResize::OnGUIOpen()
 	TRACE; 
 	pGUIResize->ResizeAtGUIOpen();
 
+}
+
+void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidthRatio, double windowHeightRatio, double guiScaleRatio)
+{
+	// You can use switch instead, but in this way it is easier to visualize the changes
+	if (viewMode == miniView)
+	{
+
+	}
+
+	if (viewMode == normalView)
+	{
+
+	}
 }
 
 

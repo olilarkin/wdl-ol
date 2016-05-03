@@ -29,10 +29,6 @@ appreciated but is not required.
 
 using namespace std;
 
-static vector <IRECT> org_draw_area;
-static vector <IRECT> org_target_area;
-static vector <IText> org_text_size;
-static bool plugin_loaded = false;
 static bool plugin_resized = false;
 static int global_width = 0, global_height = 0;
 
@@ -59,27 +55,21 @@ public:
 		// Set target and draw area
 		mTargetRECT = mRECT = IRECT(gui_resize_area.L, gui_resize_area.T, gui_resize_area.R, gui_resize_area.B);
 
-		// Don't reinitialize these values if plugin was already loaded
-		if (!plugin_loaded)
+		// Backup original controls size
+		for (int i = 0; i < pGraphics->GetNControls(); i++)
 		{
-			// Backup original controls size
-			for (int i = 0; i < pGraphics->GetNControls(); i++)
-			{
-				IControl* pIControl = pGraphics->GetControl(i);
+			IControl* pIControl = pGraphics->GetControl(i);
 
-				org_draw_area.push_back(*pIControl->GetRECT());
-				org_target_area.push_back(*pIControl->GetTargetRECT());
-				org_text_size.push_back(*pIControl->GetText());
-			}
-
-			// Add IPlugGUIResize control size
-			org_draw_area.push_back(gui_resize_area);
-			org_target_area.push_back(gui_resize_area);
-			IText tmp;
-			org_text_size.push_back(tmp);
-
-			plugin_loaded = true;
+			org_draw_area.push_back(*pIControl->GetRECT());
+			org_target_area.push_back(*pIControl->GetTargetRECT());
+			org_text_size.push_back(*pIControl->GetText());
 		}
+
+		// Add IPlugGUIResize control size
+		org_draw_area.push_back(gui_resize_area);
+		org_target_area.push_back(gui_resize_area);
+		IText tmpIText;
+		org_text_size.push_back(tmpIText);
 
 		mouse_x = pGraphics->Width();
 		mouse_y = pGraphics->Height();
@@ -93,7 +83,7 @@ public:
 		settings_ini_path.Append("/");
 		settings_ini_path.Append(bundleName);
 		settings_ini_path.Append("/settings.ini");
-        
+
 		// Check if gui size was written in settings.ini, if not write defaults
 		if (GetIntFromFile("guiwidth") == negative_int_limit)
 		{
@@ -103,6 +93,8 @@ public:
 		{
 			SetIntToFile("guiheight", pGraphics->Height());
 		}
+
+		mPlug->GetParam(2)->InitInt("test", 0, 0, 10000);
 	}
 
 	~IPlugGUIResize()
@@ -124,6 +116,18 @@ public:
 	int GetIntFromFile(const char *name)
 	{
 		return GetPrivateProfileInt("gui", name, negative_int_limit, settings_ini_path.Get());
+	}
+
+	void SetDoubleToFile(const char *name, double x)
+	{
+		sprintf(buf, "%.15f", x);
+		WritePrivateProfileString("gui", name, buf, settings_ini_path.Get());
+	}
+
+	double GetDoubleFromFile(const char *name)
+	{
+		GetPrivateProfileString("gui", name, "0.0", buf, 128, settings_ini_path.Get());
+		return atof(buf);
 	}
 
 	IRECT ResizeIRECT(IRECT old_IRECT, double width_ratio, double height_ratio)
@@ -186,7 +190,7 @@ public:
 
 		scale_ratio = (double)w / (double)default_gui_width;
 		scale_ratio = (double)h / (double)default_gui_height;
-		
+
 		global_width = w;
 		global_height = h;
 
@@ -251,6 +255,8 @@ public:
 		plugin_height = mouse_y;
 
 		plugin_resized = true;
+
+		mPlug->SetParameterFromGUI(2, 0.77);
 	}
 
 	void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod)
@@ -276,7 +282,7 @@ public:
 			{
 				ResizeGraphics();
 			}
-		mouse_is_dragging = true;
+			mouse_is_dragging = true;
 		}
 
 		if (using_bitmaps && fast_bitmap_resizing)
@@ -288,10 +294,10 @@ public:
 	void OnMouseOver(int x, int y, IMouseMod* pMod)
 	{
 		if (!gui_should_be_closed)
-		SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+			SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 	}
 
-	void OnMouseOut() 
+	void OnMouseOut()
 	{
 		SetCursor(LoadCursor(NULL, IDC_ARROW));
 	}
@@ -370,6 +376,15 @@ public:
 			}
 		}
 
+		double ttt = mPlug->GetParam(2)->Value();
+		sprintf(buf, "%u", (int)ttt);
+
+		int textSize = 48;
+		IColor textColor = IColor(255, 255, 255, 255);
+		IRECT textPosition = IRECT(0, (plugin_height / 2) - (int)((double)textSize * scale_ratio), mRECT.R, mRECT.B);
+		IText textProps = IText((int)((double)textSize * scale_ratio), &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
+
+		pGraphics->DrawIText(&textProps, buf, &textPosition);
 		return false;
 	}
 
@@ -378,12 +393,16 @@ public:
 		ResizeAtGUIOpen();
 	}
 
-    bool IsDirty() 
-	{ 
+	bool IsDirty()
+	{
 		return plugin_resized;
 	}
 
 private:
+	vector <IRECT> org_draw_area;
+	vector <IRECT> org_target_area;
+	vector <IText> org_text_size;
+
 	int mouse_x, mouse_y;
 	int default_gui_width, default_gui_height;
 	int plugin_width, plugin_height; // This is current plugin instance width
