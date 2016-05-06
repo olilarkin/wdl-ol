@@ -70,6 +70,8 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
+
+  SetGUILayout(0, 1.0, 1.0, 1.0);
 }
 
 IPlugBetterGUIResize::~IPlugBetterGUIResize() {}
@@ -84,15 +86,21 @@ void IPlugBetterGUIResize::OnGUIOpen()
 void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidthRatio, double windowHeightRatio, double guiScaleRatio)
 {
 	// You can use switch instead, but in this way it is easier to visualize the changes
-	if (viewMode == miniView)
-	{
+	// Use constructor to initialize all controls and then hide or move controls that you don't need for specific viewMode
+	// If you want to change specific control layout, you need to implement it for every viewMode
 
+	if (false) //(viewMode == 0)
+	{
+		pGUIResize->HideControl(grayKnob);
+		pGUIResize->MoveControl(redKnob, 0, 0);
 	}
 
-	if (viewMode == normalView)
+	if (true) //(viewMode == 1)
 	{
-
+		pGUIResize->ShowControl(grayKnob);
+		pGUIResize->MoveControl(redKnob, 200, 200);
 	}
+
 }
 
 

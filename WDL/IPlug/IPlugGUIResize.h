@@ -58,11 +58,11 @@ public:
 		// Backup original controls size
 		for (int i = 0; i < pGraphics->GetNControls(); i++)
 		{
-			IControl* pIControl = pGraphics->GetControl(i);
+			IControl* pControl = pGraphics->GetControl(i);
 
-			org_draw_area.push_back(*pIControl->GetRECT());
-			org_target_area.push_back(*pIControl->GetTargetRECT());
-			org_text_size.push_back(*pIControl->GetText());
+			org_draw_area.push_back(*pControl->GetRECT());
+			org_target_area.push_back(*pControl->GetTargetRECT());
+			org_text_size.push_back(*pControl->GetText());
 		}
 
 		// Add IPlugGUIResize control size
@@ -99,6 +99,48 @@ public:
 
 	~IPlugGUIResize()
 	{
+	}
+
+	void HideControl(int index)
+	{
+		IControl* pControl = GetGUI()->GetControl(index);
+		pControl->Hide(true);
+	}
+
+	void ShowControl(int index)
+	{
+		IControl* pControl = GetGUI()->GetControl(index);
+		pControl->Hide(false);
+	}
+
+	void MoveControl(int index, int x, int y)
+	{
+		IControl* pControl = GetGUI()->GetControl(index);
+
+		int drawAreaW = pControl->GetRECT()->W();
+		int drawAreaH = pControl->GetRECT()->H();
+
+		int targetAreaW = pControl->GetTargetRECT()->W();
+		int targetAreaH = pControl->GetTargetRECT()->H();
+
+		IRECT drawArea = IRECT(x, y, x + drawAreaW, y + drawAreaH);
+		IRECT targetArea = IRECT(x, y, x + targetAreaW, y + targetAreaH);
+
+		org_draw_area[index] = drawArea;
+		pControl->SetDrawArea(drawArea);
+
+		org_target_area[index] = targetArea;
+		pControl->SetTargetArea(targetArea);
+	}
+
+	void SetViewMode(int viewMode) 
+	{
+		view_mode = viewMode;
+	}
+
+	int GetViewMode()
+	{
+		return view_mode;
 	}
 
 	void UsingBitmaps(bool fastBitmapResizing = true)
@@ -146,16 +188,16 @@ public:
 		for (int i = 0; i < GetGUI()->GetNControls(); i++)
 		{
 			// This updates draw and control rect
-			IControl* pIControl = GetGUI()->GetControl(i);
-			pIControl->SetDrawArea(ResizeIRECT(org_draw_area[i], scale_ratio, scale_ratio));
-			pIControl->SetTargetArea(ResizeIRECT(org_target_area[i], scale_ratio, scale_ratio));
+			IControl* pControl = GetGUI()->GetControl(i);
+			pControl->SetDrawArea(ResizeIRECT(org_draw_area[i], scale_ratio, scale_ratio));
+			pControl->SetTargetArea(ResizeIRECT(org_target_area[i], scale_ratio, scale_ratio));
 
 			// This updates IText size
 			IText tmpText = IText((int)((double)org_text_size[i].mSize * scale_ratio), &org_text_size[i].mColor,
 				org_text_size[i].mFont, org_text_size[i].mStyle, org_text_size[i].mAlign, org_text_size[i].mOrientation,
 				org_text_size[i].mQuality, &org_text_size[i].mTextEntryBGColor, &org_text_size[i].mTextEntryFGColor);
 
-			pIControl->SetText(&tmpText);
+			pControl->SetText(&tmpText);
 		}
 
 		// Keeps control rect uniform and prevent it to go below specified size
@@ -177,8 +219,8 @@ public:
 		// Call GUI initializer
 		for (int i = 0; i < GetGUI()->GetNControls(); i++)
 		{
-			IControl* pIControl = GetGUI()->GetControl(i);
-			pIControl->InitializeGUI(scale_ratio);
+			IControl* pControl = GetGUI()->GetControl(i);
+			pControl->InitializeGUI(scale_ratio);
 		}
 		GetGUI()->SetAllControlsDirty();
 	}
@@ -402,7 +444,7 @@ private:
 	vector <IRECT> org_draw_area;
 	vector <IRECT> org_target_area;
 	vector <IText> org_text_size;
-
+	int view_mode;
 	int mouse_x, mouse_y;
 	int default_gui_width, default_gui_height;
 	int plugin_width, plugin_height; // This is current plugin instance width
