@@ -463,9 +463,8 @@ void IGraphics::RescaleBitmaps(int w, int h, double scaleRatio)
 
 void IGraphics::Resize(int w, int h)
 {
-	mWidth = w;
-	mHeight = h;
-
+  mWidth = w;
+  mHeight = h;
   DELETE_NULL(mDrawBitmap);
   DELETE_NULL(mTmpBitmap);
   PrepDraw();

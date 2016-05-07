@@ -86,8 +86,9 @@ public:
   
   #ifndef OS_IOS
   virtual void OnWindowResize() {}
-  virtual void SetGUILayout(int viewMode, double windowWidthRatio, double windowHeightRatio, double guiScaleRatio) {}
+  virtual void SetGUILayout(int viewMode = 0, double windowWidth = 1.0, double windowHeight = 1.0) {}
   #endif
+
   // implement this and return true to trigger your custom about box, when someone clicks about in the menu of a standalone
   virtual bool HostRequestingAboutBox() { return false; }
 

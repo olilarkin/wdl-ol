@@ -22,12 +22,79 @@ appreciated but is not required.
 
 */
 
+/*
+////////////////////There are 3 main GUI resize modes:////////////////////////
+
+1. View Resize: 
+With this you will be able to set up for example mini view, normal view 
+where you will have more knobs etc.
+
+-----------------------------------------------------------------------------
+
+   Normal View:                             Mini View:
+-------------------                         ----------
+|  Knob1   Knob2  |                         |  Knob1 |
+|                 |                         |        |
+|                 |                         ----------
+-------------------    
+
+-----------------------------------------------------------------------------
+
+2. Window resize:
+This will resize window of different view. For example you could have mini 
+view and on that mini view you will have some spectrum analyzer, now when
+you resize window you can make spectrum analyzer to be resized but the rest
+of controls won't be enlarged, and view won't jump to the advanced view.
+
+-----------------------------------------------------------------------------
+
+Normal View + Window Resize:           Mini View + Window Resize:
+-------------------////                     ----------////
+|  Knob1   Knob2  |////                     |  Knob1 |////
+|                 |////                     |        |////
+|                 |////                     ----------////
+-------------------////                     //////////////
+///////////////////////
+
+-----------------------------------------------------------------------------
+
+3. GUI Scaling:
+This will take everything you have done with the view and enlarge it. 
+This is mainly for monitors with higher resolutions (retina etc.)
+
+-----------------------------------------------------------------------------
+
+    Normal View:               Normal View - Scaled 2X:      
+-------------------     -------------------------------------- 
+|  Knob1   Knob2  |     |                                    |
+|                 |     |        Knob1          Knob2        | 
+|                 |     |                                    |
+-------------------     |                                    |
+                        |                                    |
+						|                                    |
+						--------------------------------------
+
+-----------------------------------------------------------------------------
+
+*/
 
 #include <vector>
 #include "IGraphics.h"
 #include "IControl.h"
 
 using namespace std;
+
+struct DRECT
+{
+	double L, T, R, B;
+
+	DRECT() { L = T = R = B = 0.0; }
+	DRECT(double l, double t, double r, double b) : L(l), R(r), T(t), B(b) {}
+	inline double W() const { return R - L; }
+	inline double H() const { return B - T; }
+};
+
+typedef enum _resizeFlag { drawAndTargetArea, drawAreaOnly, targetAreaOnly } resizeFlag;
 
 static bool plugin_resized = false;
 static int global_width = 0, global_height = 0;
@@ -40,6 +107,14 @@ public:
 	{
 		default_gui_width = guiWidth;
 		default_gui_height = guiHeight;
+
+		// Set default view dimensions
+		view_container.view_mode.push_back(0);
+		view_container.view_width.push_back(guiWidth);
+		view_container.view_height.push_back(guiHeight);
+		current_view_mode = 0;
+		current_view_mode = guiWidth;
+		current_view_height = guiHeight;
 
 		pGraphics->HandleMouseOver(true);
 
@@ -55,28 +130,11 @@ public:
 		// Set target and draw area
 		mTargetRECT = mRECT = IRECT(gui_resize_area.L, gui_resize_area.T, gui_resize_area.R, gui_resize_area.B);
 
-		// Backup original controls size
-		for (int i = 0; i < pGraphics->GetNControls(); i++)
-		{
-			IControl* pControl = pGraphics->GetControl(i);
-
-			org_draw_area.push_back(*pControl->GetRECT());
-			org_target_area.push_back(*pControl->GetTargetRECT());
-			org_text_size.push_back(*pControl->GetText());
-		}
-
-		// Add IPlugGUIResize control size
-		org_draw_area.push_back(gui_resize_area);
-		org_target_area.push_back(gui_resize_area);
-		IText tmpIText;
-		org_text_size.push_back(tmpIText);
-
 		mouse_x = pGraphics->Width();
 		mouse_y = pGraphics->Height();
 
 		plugin_width = pGraphics->Width();
 		plugin_height = pGraphics->Height();
-
 
 		// Set settings.ini file path
 		pGraphics->AppSupportPath(&settings_ini_path);
@@ -101,6 +159,64 @@ public:
 	{
 	}
 
+	IPlugGUIResize *Attach(IGraphics *pGraphics)
+	{
+		// Backup original controls sizes
+		for (int i = 0; i < pGraphics->GetNControls(); i++)
+		{
+			IControl* pControl = pGraphics->GetControl(i);
+
+			org_draw_area.push_back(IRECT_to_DRECT(&*pControl->GetRECT()));
+			org_target_area.push_back(IRECT_to_DRECT(&*pControl->GetTargetRECT()));
+			org_text_size.push_back(*pControl->GetText());
+		}
+
+		// Add IPlugGUIResize control size
+		org_draw_area.push_back(IRECT_to_DRECT(&gui_resize_area));
+		org_target_area.push_back(IRECT_to_DRECT(&gui_resize_area));
+		IText tmpIText;
+		org_text_size.push_back(tmpIText);
+
+		InitializeGUIControls(pGraphics);
+
+		return this;
+	}
+
+	IRECT DRECT_to_IRECT(DRECT *dRECT)
+	{
+		return IRECT((int)(dRECT->L), (int)(dRECT->T), (int)(dRECT->R), (int)(dRECT->B));
+	}
+
+	DRECT IRECT_to_DRECT(IRECT *iRECT)
+	{
+		return DRECT((double)(iRECT->L), (double)(iRECT->T), (double)(iRECT->R), (double)(iRECT->B));
+	}
+
+	void AddNewView(int viewMode, int viewWidth, int viewHeight)
+	{
+		view_container.view_mode.push_back(viewMode);
+		view_container.view_width.push_back(viewWidth);
+		view_container.view_height.push_back(viewHeight);
+	}
+
+	void SelectViewMode(int viewMode)
+	{
+		int position = 0;
+		
+		for (int i = 0; i < view_container.view_mode.size(); i++)
+		{
+			if (view_container.view_mode[i] == viewMode)
+			{
+				position = i;
+				break;
+			}
+		}
+
+		current_view_mode = viewMode;
+		current_view_width = view_container.view_width[position];
+		current_view_height = view_container.view_height[position];
+	}
+
 	void HideControl(int index)
 	{
 		IControl* pControl = GetGUI()->GetControl(index);
@@ -113,24 +229,75 @@ public:
 		pControl->Hide(false);
 	}
 
-	void MoveControl(int index, int x, int y)
+	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea)
 	{
 		IControl* pControl = GetGUI()->GetControl(index);
 
-		int drawAreaW = pControl->GetRECT()->W();
-		int drawAreaH = pControl->GetRECT()->H();
+		double x_relative = x * scale_ratio;
+		double y_relative = y * scale_ratio;
 
-		int targetAreaW = pControl->GetTargetRECT()->W();
-		int targetAreaH = pControl->GetTargetRECT()->H();
+		if (flag == drawAndTargetArea || flag == drawAreaOnly)
+		{
+			double drawAreaW = (double)pControl->GetRECT()->W();
+			double drawAreaH = (double)pControl->GetRECT()->H();
 
-		IRECT drawArea = IRECT(x, y, x + drawAreaW, y + drawAreaH);
-		IRECT targetArea = IRECT(x, y, x + targetAreaW, y + targetAreaH);
+			DRECT drawArea = DRECT(x_relative, y_relative, x_relative + drawAreaW, y_relative + drawAreaH);
+			pControl->SetDrawArea(DRECT_to_IRECT(&drawArea));
 
-		org_draw_area[index] = drawArea;
-		pControl->SetDrawArea(drawArea);
+			double org_draw_width = org_draw_area[index].W();
+			double org_draw_height = org_draw_area[index].H();
 
-		org_target_area[index] = targetArea;
-		pControl->SetTargetArea(targetArea);
+			org_draw_area[index].L = x;
+			org_draw_area[index].T = y;
+			org_draw_area[index].R = x + org_draw_width;
+			org_draw_area[index].B = y + org_draw_height;
+
+		}
+
+		if (flag == drawAndTargetArea || flag == targetAreaOnly)
+		{
+			double targetAreaW = (double)pControl->GetTargetRECT()->W();
+			double targetAreaH = (double)pControl->GetTargetRECT()->H();
+
+			DRECT targetArea = DRECT(x_relative, y_relative, x_relative + targetAreaW, y_relative + targetAreaH);
+			pControl->SetTargetArea(DRECT_to_IRECT(&targetArea));
+
+			double org_target_width = org_draw_area[index].W();
+			double org_target_height = org_draw_area[index].H();
+
+			org_target_area[index].L = x;
+			org_target_area[index].T = y;
+			org_target_area[index].R = x + org_target_width;
+			org_target_area[index].B = y + org_target_height;
+
+		}
+	}
+
+	void MoveControlEnd(int index, double R, double B, resizeFlag flag = drawAndTargetArea) // to do: fix this function
+	{
+		IControl* pControl = GetGUI()->GetControl(index);
+
+		if (flag == drawAndTargetArea || flag == drawAreaOnly)
+		{
+			double drawAreaX = (double)pControl->GetRECT()->L;
+			double drawAreaY = (double)pControl->GetRECT()->T;
+
+			DRECT drawArea = DRECT(drawAreaX, drawAreaY, R, B);
+
+			org_draw_area[index] = drawArea;
+			pControl->SetDrawArea(DRECT_to_IRECT(&drawArea));
+		}
+
+		if (flag == drawAndTargetArea || flag == targetAreaOnly)
+		{
+			double targetAreaX = (double)pControl->GetTargetRECT()->L;
+			double targetAreaY = (double)pControl->GetTargetRECT()->T;
+
+			DRECT targetArea = DRECT(targetAreaX, targetAreaY, R, B);
+
+			org_target_area[index] = targetArea;
+			pControl->SetTargetArea(DRECT_to_IRECT(&targetArea));
+		}
 	}
 
 	void SetViewMode(int viewMode) 
@@ -172,14 +339,9 @@ public:
 		return atof(buf);
 	}
 
-	IRECT ResizeIRECT(IRECT old_IRECT, double width_ratio, double height_ratio)
+	IRECT ResizeIRECT(DRECT *old_IRECT, double width_ratio, double height_ratio)
 	{
-		int L = (int)((double)old_IRECT.L * width_ratio);
-		int T = (int)((double)old_IRECT.T * height_ratio);
-		int R = (int)((double)old_IRECT.R * width_ratio);
-		int B = (int)((double)old_IRECT.B * height_ratio);
-
-		return IRECT(L, T, R, B);
+		return IRECT((int)(old_IRECT->L * width_ratio), (int)(old_IRECT->T * height_ratio), (int)(old_IRECT->R * width_ratio), (int)(old_IRECT->B * height_ratio));
 	}
 
 	void ResizeControlRects()
@@ -189,8 +351,8 @@ public:
 		{
 			// This updates draw and control rect
 			IControl* pControl = GetGUI()->GetControl(i);
-			pControl->SetDrawArea(ResizeIRECT(org_draw_area[i], scale_ratio, scale_ratio));
-			pControl->SetTargetArea(ResizeIRECT(org_target_area[i], scale_ratio, scale_ratio));
+			pControl->SetDrawArea(ResizeIRECT(&org_draw_area[i], scale_ratio, scale_ratio));
+			pControl->SetTargetArea(ResizeIRECT(&org_target_area[i], scale_ratio, scale_ratio));
 
 			// This updates IText size
 			IText tmpText = IText((int)((double)org_text_size[i].mSize * scale_ratio), &org_text_size[i].mColor,
@@ -214,15 +376,15 @@ public:
 
 	}
 
-	void InitializeGUIControls()
+	void InitializeGUIControls(IGraphics *pGraphics)
 	{
 		// Call GUI initializer
-		for (int i = 0; i < GetGUI()->GetNControls(); i++)
+		for (int i = 0; i < pGraphics->GetNControls(); i++)
 		{
-			IControl* pControl = GetGUI()->GetControl(i);
+			IControl* pControl = pGraphics->GetControl(i);
 			pControl->InitializeGUI(scale_ratio);
 		}
-		GetGUI()->SetAllControlsDirty();
+		pGraphics->SetAllControlsDirty();
 	}
 
 	void ResizeAtGUIOpen()
@@ -232,6 +394,9 @@ public:
 
 		scale_ratio = (double)w / (double)default_gui_width;
 		scale_ratio = (double)h / (double)default_gui_height;
+
+        // to do: implement all calls
+		mPlug->SetGUILayout(current_view_mode, 800, 800);
 
 		global_width = w;
 		global_height = h;
@@ -255,7 +420,7 @@ public:
 			gui_should_be_closed = false;
 		}
 
-		InitializeGUIControls();
+		InitializeGUIControls(GetGUI());
 	}
 
 	void ResizeGraphics()
@@ -266,6 +431,8 @@ public:
 		scale_ratio = (double)mouse_x / (double)default_gui_width;
 		scale_ratio = (double)mouse_y / (double)default_gui_height;
 
+		// to do: implement all calls
+		mPlug->SetGUILayout(current_view_mode, 800, 800);
 
 		if (using_bitmaps)
 		{
@@ -273,19 +440,19 @@ public:
 			{
 				GetGUI()->RescaleBitmaps(mouse_x, mouse_y, scale_ratio);
 				ResizeControlRects();
-				InitializeGUIControls();
+				InitializeGUIControls(GetGUI());
 				GetGUI()->Resize(mouse_x, mouse_y);
 			}
 			else
 			{
-				InitializeGUIControls();
+				InitializeGUIControls(GetGUI());
 				GetGUI()->Resize(mouse_x, mouse_y);
 			}
 		}
 		else
 		{
 			ResizeControlRects();
-			InitializeGUIControls();
+			InitializeGUIControls(GetGUI());
 			GetGUI()->Resize(mouse_x, mouse_y);
 		}
 
@@ -349,7 +516,7 @@ public:
 		if (!gui_should_be_closed)
 			SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 
-		if (using_bitmaps && fast_bitmap_resizing)
+		if (pMod->L && using_bitmaps && fast_bitmap_resizing)
 		{
 			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
 
@@ -358,6 +525,49 @@ public:
 
 		mouse_x = plugin_width;
 		mouse_y = plugin_height;
+
+		if (pMod->R)
+		{
+			doPopupMenu();
+		}
+	}
+
+	void doPopupMenu()
+	{
+		IPopupMenu menu;
+
+		IGraphics* gui = mPlug->GetGUI();
+
+		menu.AddItem("Save Program...");
+		menu.AddItem("Save Bank...");
+		menu.AddSeparator();
+		menu.AddItem("Load Program...");
+		menu.AddItem("Load Bank...");
+
+		if (gui->CreateIPopupMenu(&menu, &mRECT))
+		{
+			int itemChosen = menu.GetChosenItemIdx();
+			WDL_String fileName;
+
+			//printf("chosen %i /n", itemChosen);
+			switch (itemChosen)
+			{
+			case 0: //Save Program
+
+				break;
+			case 1: //Save Bank
+
+				break;
+			case 3: //Load Preset
+
+				break;
+			case 4: // Load Bank
+
+				break;
+			default:
+				break;
+			}
+		}
 	}
 
 	void OnMouseUp(int x, int y, IMouseMod* pMod)
@@ -367,8 +577,8 @@ public:
 		if (using_bitmaps && fast_bitmap_resizing)
 		{
 			GetGUI()->RescaleBitmaps(plugin_width, plugin_height, scale_ratio);
-			ResizeControlRects();
-			InitializeGUIControls();
+		    ResizeControlRects();
+			InitializeGUIControls(GetGUI());
 			mouse_is_down = false;
 
 			GetGUI()->SetAllControlsDirty();
@@ -441,9 +651,23 @@ public:
 	}
 
 private:
-	vector <IRECT> org_draw_area;
-	vector <IRECT> org_target_area;
+	struct viewContainer
+	{
+		vector <int> view_mode;
+		vector <int> view_width;
+		vector <int> view_height;
+	};
+
+	int current_view_mode, current_view_width, current_view_height;
+
+	viewContainer view_container;
+
+	vector <DRECT> org_draw_area;
+	vector <DRECT> org_target_area;
 	vector <IText> org_text_size;
+
+
+	double window_width_normalized = 1.0, window_height_normalized = 1.0;
 	int view_mode;
 	int mouse_x, mouse_y;
 	int default_gui_width, default_gui_height;

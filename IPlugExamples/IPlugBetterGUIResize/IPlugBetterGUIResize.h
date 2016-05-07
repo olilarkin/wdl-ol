@@ -14,7 +14,7 @@ public:
   void OnParamChange(int paramIdx);
   void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
   void OnGUIOpen();
-  void SetGUILayout(int viewMode, double windowWidthRatio, double windowHeightRatio, double guiScaleRatio);
+  void SetGUILayout(int viewMode, double windowWidth, double windowHeight);
 
 private:
   IGraphics* pGraphics;
@@ -42,7 +42,7 @@ public:
 		drawRect.T = mRECT.T;
 		drawRect.R = mRECT.W() / 2 + mRECT.L;
 		drawRect.B = mRECT.B;
-
+		
 	}
 
 	bool Draw(IGraphics* pGraphics)
@@ -54,5 +54,40 @@ public:
 private:
 	IRECT drawRect;
 	IColor mColor;
+};
+
+class viewSelector : public IControl
+{
+private:
+	WDL_String mStr;
+	IPlugGUIResize *GUIResize;
+	int view_mode;
+
+public:
+	viewSelector(IPlugBase* pPlug, IRECT pR, const char* label, IPlugGUIResize *pGUIResize, int viewMode)
+		: IControl(pPlug, pR)
+	{
+		GUIResize = pGUIResize;
+		view_mode = viewMode;
+		mStr.Set(label);
+		mText.mColor = COLOR_WHITE;
+		mText.mSize = 24;
+	}
+
+	~viewSelector() {}
+
+	bool Draw(IGraphics* pGraphics)
+	{
+		pGraphics->FillIRect(&COLOR_GRAY, &mRECT, &mBlend);
+		char* cStr = mStr.Get();
+		return pGraphics->DrawIText(&mText, cStr, &mRECT);
+	}
+
+	void OnMouseDown(int x, int y, IMouseMod* pMod)
+	{
+		GUIResize->SelectViewMode(view_mode);
+		GUIResize->ResizeAtGUIOpen();
+	}
+
 };
 #endif
