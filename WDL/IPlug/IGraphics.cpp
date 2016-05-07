@@ -422,7 +422,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 	}
 }
 
-void IGraphics::RescaleBitmaps(int w, int h, double scaleRatio)
+void IGraphics::RescaleBitmaps(double guiScaleRatio)
 {		
 	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
 	{
@@ -430,8 +430,8 @@ void IGraphics::RescaleBitmaps(int w, int h, double scaleRatio)
 		LICE_IBitmap* lb = OSLoadBitmap(storeLoadedBitmap.GetID(i), storeLoadedBitmap.GetName(i));
 				
 		// Get new bitmap width and height
-		int new_width = (int)(scaleRatio * (double)(lb->getWidth() / bitmapOversample));
-		int new_height = (int)(scaleRatio * (double)(lb->getHeight() / bitmapOversample));
+		int new_width = (int)(guiScaleRatio * (double)(lb->getWidth() / bitmapOversample));
+		int new_height = (int)(guiScaleRatio * (double)(lb->getHeight() / bitmapOversample));
 
 		// Get current bitmap
 		LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;

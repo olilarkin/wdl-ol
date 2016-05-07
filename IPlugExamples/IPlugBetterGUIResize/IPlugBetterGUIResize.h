@@ -90,4 +90,40 @@ public:
 	}
 
 };
+
+class windowSizeSelector : public IControl
+{
+private:
+	WDL_String mStr;
+	IPlugGUIResize *GUIResize;
+	int w, h;
+
+public:
+	windowSizeSelector(IPlugBase* pPlug, IRECT pR, const char* label, IPlugGUIResize *pGUIResize, int width, int height)
+		: IControl(pPlug, pR)
+	{
+		w = width;
+		h = height;
+		GUIResize = pGUIResize;
+		mStr.Set(label);
+		mText.mColor = COLOR_WHITE;
+		mText.mSize = 24;
+	}
+
+	~windowSizeSelector() {}
+
+	bool Draw(IGraphics* pGraphics)
+	{
+		pGraphics->FillIRect(&COLOR_GRAY, &mRECT, &mBlend);
+		char* cStr = mStr.Get();
+		return pGraphics->DrawIText(&mText, cStr, &mRECT);
+	}
+
+	void OnMouseDown(int x, int y, IMouseMod* pMod)
+	{
+		GUIResize->SetWindowSize(w, h);
+		GUIResize->ResizeAtGUIOpen();
+	}
+
+};
 #endif

@@ -97,7 +97,7 @@ struct DRECT
 typedef enum _resizeFlag { drawAndTargetArea, drawAreaOnly, targetAreaOnly } resizeFlag;
 
 static bool plugin_resized = false;
-static int global_width = 0, global_height = 0;
+static double global_gui_scale_ratio = 1.0;
 
 class IPlugGUIResize : public IControl
 {
@@ -107,14 +107,15 @@ public:
 	{
 		default_gui_width = guiWidth;
 		default_gui_height = guiHeight;
+		window_width_normalized = (double)guiWidth;
+		window_height_normalized = (double)guiHeight;
 
 		// Set default view dimensions
 		view_container.view_mode.push_back(0);
 		view_container.view_width.push_back(guiWidth);
 		view_container.view_height.push_back(guiHeight);
+
 		current_view_mode = 0;
-		current_view_mode = guiWidth;
-		current_view_height = guiHeight;
 
 		pGraphics->HandleMouseOver(true);
 
@@ -143,13 +144,9 @@ public:
 		settings_ini_path.Append("/settings.ini");
 
 		// Check if gui size was written in settings.ini, if not write defaults
-		if (GetIntFromFile("guiwidth") == negative_int_limit)
+		if (GetIntFromFile("guiscale") == negative_int_limit)
 		{
-			SetIntToFile("guiwidth", pGraphics->Width());
-		}
-		if (GetIntFromFile("guiheight") == negative_int_limit)
-		{
-			SetIntToFile("guiheight", pGraphics->Height());
+			SetDoubleToFile("guiscale", 1.0);
 		}
 
 		mPlug->GetParam(2)->InitInt("test", 0, 0, 10000);
@@ -157,6 +154,11 @@ public:
 
 	~IPlugGUIResize()
 	{
+	}
+
+	bool double_equals(double a, double b, double epsilon = 0.0000000001)
+	{
+		return std::abs(a - b) < epsilon;
 	}
 
 	IPlugGUIResize *Attach(IGraphics *pGraphics)
@@ -213,8 +215,8 @@ public:
 		}
 
 		current_view_mode = viewMode;
-		current_view_width = view_container.view_width[position];
-		current_view_height = view_container.view_height[position];
+		window_width_normalized = (double)view_container.view_width[position];
+		window_height_normalized = (double)view_container.view_height[position];
 	}
 
 	void HideControl(int index)
@@ -233,8 +235,8 @@ public:
 	{
 		IControl* pControl = GetGUI()->GetControl(index);
 
-		double x_relative = x * scale_ratio;
-		double y_relative = y * scale_ratio;
+		double x_relative = x * gui_scale_ratio;
+		double y_relative = y * gui_scale_ratio;
 
 		if (flag == drawAndTargetArea || flag == drawAreaOnly)
 		{
@@ -351,11 +353,11 @@ public:
 		{
 			// This updates draw and control rect
 			IControl* pControl = GetGUI()->GetControl(i);
-			pControl->SetDrawArea(ResizeIRECT(&org_draw_area[i], scale_ratio, scale_ratio));
-			pControl->SetTargetArea(ResizeIRECT(&org_target_area[i], scale_ratio, scale_ratio));
+			pControl->SetDrawArea(ResizeIRECT(&org_draw_area[i], gui_scale_ratio, gui_scale_ratio));
+			pControl->SetTargetArea(ResizeIRECT(&org_target_area[i], gui_scale_ratio, gui_scale_ratio));
 
 			// This updates IText size
-			IText tmpText = IText((int)((double)org_text_size[i].mSize * scale_ratio), &org_text_size[i].mColor,
+			IText tmpText = IText((int)((double)org_text_size[i].mSize * gui_scale_ratio), &org_text_size[i].mColor,
 				org_text_size[i].mFont, org_text_size[i].mStyle, org_text_size[i].mAlign, org_text_size[i].mOrientation,
 				org_text_size[i].mQuality, &org_text_size[i].mTextEntryBGColor, &org_text_size[i].mTextEntryFGColor);
 
@@ -382,39 +384,35 @@ public:
 		for (int i = 0; i < pGraphics->GetNControls(); i++)
 		{
 			IControl* pControl = pGraphics->GetControl(i);
-			pControl->InitializeGUI(scale_ratio);
+			pControl->InitializeGUI(gui_scale_ratio);
 		}
 		pGraphics->SetAllControlsDirty();
 	}
 
 	void ResizeAtGUIOpen()
 	{
-		int w = GetIntFromFile("guiwidth");
-		int h = GetIntFromFile("guiheight");
+		gui_scale_ratio = GetDoubleFromFile("guiscale");
+		global_gui_scale_ratio = gui_scale_ratio;
 
-		scale_ratio = (double)w / (double)default_gui_width;
-		scale_ratio = (double)h / (double)default_gui_height;
+		plugin_width = (int)(window_width_normalized * gui_scale_ratio);
+		plugin_height = (int)(window_height_normalized * gui_scale_ratio);
 
-        // to do: implement all calls
-		mPlug->SetGUILayout(current_view_mode, 800, 800);
+		MoveThisControl();
 
-		global_width = w;
-		global_height = h;
-
+		// to do: implement all calls
+		mPlug->SetGUILayout(current_view_mode, window_width_normalized, window_height_normalized);
+		
 		// Prevent resizing if it is not needed
-		if (w != plugin_width || h != plugin_height)
+		if (true) //(w != plugin_width || h != plugin_height)
 		{
 			if (using_bitmaps)
 			{
-				GetGUI()->RescaleBitmaps(w, h, scale_ratio);
+				GetGUI()->RescaleBitmaps(gui_scale_ratio);
 			}
 
 			ResizeControlRects();
-			GetGUI()->Resize(w, h);
-
-			plugin_width = global_width;
-			plugin_height = global_height;
-
+			GetGUI()->Resize(plugin_width, plugin_height);
+			
 			plugin_resized = true;
 
 			gui_should_be_closed = false;
@@ -425,47 +423,72 @@ public:
 
 	void ResizeGraphics()
 	{
-		SetIntToFile("guiwidth", mouse_x);
-		SetIntToFile("guiheight", mouse_y);
+		SetDoubleToFile("guiscale", gui_scale_ratio);
 
-		scale_ratio = (double)mouse_x / (double)default_gui_width;
-		scale_ratio = (double)mouse_y / (double)default_gui_height;
+		plugin_width = (int)(window_width_normalized * gui_scale_ratio);
+		plugin_height = (int)(window_height_normalized * gui_scale_ratio);
+
+		global_gui_scale_ratio = gui_scale_ratio;
+
+		MoveThisControl();
 
 		// to do: implement all calls
-		mPlug->SetGUILayout(current_view_mode, 800, 800);
+		mPlug->SetGUILayout(current_view_mode, window_width_normalized, window_height_normalized);
 
 		if (using_bitmaps)
 		{
 			if (!fast_bitmap_resizing)
 			{
-				GetGUI()->RescaleBitmaps(mouse_x, mouse_y, scale_ratio);
+				GetGUI()->RescaleBitmaps(gui_scale_ratio);
 				ResizeControlRects();
 				InitializeGUIControls(GetGUI());
-				GetGUI()->Resize(mouse_x, mouse_y);
+				GetGUI()->Resize(plugin_width, plugin_height);
 			}
 			else
 			{
 				InitializeGUIControls(GetGUI());
-				GetGUI()->Resize(mouse_x, mouse_y);
+				GetGUI()->Resize(plugin_width, plugin_height);
 			}
 		}
 		else
 		{
 			ResizeControlRects();
 			InitializeGUIControls(GetGUI());
-			GetGUI()->Resize(mouse_x, mouse_y);
+			GetGUI()->Resize(plugin_width, plugin_height);
 		}
-
-
-		global_width = mouse_x;
-		global_height = mouse_y;
-
-		plugin_width = mouse_x;
-		plugin_height = mouse_y;
 
 		plugin_resized = true;
 
 		mPlug->SetParameterFromGUI(2, 0.77);
+	}
+
+	void SetWindowSize(int width, int height)
+	{
+		window_width_normalized = (double)width;
+		window_height_normalized = (double)height;
+	}
+
+	void MoveThisControl()
+	{
+		int index = org_draw_area.size() - 1;
+		double x = (double)plugin_width  / gui_scale_ratio - control_size;
+		double y = (double)plugin_height / gui_scale_ratio - control_size;
+
+		double org_draw_width = org_draw_area[index].W();
+		double org_draw_height = org_draw_area[index].H();
+
+		org_draw_area[index].L = x;
+		org_draw_area[index].T = y;
+		org_draw_area[index].R = x + org_draw_width;
+		org_draw_area[index].B = y + org_draw_height;
+
+		double org_target_width = org_draw_area[index].W();
+		double org_target_height = org_draw_area[index].H();
+
+		org_target_area[index].L = x;
+		org_target_area[index].T = y;
+		org_target_area[index].R = x + org_target_width;
+		org_target_area[index].B = y + org_target_height;
 	}
 
 	void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod)
@@ -474,29 +497,31 @@ public:
 		{
 			SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 
+			// Sets GUI scale
+			gui_scale_ratio = (((double)x + (double)y) / 2.0) / ((window_width_normalized + window_height_normalized) / 2.0);
+
+			plugin_width = (int)(window_width_normalized * gui_scale_ratio);
+			plugin_height = (int)(window_height_normalized * gui_scale_ratio);
+
+			MoveThisControl();
+
 			// Resize window uniform or not
 			// Scaling will always be uniform
-			if (true)
-			{
-				mouse_x = (x + y) / 2;
-				mouse_y = (x + y) / 2;
-			}
-			else
+			if (false)
 			{
 				mouse_x = x;
 				mouse_y = y;
 			}
 
-			if (GetGUI()->Width() != mouse_x || GetGUI()->Height() != mouse_y)
-			{
-				ResizeGraphics();
-			}
+			
+			ResizeGraphics();
+			
 			mouse_is_dragging = true;
 		}
 
 		if (using_bitmaps && fast_bitmap_resizing)
 		{
-			mTargetRECT = mRECT = IRECT(0, 0, mouse_x, mouse_y);
+			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
 		}
 	}
 
@@ -576,7 +601,7 @@ public:
 
 		if (using_bitmaps && fast_bitmap_resizing)
 		{
-			GetGUI()->RescaleBitmaps(plugin_width, plugin_height, scale_ratio);
+			GetGUI()->RescaleBitmaps(gui_scale_ratio);
 		    ResizeControlRects();
 			InitializeGUIControls(GetGUI());
 			mouse_is_down = false;
@@ -589,14 +614,15 @@ public:
 	{
 		if (mouse_is_down)
 		{
-			IRECT backgroundRECT = IRECT(0, 0, mouse_x, mouse_y);
+			IRECT backgroundRECT = IRECT(0, 0, plugin_width, plugin_height);
 			IColor backgroundColor = IColor(255, 25, 25, 25);
 			pGraphics->FillIRect(&backgroundColor, &backgroundRECT);
 
 		}
 		else
 		{
-			if ((global_width != plugin_width || global_height != plugin_height) && using_bitmaps)
+			// Here we are comparing two doubles. This should not be the problem because of implementation
+			if (using_bitmaps && (!double_equals(global_gui_scale_ratio, gui_scale_ratio)))
 			{
 				gui_should_be_closed = true;
 
@@ -604,8 +630,8 @@ public:
 				int textSize = 48;
 				IColor backgroundColor = IColor(255, 25, 25, 25);
 				IColor textColor = IColor(255, 255, 255, 255);
-				IRECT textPosition = IRECT(0, (plugin_height / 2) - (int)((double)textSize * scale_ratio), mRECT.R, mRECT.B);
-				IText textProps = IText((int)((double)textSize * scale_ratio), &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
+				IRECT textPosition = IRECT(0, (plugin_height / 2) - (int)((double)textSize * gui_scale_ratio), mRECT.R, mRECT.B);
+				IText textProps = IText((int)((double)textSize * gui_scale_ratio), &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
 
 				pGraphics->FillIRect(&backgroundColor, &mRECT);
 				pGraphics->DrawIText(&textProps, "  Reopen plugin interface to get new size...", &textPosition);
@@ -633,10 +659,10 @@ public:
 
 		int textSize = 48;
 		IColor textColor = IColor(255, 255, 255, 255);
-		IRECT textPosition = IRECT(0, (plugin_height / 2) - (int)((double)textSize * scale_ratio), mRECT.R, mRECT.B);
-		IText textProps = IText((int)((double)textSize * scale_ratio), &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
+		IRECT textPosition = IRECT(0, (plugin_height / 2) - (int)((double)textSize * gui_scale_ratio), mRECT.R, mRECT.B);
+		IText textProps = IText((int)((double)textSize * gui_scale_ratio), &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
 
-		pGraphics->DrawIText(&textProps, buf, &textPosition);
+		//pGraphics->DrawIText(&textProps, buf, &textPosition);
 		return false;
 	}
 
@@ -658,7 +684,7 @@ private:
 		vector <int> view_height;
 	};
 
-	int current_view_mode, current_view_width, current_view_height;
+	int current_view_mode;
 
 	viewContainer view_container;
 
@@ -667,7 +693,7 @@ private:
 	vector <IText> org_text_size;
 
 
-	double window_width_normalized = 1.0, window_height_normalized = 1.0;
+	double window_width_normalized, window_height_normalized;
 	int view_mode;
 	int mouse_x, mouse_y;
 	int default_gui_width, default_gui_height;
@@ -679,7 +705,7 @@ private:
 	bool using_bitmaps = false;
 	bool fast_bitmap_resizing = false;
 	double* backup_parameters;
-	double scale_ratio;
+	double gui_scale_ratio = 1.0;
 	IRECT gui_resize_area;
 	WDL_String settings_ini_path;
 	int negative_int_limit = -2147483647;

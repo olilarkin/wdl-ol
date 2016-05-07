@@ -146,7 +146,7 @@ public:
   int FPS() { return mFPS; }
 
   // This is needed for GUI resizing------------------------------------------------------------------------
-  void RescaleBitmaps(int w, int h, double scaleRatio);
+  void RescaleBitmaps(double guiScaleRatio);
   void SetBitmapOversample(unsigned oversample) { bitmapOversample = oversample; }
   //--------------------------------------------------------------------------------------------------------
 

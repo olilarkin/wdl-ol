@@ -45,8 +45,8 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGUIResize->UsingBitmaps(false);
 
   // Adding new view. Default view will always be 0.
-  pGUIResize->AddNewView(miniView, 300, 300);
-  pGUIResize->AddNewView(hugeView, 800, 800);
+  pGUIResize->AddNewView(miniView, 300, 400);
+  pGUIResize->AddNewView(hugeView, 1000, 800);
 
   pGUIResize->SelectViewMode(miniView);
   // --------------------------------------------------------------------------------------------------------------------------
@@ -85,8 +85,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGraphics->AttachControl(new viewSelector(this, IRECT(0, 0 + 200, 150, 30 + 200), "miniView", pGUIResize, miniView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(0, 50 + 200, 150, 80 + 200), "defaultView", pGUIResize, defaultView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(0, 100 + 200, 150, 130 + 200), "hugeView", pGUIResize, hugeView));
-
-
+  
   // Here we are attaching our GUI resize control. This must be the last control ----------------------------------------------
   pGraphics->AttachControl(pGUIResize->Attach(pGraphics));
   // --------------------------------------------------------------------------------------------------------------------------
@@ -131,7 +130,7 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	if (viewMode == hugeView)
 	{
 		pGUIResize->ShowControl(grayKnob);
-		pGUIResize->MoveControl(redKnob, windowWidth - 100.0, 0.0);
+		pGUIResize->MoveControl(redKnob, 200.0, 0.0);
 	}
 
 }
