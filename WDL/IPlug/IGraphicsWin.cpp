@@ -552,6 +552,11 @@ void IGraphicsWin::Resize(int w, int h)
   int dw = w - Width(), dh = h - Height();
   IGraphics::Resize(w, h);
 
+  RECT r = { 0, 0, Width(), Height() };
+
+  InvalidateRect(mPlugWnd, &r, FALSE);
+  UpdateWindow(mPlugWnd);
+   
   if (WindowIsOpen())
   {
     HWND pParent = 0, pGrandparent = 0;
@@ -585,11 +590,6 @@ void IGraphicsWin::Resize(int w, int h)
         SetWindowPos(pGrandparent, 0, 0, 0, grandparentW + dw, grandparentH + dh, SETPOS_FLAGS);
       }
     }
-
-	RECT r = { 0, 0, Width(), Height() };
-
-    InvalidateRect(mPlugWnd, &r, FALSE);
-	UpdateWindow(mPlugWnd);
   }
 }
 

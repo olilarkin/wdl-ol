@@ -39,31 +39,31 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   // Here we are creating our GUI resize control ------------------------------------------------------------------------------
   // It is important to create on top of all controls because we might use its pointer to call different sizes from other controls
-  pGUIResize = new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, 16, 16);
+  pGUIResize = new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, true, 16, 16);
 
   // Use fast resizing or slow. You must call this if you are using bitmaps
-  pGUIResize->UsingBitmaps(false);
+  pGUIResize->UsingBitmaps(true);
 
   // Adding new view. Default view will always be 0.
   pGUIResize->AddNewView(miniView, 300, 400);
   pGUIResize->AddNewView(hugeView, 1000, 800);
 
-  pGUIResize->SelectViewMode(miniView);
+  pGUIResize->SelectViewMode(hugeView);
   // --------------------------------------------------------------------------------------------------------------------------
-
-
+  
   // You can now use bitmaps with higher resolution, so that when you resize interface up, everything will be nice
   // This must be called before LoadPointerToBitmap
   pGraphics->SetBitmapOversample(1);
-
-
+  
   
   // Your custom controls------------------------------------------------------------------------------------------------------
-  pGraphics->AttachPanelBackground(&COLOR_BLACK);
+  pGraphics->AttachPanelBackground(&COLOR_GRAY);
 
   IBitmap *tube = pGraphics->LoadPointerToBitmap(BACKGROUND_ID, BACKGROUND_FN);
-  background = pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
-  
+  //background = pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
+
+  customControl = pGraphics->AttachControl(new CustomControl(this, IRECT(625, 0, 800, 800), IColor(255, 0, 0, 100)));
+
   //arguments are: name, defaultVal, minVal, maxVal, step, label
   GetParam(kGain)->InitDouble("Gain", 50., 0., 100.0, 0.01, "%");
   GetParam(kGain)->SetShape(2.);
@@ -79,15 +79,15 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   IRECT tmpRect3(20, 760, 800, 800);
   IText textProps3(24, &COLOR_WHITE, "Arial", IText::kStyleItalic, IText::kAlignNear, 0, IText::kQualityDefault);
   infoText = pGraphics->AttachControl(new ITextControl(this, tmpRect3, &textProps3, "This is IPlugGUIResize example by Youlean..."));
+  
+  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 0 + 200, 150 + 25, 30 + 200), "miniView", pGUIResize, miniView));
+  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 50 + 200, 150 + 25, 80 + 200), "defaultView", pGUIResize, defaultView));
+  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", pGUIResize, hugeView));
 
-  customControl = pGraphics->AttachControl(new CustomControl(this, IRECT(625,500,750,700), IColor(255,0,0,100)));
-
-  pGraphics->AttachControl(new viewSelector(this, IRECT(0, 0 + 200, 150, 30 + 200), "miniView", pGUIResize, miniView));
-  pGraphics->AttachControl(new viewSelector(this, IRECT(0, 50 + 200, 150, 80 + 200), "defaultView", pGUIResize, defaultView));
-  pGraphics->AttachControl(new viewSelector(this, IRECT(0, 100 + 200, 150, 130 + 200), "hugeView", pGUIResize, hugeView));
+  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380), pGUIResize));
   
   // Here we are attaching our GUI resize control. This must be the last control ----------------------------------------------
-  pGraphics->AttachControl(pGUIResize->Attach(pGraphics));
+  pGraphics->AttachControl(pGUIResize->AttachGUIResize(pGraphics));
   // --------------------------------------------------------------------------------------------------------------------------
   
 
@@ -111,26 +111,38 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 {
 	// You can use switch instead, but in this way it is easier to visualize the changes
 	// Use constructor to initialize all controls and then hide or move controls that you don't need for specific viewMode
-	// If you want to change specific control layout, you need to implement it for every viewMode
-
 	// Use this function to move, hide, show and resize controls. Don't worry about GUI Scale, this will be handled automatically
 
+	// Every view will have it's own gui layout, controls visibility, so if you for example hide some control on miniView you don't
+	// need to show it in defaultView because controls visibility is separate for every view
 	if (viewMode == defaultView)
 	{
-		pGUIResize->ShowControl(grayKnob);
+		pGUIResize->HideControl(grayKnob);
 		pGUIResize->MoveControl(redKnob, 50.0, 50.0);
+
+		// customControl
+		pGUIResize->MoveControl(customControl, 425, 0);
+		pGUIResize->MoveControlRightEdge(customControl, windowWidth);
+		pGUIResize->MoveControlBottomEdge(customControl, windowHeight);
 	}
 
 	if (viewMode == miniView)
 	{
 		pGUIResize->HideControl(grayKnob);
 		pGUIResize->MoveControl(redKnob, 0.0, 0.0);
+
+		// customControl
+		pGUIResize->HideControl(customControl);
 	}
 
 	if (viewMode == hugeView)
 	{
-		pGUIResize->ShowControl(grayKnob);
-		pGUIResize->MoveControl(redKnob, 200.0, 0.0);
+		pGUIResize->MoveControl(redKnob, windowWidth - 101.0, 0.0);
+
+		// customControl
+		pGUIResize->MoveControl(customControl, windowWidth - 100.0, 0);
+		pGUIResize->MoveControlRightEdge(customControl, windowWidth);
+		pGUIResize->MoveControlBottomEdge(customControl, windowHeight);
 	}
 
 }

@@ -40,7 +40,7 @@ public:
 
 		drawRect.L = mRECT.L;
 		drawRect.T = mRECT.T;
-		drawRect.R = mRECT.W() / 2 + mRECT.L;
+		drawRect.R = mRECT.R; // mRECT.W() / 2 + mRECT.L;
 		drawRect.B = mRECT.B;
 		
 	}
@@ -91,39 +91,52 @@ public:
 
 };
 
-class windowSizeSelector : public IControl
+class handleSelector : public IControl
 {
 private:
-	WDL_String mStr;
+	WDL_String scaling;
+	WDL_String resize;
 	IPlugGUIResize *GUIResize;
-	int w, h;
+	bool button = false;
 
 public:
-	windowSizeSelector(IPlugBase* pPlug, IRECT pR, const char* label, IPlugGUIResize *pGUIResize, int width, int height)
+	handleSelector(IPlugBase* pPlug, IRECT pR, IPlugGUIResize *pGUIResize)
 		: IControl(pPlug, pR)
 	{
-		w = width;
-		h = height;
 		GUIResize = pGUIResize;
-		mStr.Set(label);
+		scaling.Set("guiScaling");
+		resize.Set("windowResizing");
 		mText.mColor = COLOR_WHITE;
 		mText.mSize = 24;
 	}
 
-	~windowSizeSelector() {}
+	~handleSelector() {}
 
 	bool Draw(IGraphics* pGraphics)
 	{
-		pGraphics->FillIRect(&COLOR_GRAY, &mRECT, &mBlend);
-		char* cStr = mStr.Get();
-		return pGraphics->DrawIText(&mText, cStr, &mRECT);
+		pGraphics->FillIRect(&COLOR_BLUE, &mRECT, &mBlend);
+
+		if (!button)
+		{
+			pGraphics->DrawIText(&mText, resize.Get(), &mRECT);
+		}
+		else
+		{
+			pGraphics->DrawIText(&mText, scaling.Get(), &mRECT);
+		}
+		return true;
 	}
 
 	void OnMouseDown(int x, int y, IMouseMod* pMod)
 	{
-		GUIResize->SetWindowSize(w, h);
-		GUIResize->ResizeAtGUIOpen();
-	}
+		if (button)
+			button = false;
+		else
+			button = true;
 
+		GUIResize->UseHandleForGUIScaling(button);
+
+		SetDirty();
+	}
 };
 #endif

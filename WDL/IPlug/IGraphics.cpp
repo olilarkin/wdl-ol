@@ -1002,6 +1002,7 @@ bool IGraphics::DrawRadialLine(const IColor* pColor, float cx, float cy, float a
 
 bool IGraphics::IsDirty(IRECT* pR)
 {
+	OnGUIIdle();
 #ifndef NDEBUG
   if (mShowControlBounds)
   {
