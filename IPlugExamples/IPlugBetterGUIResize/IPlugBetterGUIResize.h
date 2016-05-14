@@ -34,12 +34,11 @@ public:
 	// Initialize GUI size here. This will be called after gui resize
 	void InitializeGUI(double scaleRatio)
 	{
-		// For example make this rect halph the size of control rect
 		// We could actually just use mRECT, but this is just to demonstrate this function
 
 		drawRect.L = mRECT.L;
 		drawRect.T = mRECT.T;
-		drawRect.R = mRECT.R; // mRECT.W() / 2 + mRECT.L;
+		drawRect.R = mRECT.R;
 		drawRect.B = mRECT.B;
 		
 	}
@@ -83,7 +82,7 @@ public:
 	void OnMouseDown(int x, int y, IMouseMod* pMod)
 	{
 		GetGUIResize()->SelectViewMode(view_mode);
-		GetGUIResize()->ResizeAtGUIOpen();
+		GetGUIResize()->ResizeGraphics();
 	}
 
 };

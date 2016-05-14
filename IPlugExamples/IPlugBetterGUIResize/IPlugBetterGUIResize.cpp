@@ -45,10 +45,10 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   GetGUIResize()->UsingBitmaps(true);
 
   // Adding new view. Default view will always be 0.
-  GetGUIResize()->AddNewView(miniView, 300, 400);
+  GetGUIResize()->AddNewView(miniView, 200, 400);
   GetGUIResize()->AddNewView(hugeView, 1000, 800);
 
-  GetGUIResize()->SelectViewMode(hugeView);
+  GetGUIResize()->SelectViewMode(defaultView);
   // --------------------------------------------------------------------------------------------------------------------------
   
 
@@ -61,7 +61,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGraphics->AttachPanelBackground(&COLOR_GRAY);
 
   IBitmap *tube = pGraphics->LoadPointerToBitmap(BACKGROUND_ID, BACKGROUND_FN);
-  //background = pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
+  background = pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
 
   customControl = pGraphics->AttachControl(new CustomControl(this, IRECT(625, 0, 800, 800), IColor(255, 0, 0, 100)));
 
@@ -113,19 +113,18 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because controls visibility is separate for every view
 	if (viewMode == defaultView)
 	{
-		GetGUIResize()->HideControl(grayKnob);
+		GetGUIResize()->MoveControl(grayKnob, 50.0, 450.0);
 		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
 
 		// customControl
-		GetGUIResize()->MoveControl(customControl, 425, 0);
+		GetGUIResize()->MoveControl(customControl, 600, 0);
 		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
-		GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
 	}
 
 	if (viewMode == miniView)
 	{
 		GetGUIResize()->HideControl(grayKnob);
-		GetGUIResize()->MoveControl(redKnob, 0.0, 0.0);
+		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
 
 		// customControl
 		GetGUIResize()->HideControl(customControl);
@@ -134,13 +133,13 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	if (viewMode == hugeView)
 	{
 		GetGUIResize()->MoveControl(redKnob, windowWidth - 101.0, 0.0);
+		GetGUIResize()->MoveControl(grayKnob, windowWidth - 101.0, 150.0);
 
 		// customControl
 		GetGUIResize()->MoveControl(customControl, windowWidth - 100.0, 0);
 		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
 		GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
 	}
-
 }
 
 

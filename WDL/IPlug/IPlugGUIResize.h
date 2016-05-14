@@ -70,9 +70,9 @@ Normal View:               Normal View - Scaled 2X:
 |                 |     |        Knob1          Knob2        |
 |                 |     |                                    |
 -------------------     |                                    |
-|                                    |
-|                                    |
---------------------------------------
+                        |                                    |
+                        |                                    |
+                        --------------------------------------
 
 -----------------------------------------------------------------------------
 
@@ -144,12 +144,20 @@ public:
 		settings_ini_path.Append("/settings.ini");
 
 		// Check if gui size was written in settings.ini, if not write defaults
-		if (GetIntFromFile("guiscale") == negative_int_limit)
+		if (GetDoubleFromFile("guiscale") < 0.0)
 		{
 			SetDoubleToFile("guiscale", 1.0);
 		}
 
-		mPlug->GetParam(2)->InitInt("test", 0, 0, 10000);
+		// Initiaize parameters
+		mPlug->GetParam(viewMode)->InitInt("", -1, -1, 1000000);
+		mPlug->GetParam(viewMode)->SetCanAutomate(false);
+
+		mPlug->GetParam(windowWidth)->InitDouble("", -1.0, -1.0, 1000000, 1.0);
+		mPlug->GetParam(windowWidth)->SetCanAutomate(false);
+
+		mPlug->GetParam(windowHeight)->InitDouble("", -1.0, -1.0, 1000000, 1.0);
+		mPlug->GetParam(windowHeight)->SetCanAutomate(false);
 	}
 
 	~IPlugGUIResize()
@@ -385,7 +393,7 @@ public:
 
 	int GetIntFromFile(const char *name)
 	{
-		return GetPrivateProfileInt("gui", name, negative_int_limit, settings_ini_path.Get());
+		return GetPrivateProfileInt("gui", name, -1, settings_ini_path.Get());
 	}
 
 	void SetDoubleToFile(const char *name, double x)
@@ -396,7 +404,7 @@ public:
 
 	double GetDoubleFromFile(const char *name)
 	{
-		GetPrivateProfileString("gui", name, "0.0", buf, 128, settings_ini_path.Get());
+		GetPrivateProfileString("gui", name, "-1.0", buf, 128, settings_ini_path.Get());
 		return atof(buf);
 	}
 
@@ -441,7 +449,6 @@ public:
 		{
 			mTargetRECT = mRECT = IRECT(mRECT.R - min_control_size, mRECT.B - min_control_size, mRECT.R, mRECT.B);
 		}
-
 	}
 
 	void InitializeGUIControls(IGraphics *pGraphics)
@@ -469,11 +476,23 @@ public:
 		double prev_plugin_width = plugin_width;
 		double prev_plugin_height = plugin_height;
 
+		if (!plugin_resized)
+		{
+			if(mPlug->GetParam(viewMode)->Value() > -0.5)
+			current_view_mode = (int)mPlug->GetParam(viewMode)->Value();
+
+			if (mPlug->GetParam(windowWidth)->Value() > -0.5)
+			window_width_normalized = mPlug->GetParam(windowWidth)->Value();
+
+			if (mPlug->GetParam(windowHeight)->Value() > -0.5)
+			window_height_normalized = mPlug->GetParam(windowHeight)->Value();
+		}
+
 		gui_scale_ratio = GetDoubleFromFile("guiscale");
-		global_gui_scale_ratio = gui_scale_ratio;
 
 		plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 		plugin_height = (int)(window_height_normalized * gui_scale_ratio);
+		global_gui_scale_ratio = gui_scale_ratio;
 
 		MoveHandle();
 		ResizeBackground();
@@ -489,23 +508,25 @@ public:
 			}
 
 			ResizeControlRects();
+			InitializeGUIControls(GetGUI());
 			GetGUI()->Resize(plugin_width, plugin_height);
 
 			plugin_resized = true;
 
 			gui_should_be_closed = false;
 		}
-
-		InitializeGUIControls(GetGUI());
 	}
 
 	void ResizeGraphics()
 	{
+		// Set parameters
 		SetDoubleToFile("guiscale", gui_scale_ratio);
+		mPlug->GetParam(viewMode)->Set(current_view_mode);
+		mPlug->GetParam(windowWidth)->Set(window_width_normalized);
+		mPlug->GetParam(windowHeight)->Set(window_height_normalized);
 
 		plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 		plugin_height = (int)(window_height_normalized * gui_scale_ratio);
-
 		global_gui_scale_ratio = gui_scale_ratio;
 
 		MoveHandle();
@@ -524,7 +545,12 @@ public:
 			}
 			else
 			{
-				InitializeGUIControls(GetGUI());
+				if (!mouse_is_down)
+				{
+					ResizeControlRects();
+					InitializeGUIControls(GetGUI());
+				}
+
 				GetGUI()->Resize(plugin_width, plugin_height);
 			}
 		}
@@ -537,10 +563,6 @@ public:
 
 		plugin_resized = true;
 
-		pripare_draw1 = pripare_draw;
-		pripare_draw = true;
-
-		mPlug->SetParameterFromGUI(2, 0.77);
 	}
 
 	void SetWindowSize(int width, int height)
@@ -698,15 +720,6 @@ public:
 
 	bool Draw(IGraphics* pGraphics)
 	{
-		if (pripare_draw)
-		{
-			if (pripare_draw1)
-			{
-				
-				pripare_draw1 = false;
-				pripare_draw = false;
-			}
-		}
 		if (mouse_is_down)
 		{
 			IRECT backgroundRECT = IRECT(0, 0, plugin_width, plugin_height);
@@ -749,7 +762,7 @@ public:
 			}
 		}
 
-		double ttt = mPlug->GetParam(2)->Value();
+		double ttt = mPlug->GetParam(viewMode)->Value();
 		sprintf(buf, "%u", (int)ttt);
 
 		int textSize = 48;
@@ -803,8 +816,10 @@ private:
 	bool use_handle = true;
 	bool handle_gui_scaling = false;
 
-	bool pripare_draw = false;
-	bool pripare_draw1 = false;
+	// Parameters set
+	int viewMode = 0,
+		windowWidth = 1,
+		windowHeight = 2;
 
 	double window_width_normalized, window_height_normalized;
 	int view_mode;
@@ -820,7 +835,10 @@ private:
 	double gui_scale_ratio = 1.0;
 	IRECT gui_resize_area;
 	WDL_String settings_ini_path;
+
+	int posistive_int_limit = 2147483647;
 	int negative_int_limit = -2147483647;
+
 	char buf[128]; // temp buffer for writing integers to profile strings
 	LICE_IBitmap *draggingDisplay;
 	IRECT mRECT_backup;
