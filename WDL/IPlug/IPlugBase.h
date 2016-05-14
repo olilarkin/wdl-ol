@@ -21,7 +21,7 @@
 // All version ints are stored as 0xVVVVRRMM: V = version, R = revision, M = minor revision.
 
 class IGraphics;
-
+class IPlugGUIResize;
 class IPlugBase
 {
 public:
@@ -104,6 +104,15 @@ public:
   int NParams() { return mParams.GetSize(); }
   IParam* GetParam(int idx) { return mParams.Get(idx); }
   IGraphics* GetGUI() { return mGraphics; }
+
+
+
+
+  void AttachGUIResize(IPlugGUIResize* pGUIResize) { mGUIResize = pGUIResize; }
+  IPlugGUIResize* GetGUIResize() { return mGUIResize; }
+
+
+
 
   const char* GetEffectName() { return mEffectName; }
   int GetEffectVersion(bool decimal);   // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
@@ -334,6 +343,7 @@ protected:
 
 private:
   IGraphics* mGraphics;
+  IPlugGUIResize* mGUIResize = NULL;
   WDL_PtrList<IParam> mParams;
   WDL_PtrList<IPreset> mPresets;
   WDL_TypedBuf<double*> mInData, mOutData;

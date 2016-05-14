@@ -18,7 +18,6 @@ public:
 
 private:
   IGraphics* pGraphics;
-  IPlugGUIResize* pGUIResize;
 
   // Get control numbers. Do this to make gui layout easier
   int background, redKnob, grayKnob, infoText, customControl;
@@ -60,14 +59,12 @@ class viewSelector : public IControl
 {
 private:
 	WDL_String mStr;
-	IPlugGUIResize *GUIResize;
 	int view_mode;
 
 public:
-	viewSelector(IPlugBase* pPlug, IRECT pR, const char* label, IPlugGUIResize *pGUIResize, int viewMode)
+	viewSelector(IPlugBase* pPlug, IRECT pR, const char* label, int viewMode)
 		: IControl(pPlug, pR)
 	{
-		GUIResize = pGUIResize;
 		view_mode = viewMode;
 		mStr.Set(label);
 		mText.mColor = COLOR_WHITE;
@@ -85,8 +82,8 @@ public:
 
 	void OnMouseDown(int x, int y, IMouseMod* pMod)
 	{
-		GUIResize->SelectViewMode(view_mode);
-		GUIResize->ResizeAtGUIOpen();
+		GetGUIResize()->SelectViewMode(view_mode);
+		GetGUIResize()->ResizeAtGUIOpen();
 	}
 
 };
@@ -100,10 +97,9 @@ private:
 	bool button = false;
 
 public:
-	handleSelector(IPlugBase* pPlug, IRECT pR, IPlugGUIResize *pGUIResize)
+	handleSelector(IPlugBase* pPlug, IRECT pR)
 		: IControl(pPlug, pR)
 	{
-		GUIResize = pGUIResize;
 		scaling.Set("guiScaling");
 		resize.Set("windowResizing");
 		mText.mColor = COLOR_WHITE;
@@ -133,8 +129,8 @@ public:
 			button = false;
 		else
 			button = true;
-
-		GUIResize->UseHandleForGUIScaling(button);
+		
+		GetGUIResize()->UseHandleForGUIScaling(button);
 
 		SetDirty();
 	}

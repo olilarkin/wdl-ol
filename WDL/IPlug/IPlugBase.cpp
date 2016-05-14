@@ -2,6 +2,7 @@
 #ifndef OS_IOS
 #include "IGraphics.h"
 #include "IControl.h"
+#include "IPlugGUIResize.h"
 #endif
 #include <math.h>
 #include <stdio.h>
@@ -229,6 +230,12 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 {
   if (pGraphics)
   {
+	  if (GetGUIResize() != NULL)
+	  {
+		  // Here we are attaching our GUI resize control.
+		  pGraphics->AttachControl(GetGUIResize()->AttachGUIResize(pGraphics));
+	  }
+
     WDL_MutexLock lock(&mMutex);
     int i, n = mParams.GetSize();
     

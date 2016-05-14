@@ -125,6 +125,7 @@ public:
   
   IPlugBase* GetPlug() { return mPlug; }
   IGraphics* GetGUI() { return mPlug->GetGUI(); }
+  IPlugGUIResize* GetGUIResize() { return mPlug->GetGUIResize(); }
 
 protected:
   int mTextEntryLength;

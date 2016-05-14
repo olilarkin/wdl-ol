@@ -39,18 +39,19 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   // Here we are creating our GUI resize control ------------------------------------------------------------------------------
   // It is important to create on top of all controls because we might use its pointer to call different sizes from other controls
-  pGUIResize = new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, true, 16, 16);
+  AttachGUIResize(new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, true, 16, 16));
 
   // Use fast resizing or slow. You must call this if you are using bitmaps
-  pGUIResize->UsingBitmaps(true);
+  GetGUIResize()->UsingBitmaps(true);
 
   // Adding new view. Default view will always be 0.
-  pGUIResize->AddNewView(miniView, 300, 400);
-  pGUIResize->AddNewView(hugeView, 1000, 800);
+  GetGUIResize()->AddNewView(miniView, 300, 400);
+  GetGUIResize()->AddNewView(hugeView, 1000, 800);
 
-  pGUIResize->SelectViewMode(hugeView);
+  GetGUIResize()->SelectViewMode(hugeView);
   // --------------------------------------------------------------------------------------------------------------------------
   
+
   // You can now use bitmaps with higher resolution, so that when you resize interface up, everything will be nice
   // This must be called before LoadPointerToBitmap
   pGraphics->SetBitmapOversample(1);
@@ -80,16 +81,11 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   IText textProps3(24, &COLOR_WHITE, "Arial", IText::kStyleItalic, IText::kAlignNear, 0, IText::kQualityDefault);
   infoText = pGraphics->AttachControl(new ITextControl(this, tmpRect3, &textProps3, "This is IPlugGUIResize example by Youlean..."));
   
-  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 0 + 200, 150 + 25, 30 + 200), "miniView", pGUIResize, miniView));
-  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 50 + 200, 150 + 25, 80 + 200), "defaultView", pGUIResize, defaultView));
-  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", pGUIResize, hugeView));
+  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 0 + 200, 150 + 25, 30 + 200), "miniView", miniView));
+  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 50 + 200, 150 + 25, 80 + 200), "defaultView", defaultView));
+  pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", hugeView));
 
-  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380), pGUIResize));
-  
-  // Here we are attaching our GUI resize control. This must be the last control ----------------------------------------------
-  pGraphics->AttachControl(pGUIResize->AttachGUIResize(pGraphics));
-  // --------------------------------------------------------------------------------------------------------------------------
-  
+  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
 
   AttachGraphics(pGraphics);
   pGraphics->ShowControlBounds(true);
@@ -103,7 +99,7 @@ IPlugBetterGUIResize::~IPlugBetterGUIResize() {}
 void IPlugBetterGUIResize::OnGUIOpen()
 { 
 	TRACE; 
-	pGUIResize->ResizeAtGUIOpen();
+	GetGUIResize()->ResizeAtGUIOpen();
 
 }
 
@@ -117,32 +113,32 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because controls visibility is separate for every view
 	if (viewMode == defaultView)
 	{
-		pGUIResize->HideControl(grayKnob);
-		pGUIResize->MoveControl(redKnob, 50.0, 50.0);
+		GetGUIResize()->HideControl(grayKnob);
+		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
 
 		// customControl
-		pGUIResize->MoveControl(customControl, 425, 0);
-		pGUIResize->MoveControlRightEdge(customControl, windowWidth);
-		pGUIResize->MoveControlBottomEdge(customControl, windowHeight);
+		GetGUIResize()->MoveControl(customControl, 425, 0);
+		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
+		GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
 	}
 
 	if (viewMode == miniView)
 	{
-		pGUIResize->HideControl(grayKnob);
-		pGUIResize->MoveControl(redKnob, 0.0, 0.0);
+		GetGUIResize()->HideControl(grayKnob);
+		GetGUIResize()->MoveControl(redKnob, 0.0, 0.0);
 
 		// customControl
-		pGUIResize->HideControl(customControl);
+		GetGUIResize()->HideControl(customControl);
 	}
 
 	if (viewMode == hugeView)
 	{
-		pGUIResize->MoveControl(redKnob, windowWidth - 101.0, 0.0);
+		GetGUIResize()->MoveControl(redKnob, windowWidth - 101.0, 0.0);
 
 		// customControl
-		pGUIResize->MoveControl(customControl, windowWidth - 100.0, 0);
-		pGUIResize->MoveControlRightEdge(customControl, windowWidth);
-		pGUIResize->MoveControlBottomEdge(customControl, windowHeight);
+		GetGUIResize()->MoveControl(customControl, windowWidth - 100.0, 0);
+		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
+		GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
 	}
 
 }
