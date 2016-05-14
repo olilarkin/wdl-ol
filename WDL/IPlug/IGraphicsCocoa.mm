@@ -264,6 +264,31 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
   }
 }
 
+- (void) updateTrackingAreas
+{
+    [ super updateTrackingAreas];
+    
+    NSTrackingArea *trackingArea;
+    
+    for (trackingArea in [[[self trackingAreas] copy] autorelease]) {
+        [self removeTrackingArea:trackingArea];
+    }
+    
+    trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+                                                options:(NSTrackingMouseEnteredAndExited |
+                                                         NSTrackingActiveAlways |
+                                                         NSTrackingInVisibleRect)
+                                                  owner:self
+                                               userInfo:nil];
+    [self addTrackingArea:trackingArea];
+}
+
+- (void) mouseEntered:(NSEvent *) pEvent
+{
+    [super mouseEntered:pEvent];
+    [[NSCursor arrowCursor] set];
+}
+
 - (void) drawRect: (NSRect) rect
 {
   if (mGraphics)
