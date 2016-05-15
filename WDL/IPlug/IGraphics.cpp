@@ -264,57 +264,84 @@ IGraphics::~IGraphics()
 
 void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
 {
-	int a, b, c, d, x, y, index;
-	double x_ratio = ((double)(w1 - 1)) / w2;
-	double y_ratio = ((double)(h1 - 1)) / h2;
-	double x_diff, y_diff, blue, red, green, alpha;
+	int oversample = 0;
+	int a = 0, b = 0, c = 0, d = 0;
+	int x, y, index;
+
+	int w_ratio = IPMAX(int((double)w1 / (double)w2), 0) + oversample;
+	int h_ratio = IPMAX(int((double)h1 / (double)h2), 0) + oversample;
+
+	double x_ratio = ((double)(w1 - 1- oversample)) / w2;
+	double y_ratio = ((double)(h1 - 1- oversample)) / h2;
+
+	double hw_ratio = 1.0 / IPMAX(double(w_ratio * h_ratio), 1.0);
+	double x_diff, y_diff, blue = 0.0, red = 0.0, green = 0.0, alpha = 0.0;
 	int offset = 0, offset_src = 0, offset_dst = 0;
+	long long output = 0;
 
 	for (int i = 0; i<h2; i++)
 	{
 		for (int j = 0; j<w2; j++)
 		{
+			blue = 0.0; red = 0.0; green = 0.0; alpha = 0.0;
+
 			x = (int)(x_ratio * j);
 			y = (int)(y_ratio * i);
 			x_diff = (x_ratio * j) - x;
 			y_diff = (y_ratio * i) - y;
 
-			if (framesAreHoriztonal)
+			
+			for (int h = -1; h < h_ratio; h++)
 			{
-				index = (y*src_width + x);
-				a = input[index];
-				b = input[index + 1];
-				c = input[index + src_width];
-				d = input[index + src_width + 1];
+				if (h == -1) h++;
+				for (int w = -1; w < w_ratio; w++)
+				{
+					if (w == -1) w++;
+					if (framesAreHoriztonal)
+					{
+						index = (y*src_width + h*src_width + x);
+						a = input[index + w];
+						b = input[index + 1 + w];
+						c = input[index + src_width + w];
+						d = input[index + src_width + 1 + w];
+					}
+					else
+					{
+						index = (y*w1 + h*w1 + x);
+
+						a = input[index + w];
+						b = input[index + 1 + w];
+						c = input[index + w1 + w];
+						d = input[index + w1 + 1 + w];
+
+					}
+					
+					// blue element
+					// Yb = Ab(1-w1)(1-h1) + Bb(w1)(1-h1) + Cb(h1)(1-w1) + Db(wh)
+					blue += (a & 0xff)*(1 - x_diff)*(1 - y_diff) + (b & 0xff)*(x_diff)*(1 - y_diff) +
+						(c & 0xff)*(y_diff)*(1 - x_diff) + (d & 0xff)*(x_diff*y_diff);
+
+					// green element
+					// Yg = Ag(1-w1)(1-h1) + Bg(w1)(1-h1) + Cg(h1)(1-w1) + Dg(wh)
+					green += ((a >> 8) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 8) & 0xff)*(x_diff)*(1 - y_diff) +
+						((c >> 8) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 8) & 0xff)*(x_diff*y_diff);
+
+					// red element
+					// Yr = Ar(1-w1)(1-h1) + Br(w1)(1-h1) + Cr(h1)(1-w1) + Dr(wh)
+					red += ((a >> 16) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 16) & 0xff)*(x_diff)*(1 - y_diff) +
+						((c >> 16) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 16) & 0xff)*(x_diff*y_diff);
+
+					// alpha element
+					// Ya = Aa(1 - w1)(1 - h1) + Ba(w1)(1 - h1) + Ca(h1)(1 - w1) + Da(wh)
+					alpha += ((a >> 24) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 24) & 0xff)*(x_diff)*(1 - y_diff) +
+						((c >> 24) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 24) & 0xff)*(x_diff*y_diff);
+				}
 			}
-			else
-			{
-				index = (y*w1 + x);
-				a = input[index];
-				b = input[index + 1];
-				c = input[index + w1];
-				d = input[index + w1 + 1];
-			}
 
-			// blue element
-			// Yb = Ab(1-w1)(1-h1) + Bb(w1)(1-h1) + Cb(h1)(1-w1) + Db(wh)
-			blue = (a & 0xff)*(1 - x_diff)*(1 - y_diff) + (b & 0xff)*(x_diff)*(1 - y_diff) +
-				(c & 0xff)*(y_diff)*(1 - x_diff) + (d & 0xff)*(x_diff*y_diff);
-
-			// green element
-			// Yg = Ag(1-w1)(1-h1) + Bg(w1)(1-h1) + Cg(h1)(1-w1) + Dg(wh)
-			green = ((a >> 8) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 8) & 0xff)*(x_diff)*(1 - y_diff) +
-				((c >> 8) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 8) & 0xff)*(x_diff*y_diff);
-
-			// red element
-			// Yr = Ar(1-w1)(1-h1) + Br(w1)(1-h1) + Cr(h1)(1-w1) + Dr(wh)
-			red = ((a >> 16) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 16) & 0xff)*(x_diff)*(1 - y_diff) +
-				((c >> 16) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 16) & 0xff)*(x_diff*y_diff);
-
-			// alpha
-			// Ya = Ara(1 - w1)(1 - h1) + Ba(w1)(1 - h1) + Ca(h1)(1 - w1) + Da(wh)
-			alpha = ((a >> 24) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 24) & 0xff)*(x_diff)*(1 - y_diff) +
-				((c >> 24) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 24) & 0xff)*(x_diff*y_diff);
+			blue *= hw_ratio;
+			green *= hw_ratio;
+			red *= hw_ratio;
+			alpha *= hw_ratio;
 
 			// Prevent writing out of destination buffer because of glitch fix (IMPORTANT!!!)
 			if (verticalFix)
@@ -428,7 +455,7 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio)
 	{
 		// Load bitmas from binary 
 		LICE_IBitmap* lb = OSLoadBitmap(storeLoadedBitmap.GetID(i), storeLoadedBitmap.GetName(i));
-				
+
 		// Get new bitmap width and height
 		int new_width = (int)(guiScaleRatio * (double)(lb->getWidth() / bitmapOversample));
 		int new_height = (int)(guiScaleRatio * (double)(lb->getHeight() / bitmapOversample));
@@ -439,14 +466,14 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio)
 		// Get current bitmap propeties
 		int nStates = storeLoadedBitmap.GetBitmap(i)->N;
 		bool framesAreHoriztonal = storeLoadedBitmap.GetBitmap(i)->mFramesAreHorizontal;
-			
+
 		// Create new LICE_IBitmap to use after resizing
 		LICE_IBitmap* newBitmap;
 
 		newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height, 0);
 
 		// Resize old content and write to new bitmap
-	    ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal);
+		ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal);
 
 		// Copy resized image to cached bitmap that all plugins are using
 		LICE_Copy(currentBitmap, newBitmap);
@@ -455,7 +482,6 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio)
 		storeLoadedBitmap.GetBitmap(i)->W = new_width;
 		storeLoadedBitmap.GetBitmap(i)->H = new_height;
 
-		// Delete tmpBitmap and bitmap that was loaded from binary
 		delete newBitmap;
 		delete lb;
 	}
@@ -470,7 +496,6 @@ void IGraphics::Resize(int w, int h)
   PrepDraw();
   mPlug->ResizeGraphics(w, h);
 }
-
 
 void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, char *txt)
 {
@@ -495,7 +520,6 @@ void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, cha
     pControl->SetValueFromUserInput(pParam->GetNormalized(v));
   }
 }
-
 
 void IGraphics::AttachBackground(int ID, const char* name)
 {
@@ -687,7 +711,6 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
 
 }
 
-
 IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, bool framesAreHoriztonal)
 {
 	LICE_IBitmap* lb = s_bitmapCache.Find(ID);
@@ -704,7 +727,9 @@ IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, b
 		if (bitmapOversample > 1)
 		{
 			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(lb->getWidth() / bitmapOversample, lb->getHeight() / bitmapOversample, 0);
-			ResizeBilinear((int*)lb->getBits(), (int*)newBitmap->getBits(), lb->getWidth(), lb->getHeight(), newBitmap->getWidth(), newBitmap->getHeight());
+
+			//ResizeBilinear((int*)lb->getBits(), (int*)newBitmap->getBits(), lb->getWidth(), lb->getHeight(), newBitmap->getWidth(), newBitmap->getHeight());
+			
 			s_bitmapCache.Add(newBitmap, ID);
 			storeLoadedBitmap.Add(new IBitmap(newBitmap, newBitmap->getWidth(), newBitmap->getHeight(), nStates, framesAreHoriztonal), ID, name);
 			delete lb;
@@ -1002,7 +1027,6 @@ bool IGraphics::DrawRadialLine(const IColor* pColor, float cx, float cy, float a
 
 bool IGraphics::IsDirty(IRECT* pR)
 {
-	OnGUIIdle();
 #ifndef NDEBUG
   if (mShowControlBounds)
   {

@@ -97,6 +97,7 @@ struct DRECT
 typedef enum _resizeFlag { drawAndTargetArea, drawAreaOnly, targetAreaOnly } resizeFlag;
 
 static bool plugin_resized = false;
+static bool bitmaps_rescaled_at_load = false;
 static double global_gui_scale_ratio = 1.0;
 
 class IPlugGUIResize : public IControl
@@ -144,9 +145,11 @@ public:
 		settings_ini_path.Append("/settings.ini");
 
 		// Check if gui size was written in settings.ini, if not write defaults
-		if (GetDoubleFromFile("guiscale") < 0.0)
+		gui_scale_ratio = GetDoubleFromFile("guiscale");
+		if (gui_scale_ratio < 0.0)
 		{
 			SetDoubleToFile("guiscale", 1.0);
+			gui_scale_ratio = 1.0;
 		}
 
 		// Initiaize parameters
@@ -260,6 +263,11 @@ public:
 	{
 		IControl* pControl = GetGUI()->GetControl(index);
 		pControl->Hide(false);
+	}
+
+	double GetGUIScaleRatio()
+	{
+		return gui_scale_ratio;
 	}
 
 	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea)
@@ -379,9 +387,13 @@ public:
 		return view_mode;
 	}
 
-	void UsingBitmaps(bool fastBitmapResizing = true)
+	void UsingBitmaps()
 	{
 		using_bitmaps = true;
+	}
+
+	void FastBitmapResizing(bool fastBitmapResizing = true)
+	{
 		fast_bitmap_resizing = fastBitmapResizing;
 	}
 
@@ -471,6 +483,16 @@ public:
 		}
 	}
 
+	void RescaleBitmapsAtLoad(IGraphics *pGraphics)
+	{
+		if (!bitmaps_rescaled_at_load)
+		{
+			pGraphics->RescaleBitmaps(gui_scale_ratio);
+			bitmaps_rescaled_at_load = true;
+		}
+		bitmaps_rescaled_at_load_skip = true;
+	}
+
 	void ResizeAtGUIOpen()
 	{
 		double prev_plugin_width = plugin_width;
@@ -502,10 +524,11 @@ public:
 		// Prevent resizing if it is not needed
 		if (prev_plugin_width != plugin_width || prev_plugin_height != plugin_height)
 		{
-			if (using_bitmaps)
+			if (using_bitmaps && !bitmaps_rescaled_at_load_skip)
 			{
 				GetGUI()->RescaleBitmaps(gui_scale_ratio);
 			}
+			bitmaps_rescaled_at_load_skip = false;
 
 			ResizeControlRects();
 			InitializeGUIControls(GetGUI());
@@ -831,6 +854,7 @@ private:
 	bool gui_should_be_closed = false;
 	bool using_bitmaps = false;
 	bool fast_bitmap_resizing = false;
+	bool bitmaps_rescaled_at_load_skip = false;
 	double* backup_parameters;
 	double gui_scale_ratio = 1.0;
 	IRECT gui_resize_area;

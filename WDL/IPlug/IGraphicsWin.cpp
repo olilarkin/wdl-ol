@@ -551,12 +551,7 @@ void IGraphicsWin::Resize(int w, int h)
 
   int dw = w - Width(), dh = h - Height();
   IGraphics::Resize(w, h);
-
-  RECT r = { 0, 0, Width(), Height() };
-
-  InvalidateRect(mPlugWnd, &r, FALSE);
-  UpdateWindow(mPlugWnd);
-   
+     
   if (WindowIsOpen())
   {
     HWND pParent = 0, pGrandparent = 0;
@@ -575,7 +570,7 @@ void IGraphicsWin::Resize(int w, int h)
       }
     }
 
-    SetWindowPos(mPlugWnd, 0, 0, 0, plugW + dw, plugH + dh, SWP_NOREDRAW);
+    SetWindowPos(mPlugWnd, 0, 0, 0, plugW + dw, plugH + dh, SETPOS_FLAGS | SWP_NOREDRAW);
 
     // don't want to touch the host window in VST3 or RTAS
     if(mPlug->GetAPI() != kAPIVST3 && mPlug->GetAPI() != kAPIRTAS)
@@ -590,6 +585,11 @@ void IGraphicsWin::Resize(int w, int h)
         SetWindowPos(pGrandparent, 0, 0, 0, grandparentW + dw, grandparentH + dh, SETPOS_FLAGS);
       }
     }
+
+	RECT r = { 0, 0, Width(), Height() };
+
+	InvalidateRect(mPlugWnd, &r, FALSE);
+	UpdateWindow(mPlugWnd);
   }
 }
 
