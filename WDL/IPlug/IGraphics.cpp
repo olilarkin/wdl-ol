@@ -261,21 +261,20 @@ IGraphics::~IGraphics()
   DELETE_NULL(mTmpBitmap);
 }
 
-
 void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
 {
-	int oversample = 0;
 	int a = 0, b = 0, c = 0, d = 0;
 	int x, y, index;
 
-	int w_ratio = IPMAX(int((double)w1 / (double)w2), 0) + oversample;
-	int h_ratio = IPMAX(int((double)h1 / (double)h2), 0) + oversample;
+	int w_ratio = IPMAX(int((double)w1 / (double)w2), 0);
+	int h_ratio = IPMAX(int((double)h1 / (double)h2), 0);
 
-	double x_ratio = ((double)(w1 - 1- oversample)) / w2;
-	double y_ratio = ((double)(h1 - 1- oversample)) / h2;
+	double x_ratio = ((double)(w1 - 1)) / w2;
+	double y_ratio = ((double)(h1 - 1)) / h2;
 
 	double hw_ratio = 1.0 / IPMAX(double(w_ratio * h_ratio), 1.0);
-	double x_diff, y_diff, blue = 0.0, red = 0.0, green = 0.0, alpha = 0.0;
+	double x_diff, y_diff;
+	double blue = 0.0, red = 0.0, green = 0.0, alpha = 0.0;
 	int offset = 0, offset_src = 0, offset_dst = 0;
 	long long output = 0;
 
@@ -290,7 +289,7 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 			x_diff = (x_ratio * j) - x;
 			y_diff = (y_ratio * i) - y;
 
-			
+
 			for (int h = -1; h < h_ratio; h++)
 			{
 				if (h == -1) h++;
@@ -315,7 +314,7 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 						d = input[index + w1 + 1 + w];
 
 					}
-					
+
 					// blue element
 					// Yb = Ab(1-w1)(1-h1) + Bb(w1)(1-h1) + Cb(h1)(1-w1) + Db(wh)
 					blue += (a & 0xff)*(1 - x_diff)*(1 - y_diff) + (b & 0xff)*(x_diff)*(1 - y_diff) +
@@ -731,8 +730,7 @@ IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, b
 			int new_width = (int)(double)(lb->getWidth() / bitmapOversample);
 			int new_height = (int)(double)(lb->getHeight() / bitmapOversample);
 
-			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(1, 1, 0);
-
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(1, 1, 0); 
 			s_bitmapCache.Add(newBitmap, ID);
 			storeLoadedBitmap.Add(new IBitmap(newBitmap, new_width, new_height, nStates, framesAreHoriztonal), ID, name);
 			delete lb;
