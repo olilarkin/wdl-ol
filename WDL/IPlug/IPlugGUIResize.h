@@ -523,7 +523,7 @@ public:
 		double prev_plugin_width = plugin_width;
 		double prev_plugin_height = plugin_height;
 
-		if (!plugin_resized)
+		if (!presets_loaded)
 		{
 			if(mPlug->GetParam(viewMode)->Value() > -0.5)
 			current_view_mode = (int)mPlug->GetParam(viewMode)->Value();
@@ -533,6 +533,8 @@ public:
 
 			if (mPlug->GetParam(windowHeight)->Value() > -0.5)
 			window_height_normalized = mPlug->GetParam(windowHeight)->Value();
+
+			presets_loaded = true;
 		}
 
 		gui_scale_ratio = GetDoubleFromFile("guiscale");
@@ -866,6 +868,7 @@ private:
 	bool using_bitmaps = false;
 	bool fast_bitmap_resizing = false;
 	bool bitmaps_rescaled_at_load_skip = false;
+	bool presets_loaded = false;
 	double* backup_parameters;
 	double gui_scale_ratio = 1.0;
 	IRECT gui_resize_area;
