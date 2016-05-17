@@ -185,8 +185,7 @@ public:
 
 	bool double_equals(double a, double b, double epsilon = 0.0000000001)
 	{
-        return a == b;
-		//return abs(a - b) < epsilon;
+		return abs(a - b) < epsilon;
 	}
 
 	IPlugGUIResize *AttachGUIResize()
@@ -540,7 +539,6 @@ public:
 
 		plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 		plugin_height = (int)(window_height_normalized * gui_scale_ratio);
-		global_gui_scale_ratio = gui_scale_ratio;
 
 		MoveHandle();
 		ResizeBackground();
@@ -550,7 +548,7 @@ public:
 		// Prevent resizing if it is not needed
 		if (prev_plugin_width != plugin_width || prev_plugin_height != plugin_height)
 		{
-			if (using_bitmaps && !bitmaps_rescaled_at_load_skip)
+			if (using_bitmaps && !bitmaps_rescaled_at_load_skip && !double_equals(global_gui_scale_ratio, gui_scale_ratio))
 			{
 				mGraphics->RescaleBitmaps(gui_scale_ratio);
 			}
@@ -564,6 +562,8 @@ public:
 
 			gui_should_be_closed = false;
 		}
+
+		global_gui_scale_ratio = gui_scale_ratio;
 	}
 
 	void ResizeGraphics()
@@ -576,7 +576,6 @@ public:
 
 		plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 		plugin_height = (int)(window_height_normalized * gui_scale_ratio);
-		global_gui_scale_ratio = gui_scale_ratio;
 
 		MoveHandle();
 		ResizeBackground();
@@ -611,6 +610,8 @@ public:
 		}
 
 		plugin_resized = true;
+
+		global_gui_scale_ratio = gui_scale_ratio;
 
 	}
 
@@ -764,6 +765,7 @@ public:
 			InitializeGUIControls(mGraphics);
 			mouse_is_down = false;
 			mouse_is_dragging = false;
+			global_gui_scale_ratio = gui_scale_ratio;
 			mGraphics->SetAllControlsDirty();
 		}
 	}
@@ -822,11 +824,6 @@ public:
 
 		//pGraphics->DrawIText(&textProps, buf, &textPosition);
 		return false;
-	}
-
-	void ResizeOnReset()
-	{
-		ResizeAtGUIOpen();
 	}
 
 	void OnGUIIdle()
