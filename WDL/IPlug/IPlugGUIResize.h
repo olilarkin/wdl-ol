@@ -94,11 +94,26 @@ struct DRECT
 	inline double H() const { return B - T; }
 };
 
+struct viewContainer
+{
+	vector <int> view_mode;
+	vector <int> view_width;
+	vector <int> view_height;
+};
+
+struct layoutContainer
+{
+	vector <DRECT> org_draw_area;
+	vector <DRECT> org_target_area;
+	vector <IText> org_text_size;
+};
+
 typedef enum _resizeFlag { drawAndTargetArea, drawAreaOnly, targetAreaOnly } resizeFlag;
 
 static bool plugin_resized = false;
 static bool bitmaps_rescaled_at_load = false;
 static double global_gui_scale_ratio = 1.0;
+static vector <layoutContainer> global_layout_container;
 
 class IPlugGUIResize : public IControl
 {
@@ -106,6 +121,7 @@ public:
 	IPlugGUIResize(IPlugBase *pPlug, IGraphics *pGraphics, int guiWidth, int guiHeight, const char *bundleName, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10)
 		: IControl(pPlug, IRECT(0, 0, 0, 0))
 	{
+		mGraphics = pGraphics;
 		layout_container.resize(1);
 		use_handle = useHandle;
 
@@ -173,42 +189,52 @@ public:
 		//return abs(a - b) < epsilon;
 	}
 
-	IPlugGUIResize *AttachGUIResize(IGraphics *pGraphics)
+	IPlugGUIResize *AttachGUIResize()
 	{
-		// Backup original controls sizes
-		for (int i = 0; i < pGraphics->GetNControls(); i++)
+		// Add control sizes to a global container. This is to fix the problem of bitmap resizing on load
+		if (global_layout_container.size() == 0)
 		{
-			IControl* pControl = pGraphics->GetControl(i);
+			global_layout_container.resize(1);
 
-			layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&*pControl->GetRECT()));
-			layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&*pControl->GetTargetRECT()));
-			layout_container[0].org_text_size.push_back(*pControl->GetText());
+			// Backup original controls sizes
+			for (int i = 0; i < mGraphics->GetNControls(); i++)
+			{
+				IControl* pControl = mGraphics->GetControl(i);
+
+				global_layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&*pControl->GetRECT()));
+				global_layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&*pControl->GetTargetRECT()));
+				global_layout_container[0].org_text_size.push_back(*pControl->GetText());
+			}
+
+			// Add IPlugGUIResize control size
+			global_layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&gui_resize_area));
+			global_layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&gui_resize_area));
+			IText tmpIText;
+			global_layout_container[0].org_text_size.push_back(tmpIText);
 		}
-		
+
+		// Adding global layout container to a local one
+		layout_container[0] = global_layout_container[0];
+
 		// Backup original controls visibility
-		for (int i = 0; i < pGraphics->GetNControls(); i++)
+		for (int i = 0; i < mGraphics->GetNControls(); i++)
 		{
-			IControl* pControl = pGraphics->GetControl(i);
+			IControl* pControl = mGraphics->GetControl(i);
 
 			controls_visibility.push_back(pControl->IsHidden());
 		}
-
-		// Add IPlugGUIResize control size
-		layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&gui_resize_area));
-		layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&gui_resize_area));
-		IText tmpIText;
-		layout_container[0].org_text_size.push_back(tmpIText);
 		
-
 		// Adding new layout for this view. By default it is copying default view layout
 		for (int i = 0; i < view_container.view_mode.size(); i++)
 		{
 			layout_container.push_back(layout_container[0]);
 		}
 
+		RescaleBitmapsAtLoad(mGraphics);
 
+		InitializeGUIControls(mGraphics);
 
-		InitializeGUIControls(pGraphics);
+		mGraphics->SetAllControlsDirty();
 
 		return this;
 	}
@@ -255,13 +281,13 @@ public:
 
 	void HideControl(int index)
 	{
-		IControl* pControl = GetGUI()->GetControl(index);
+		IControl* pControl = mGraphics->GetControl(index);
 		pControl->Hide(true);
 	}
 
 	void ShowControl(int index)
 	{
-		IControl* pControl = GetGUI()->GetControl(index);
+		IControl* pControl = mGraphics->GetControl(index);
 		pControl->Hide(false);
 	}
 
@@ -272,7 +298,7 @@ public:
 
 	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea)
 	{
-		IControl* pControl = GetGUI()->GetControl(index);
+		IControl* pControl = mGraphics->GetControl(index);
 
 		double x_relative = x * gui_scale_ratio;
 		double y_relative = y * gui_scale_ratio;
@@ -316,7 +342,7 @@ public:
 
 	void MoveControlRightEdge(int index, double R, resizeFlag flag = drawAndTargetArea)
 	{
-		IControl* pControl = GetGUI()->GetControl(index);
+		IControl* pControl = mGraphics->GetControl(index);
 
 		double R_relative = R * gui_scale_ratio;
 
@@ -347,7 +373,7 @@ public:
 
 	void MoveControlBottomEdge(int index, double B, resizeFlag flag = drawAndTargetArea)
 	{
-		IControl* pControl = GetGUI()->GetControl(index);
+		IControl* pControl = mGraphics->GetControl(index);
 
 		double B_relative = B * gui_scale_ratio;
 
@@ -428,17 +454,17 @@ public:
 	void ResizeBackground()
 	{
 		// Resize background to plugin width/height
-		GetGUI()->GetControl(0)->SetDrawArea(IRECT(0, 0, plugin_width, plugin_height));
-		GetGUI()->GetControl(0)->SetTargetArea(IRECT(0, 0, plugin_width, plugin_height));
+		mGraphics->GetControl(0)->SetDrawArea(IRECT(0, 0, plugin_width, plugin_height));
+		mGraphics->GetControl(0)->SetTargetArea(IRECT(0, 0, plugin_width, plugin_height));
 	}
 
 	void ResizeControlRects()
 	{
 		// Set new target and draw area
-		for (int i = 1; i < GetGUI()->GetNControls(); i++)
+		for (int i = 1; i < mGraphics->GetNControls(); i++)
 		{
 			// This updates draw and control rect
-			IControl* pControl = GetGUI()->GetControl(i);
+			IControl* pControl = mGraphics->GetControl(i);
 			pControl->SetDrawArea(ResizeIRECT(&layout_container[current_view_mode].org_draw_area[i], gui_scale_ratio, gui_scale_ratio));
 			pControl->SetTargetArea(ResizeIRECT(&layout_container[current_view_mode].org_target_area[i], gui_scale_ratio, gui_scale_ratio));
 
@@ -476,9 +502,9 @@ public:
 
 	void ResetControlsVisibility()
 	{
-		for (int i = 0; i < GetGUI()->GetNControls(); i++)
+		for (int i = 0; i < mGraphics->GetNControls(); i++)
 		{
-			IControl* pControl = GetGUI()->GetControl(i);
+			IControl* pControl = mGraphics->GetControl(i);
 			pControl->Hide(controls_visibility[0]);
 		}
 	}
@@ -526,13 +552,13 @@ public:
 		{
 			if (using_bitmaps && !bitmaps_rescaled_at_load_skip)
 			{
-				GetGUI()->RescaleBitmaps(gui_scale_ratio);
+				mGraphics->RescaleBitmaps(gui_scale_ratio);
 			}
 			bitmaps_rescaled_at_load_skip = false;
 
 			ResizeControlRects();
-			InitializeGUIControls(GetGUI());
-			GetGUI()->Resize(plugin_width, plugin_height);
+			InitializeGUIControls(mGraphics);
+			mGraphics->Resize(plugin_width, plugin_height);
 
 			plugin_resized = true;
 
@@ -561,27 +587,27 @@ public:
 		{
 			if (!fast_bitmap_resizing)
 			{
-				GetGUI()->RescaleBitmaps(gui_scale_ratio);
+				mGraphics->RescaleBitmaps(gui_scale_ratio);
 				ResizeControlRects();
-				InitializeGUIControls(GetGUI());
-				GetGUI()->Resize(plugin_width, plugin_height);
+				InitializeGUIControls(mGraphics);
+				mGraphics->Resize(plugin_width, plugin_height);
 			}
 			else
 			{
 				if (!mouse_is_down)
 				{
 					ResizeControlRects();
-					InitializeGUIControls(GetGUI());
+					InitializeGUIControls(mGraphics);
 				}
 
-				GetGUI()->Resize(plugin_width, plugin_height);
+				mGraphics->Resize(plugin_width, plugin_height);
 			}
 		}
 		else
 		{
 			ResizeControlRects();
-			InitializeGUIControls(GetGUI());
-			GetGUI()->Resize(plugin_width, plugin_height);
+			InitializeGUIControls(mGraphics);
+			mGraphics->Resize(plugin_width, plugin_height);
 		}
 
 		plugin_resized = true;
@@ -690,6 +716,7 @@ public:
 
 	void doPopupMenu()
 	{
+
 		IPopupMenu menu;
 
 		IGraphics* gui = mPlug->GetGUI();
@@ -732,12 +759,12 @@ public:
 
 		if (using_bitmaps && fast_bitmap_resizing)
 		{
-			GetGUI()->RescaleBitmaps(gui_scale_ratio);
+			mGraphics->RescaleBitmaps(gui_scale_ratio);
 			ResizeControlRects();
-			InitializeGUIControls(GetGUI());
+			InitializeGUIControls(mGraphics);
 			mouse_is_down = false;
 			mouse_is_dragging = false;
-			GetGUI()->SetAllControlsDirty();
+			mGraphics->SetAllControlsDirty();
 		}
 	}
 
@@ -812,21 +839,7 @@ public:
 		return plugin_resized;
 	}
 
-private:
-	struct viewContainer
-	{
-		vector <int> view_mode;
-		vector <int> view_width;
-		vector <int> view_height;
-	};
-	
-	struct layoutContainer
-	{
-		vector <DRECT> org_draw_area;
-		vector <DRECT> org_target_area;
-		vector <IText> org_text_size;
-	};
-	
+private:	
 	int current_view_mode;
 
 	int testRedraw = 0;
@@ -844,6 +857,7 @@ private:
 		windowWidth = 1,
 		windowHeight = 2;
 
+	IGraphics *mGraphics;
 	double window_width_normalized, window_height_normalized;
 	int view_mode;
 	int default_gui_width, default_gui_height;

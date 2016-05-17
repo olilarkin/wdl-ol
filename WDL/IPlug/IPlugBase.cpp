@@ -232,10 +232,8 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
   {
 	  if (GetGUIResize() != NULL)
 	  {
-		  GetGUIResize()->RescaleBitmapsAtLoad(pGraphics);
-
 		  // Here we are attaching our GUI resize control.
-		  pGraphics->AttachControl(GetGUIResize()->AttachGUIResize(pGraphics));
+		  pGraphics->AttachControl(GetGUIResize()->AttachGUIResize());
 	  }
 
     WDL_MutexLock lock(&mMutex);

@@ -88,10 +88,10 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
   // --------------------------------------------------------------------------------------------------------------------------
-
+  
   AttachGraphics(pGraphics);
   pGraphics->ShowControlBounds(true);
-
+  
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
 }

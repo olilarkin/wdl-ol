@@ -450,40 +450,40 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 }
 
 void IGraphics::RescaleBitmaps(double guiScaleRatio)
-{		
+{
 	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
-	{
-		// Load bitmas from binary 
-		LICE_IBitmap* lb = OSLoadBitmap(storeLoadedBitmap.GetID(i), storeLoadedBitmap.GetName(i));
+		{
+			// Load bitmas from binary 
+			LICE_IBitmap* lb = OSLoadBitmap(storeLoadedBitmap.GetID(i), storeLoadedBitmap.GetName(i));
 
-		// Get new bitmap width and height
-		int new_width = (int)(guiScaleRatio * (double)(lb->getWidth() / bitmapOversample));
-		int new_height = (int)(guiScaleRatio * (double)(lb->getHeight() / bitmapOversample));
+			// Get new bitmap width and height
+			int new_width = (int)(guiScaleRatio * (double)(lb->getWidth() / bitmapOversample));
+			int new_height = (int)(guiScaleRatio * (double)(lb->getHeight() / bitmapOversample));
 
-		// Get current bitmap
-		LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;
+			// Get current bitmap
+			LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;
 
-		// Get current bitmap propeties
-		int nStates = storeLoadedBitmap.GetBitmap(i)->N;
-		bool framesAreHoriztonal = storeLoadedBitmap.GetBitmap(i)->mFramesAreHorizontal;
+			// Get current bitmap propeties
+			int nStates = storeLoadedBitmap.GetBitmap(i)->N;
+			bool framesAreHoriztonal = storeLoadedBitmap.GetBitmap(i)->mFramesAreHorizontal;
 
-		// Create new LICE_IBitmap to use after resizing
-		LICE_IBitmap* newBitmap;
+			// Create new LICE_IBitmap to use after resizing
+			LICE_IBitmap* newBitmap;
 
-		newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height, 0);
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height, 0);
 
-		// Resize old content and write to new bitmap
-		ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal);
+			// Resize old content and write to new bitmap
+			ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal);
 
-		// Copy resized image to cached bitmap that all plugins are using
-		LICE_Copy(currentBitmap, newBitmap);
+			// Copy resized image to cached bitmap that all plugins are using
+			LICE_Copy(currentBitmap, newBitmap);
 
-		// Store new window size
-		storeLoadedBitmap.GetBitmap(i)->W = new_width;
-		storeLoadedBitmap.GetBitmap(i)->H = new_height;
-
-		delete newBitmap;
-		delete lb;
+			delete newBitmap;
+			
+			// Store new window size
+			storeLoadedBitmap.GetBitmap(i)->W = new_width;
+			storeLoadedBitmap.GetBitmap(i)->H = new_height;
+			delete lb;
 	}
 }
 
@@ -719,19 +719,22 @@ IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, b
 	{
 		lb = OSLoadBitmap(ID, name);
 #ifndef NDEBUG
-        bool imgResourceFound = lb;
+		bool imgResourceFound = lb;
 #endif
-        assert(imgResourceFound); // Protect against typos in resource.h and .rc files.
+		assert(imgResourceFound); // Protect against typos in resource.h and .rc files.
 
 		// Rescale bitmap if oversample is specified
+		// If we use bitmap oversampling we wont recale bitmaps here. We will let iplugguiresize do it for us
 		if (bitmapOversample > 1)
 		{
-			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(lb->getWidth() / bitmapOversample, lb->getHeight() / bitmapOversample, 0);
+			// Get new bitmap width and height
+			int new_width = (int)(double)(lb->getWidth() / bitmapOversample);
+			int new_height = (int)(double)(lb->getHeight() / bitmapOversample);
 
-			//ResizeBilinear((int*)lb->getBits(), (int*)newBitmap->getBits(), lb->getWidth(), lb->getHeight(), newBitmap->getWidth(), newBitmap->getHeight());
-			
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(1, 1, 0);
+
 			s_bitmapCache.Add(newBitmap, ID);
-			storeLoadedBitmap.Add(new IBitmap(newBitmap, newBitmap->getWidth(), newBitmap->getHeight(), nStates, framesAreHoriztonal), ID, name);
+			storeLoadedBitmap.Add(new IBitmap(newBitmap, new_width, new_height, nStates, framesAreHoriztonal), ID, name);
 			delete lb;
 		}
 		else
