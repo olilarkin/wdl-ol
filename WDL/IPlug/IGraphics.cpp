@@ -379,17 +379,40 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 					if (framesAreHoriztonal)
 					{
 						index = (y*src_width + h*src_width + x);
-						a = input[index + w];
-						b = input[index + 1 + w];
 
-						if (j < w2 - 1 || i < h2 - 1)
+						if (j + w < w2)
+						{
+							a = input[index + w];
+						}
+						else
+						{
+							a = 0;
+						}
+
+						if (j + w < w2 - 1)
+						{
+							b = input[index + 1 + w];
+						}
+						else
+						{
+							b = 0;
+						}
+
+						if (j + w < w2 && i + h < h2 - 1)
 						{
 							c = input[index + src_width + w];
-							d = input[index + src_width + 1 + w];
 						}
 						else
 						{
 							c = 0;
+						}
+
+						if (j + w < w2 - 1 && i + h < h2 - 1)
+						{
+							d = input[index + src_width + 1 + w];
+						}
+						else
+						{
 							d = 0;
 						}
 					}
@@ -397,20 +420,41 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 					{
 						index = (y*w1 + h*w1 + x);
 
-						a = input[index + w];
-						b = input[index + 1 + w];
+						if (j + w < w2)
+						{
+							a = input[index + w];
+						}
+						else
+						{
+							a = 0;
+						}
 
-						if (j < w2 - 1 || i < h2 - 1)
+						if (j + w < w2 - 1)
+						{
+							b = input[index + 1 + w];
+						}
+						else
+						{
+							b = 0;
+						}
+
+						if (j + w < w2 && i + h < h2 - 1)
 						{
 							c = input[index + w1 + w];
-							d = input[index + w1 + 1 + w];
 						}
 						else
 						{
 							c = 0;
-							d = 0;
 						}
 
+						if (j + w < w2 - 1 && i + h < h2 - 1)
+						{
+							d = input[index + w1 + 1 + w];
+						}
+						else
+						{
+							d = 0;
+						}
 					}
 
 					// blue element
