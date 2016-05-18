@@ -147,6 +147,7 @@ public:
 
 	// This is needed for GUI resizing------------------------------------------------------------------------
 	void RescaleBitmaps(double guiScaleRatio);
+	void SmoothResizedBitmaps();
 	void SetBitmapOversample(unsigned oversample) { bitmapOversample = oversample; }
 	//--------------------------------------------------------------------------------------------------------
 

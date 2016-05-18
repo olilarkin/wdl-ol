@@ -41,9 +41,10 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   // It is important to create on top of all controls because we might use its pointer from other controls
   AttachGUIResize(new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, true, 16, 16));
 
-  // Use fast resizing or slow. You must call UsingBitmaps() if you want to use bitmaps
+  // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
-  GetGUIResize()->FastBitmapResizing();
+  GetGUIResize()->SmoothResizedBitmaps();
+  //GetGUIResize()->DisableFastBitmapResizing();
 
   // Adding a new view. Default view will always be 0.
   GetGUIResize()->AddNewView(miniView, 200, 400);

@@ -417,9 +417,14 @@ public:
 		using_bitmaps = true;
 	}
 
-	void FastBitmapResizing(bool fastBitmapResizing = true)
+	void DisableFastBitmapResizing()
 	{
-		fast_bitmap_resizing = fastBitmapResizing;
+		fast_bitmap_resizing = false;
+	}
+
+	void SmoothResizedBitmaps()
+	{
+		smooth_bitmap_resizing = true;
 	}
 
 	void SetIntToFile(const char *name, int x)
@@ -513,6 +518,12 @@ public:
 		if (!bitmaps_rescaled_at_load)
 		{
 			pGraphics->RescaleBitmaps(gui_scale_ratio);
+
+			if (smooth_bitmap_resizing)
+			{
+				mGraphics->SmoothResizedBitmaps();
+			}
+
 			bitmaps_rescaled_at_load = true;
 		}
 		bitmaps_rescaled_at_load_skip = true;
@@ -553,6 +564,11 @@ public:
 			if (using_bitmaps && !bitmaps_rescaled_at_load_skip && !double_equals(global_gui_scale_ratio, gui_scale_ratio))
 			{
 				mGraphics->RescaleBitmaps(gui_scale_ratio);
+
+				if (smooth_bitmap_resizing)
+				{
+					mGraphics->SmoothResizedBitmaps();
+				}
 			}
 			bitmaps_rescaled_at_load_skip = false;
 
@@ -589,6 +605,12 @@ public:
 			if (!fast_bitmap_resizing)
 			{
 				mGraphics->RescaleBitmaps(gui_scale_ratio);
+
+				if (smooth_bitmap_resizing)
+				{
+					mGraphics->SmoothResizedBitmaps();
+				}
+
 				ResizeControlRects();
 				InitializeGUIControls(mGraphics);
 				mGraphics->Resize(plugin_width, plugin_height);
@@ -866,9 +888,10 @@ private:
 	bool mouse_is_dragging = false;
 	bool gui_should_be_closed = false;
 	bool using_bitmaps = false;
-	bool fast_bitmap_resizing = false;
+	bool fast_bitmap_resizing = true;
 	bool bitmaps_rescaled_at_load_skip = false;
 	bool presets_loaded = false;
+	bool smooth_bitmap_resizing = false;
 	double* backup_parameters;
 	double gui_scale_ratio = 1.0;
 	IRECT gui_resize_area;

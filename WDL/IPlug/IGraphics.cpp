@@ -261,13 +261,93 @@ IGraphics::~IGraphics()
   DELETE_NULL(mTmpBitmap);
 }
 
+void BoxBlur(int* data, int width, int height, int h_radius, int v_radius)
+{
+	int r = 0, b = 0, g = 0, a = 0;
+	int wh = width * height;
+	int* tmp = new int[wh];
+	int pointer_mover = 0;
+
+	if (h_radius > 1 || v_radius > 1)
+	{
+		// Horisontal pass
+		for (int h = 0; h < height; h++)
+		{
+			for (int w = 0; w < width; w++)
+			{
+				pointer_mover = 0;
+				r = 0, b = 0, g = 0, a = 0;
+				for (int rd = 0; rd < h_radius; rd++)
+				{
+					if (rd + w >= width) continue;
+
+					r += int(*data >> 24 & 0xff);
+					g += int(*data >> 16 & 0xff);
+					b += int(*data >> 8 & 0xff);
+					a += int(*data & 0xff);
+
+					pointer_mover++;
+					data++;
+				}
+				data -= pointer_mover;
+
+				r /= h_radius;
+				g /= h_radius;
+				b /= h_radius;
+				a /= h_radius;
+
+				*tmp = (r << 24) | (g << 16) | (b << 8) | (a);
+				tmp++;
+				data++;
+			}
+		}
+		data -= wh;
+		tmp -= wh;
+
+		// Vertical pass
+		for (int h = 0; h < height; h++)
+		{
+			for (int w = 0; w < width; w++)
+			{
+				pointer_mover = 0;
+				r = 0, b = 0, g = 0, a = 0;
+				for (int rd = 0; rd < v_radius; rd++)
+				{
+					if (rd + h >= height) continue;
+
+					r += int(*tmp >> 24 & 0xff);
+					g += int(*tmp >> 16 & 0xff);
+					b += int(*tmp >> 8 & 0xff);
+					a += int(*tmp & 0xff);
+
+					pointer_mover++;
+					tmp += width;
+				}
+				tmp -= pointer_mover * width;
+
+				r /= v_radius;
+				g /= v_radius;
+				b /= v_radius;
+				a /= v_radius;
+
+				*data = (r << 24) | (g << 16) | (b << 8) | (a);
+				tmp++;
+				data++;
+			}
+		}
+		data -= wh;
+		tmp -= wh;
+		delete[] tmp;
+	}
+}
+
 void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
 {
 	int a = 0, b = 0, c = 0, d = 0;
 	int x, y, index;
 
-	int w_ratio = IPMAX(int((double)w1 / (double)w2), 0);
-	int h_ratio = IPMAX(int((double)h1 / (double)h2), 0);
+	int w_ratio =  IPMAX(int((double)w1 / (double)w2), 0);
+	int h_ratio =  IPMAX(int((double)h1 / (double)h2), 0);
 
 	double x_ratio = ((double)(w1 - 1)) / w2;
 	double y_ratio = ((double)(h1 - 1)) / h2;
@@ -316,22 +396,18 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 					}
 
 					// blue element
-					// Yb = Ab(1-w1)(1-h1) + Bb(w1)(1-h1) + Cb(h1)(1-w1) + Db(wh)
 					blue += (a & 0xff)*(1 - x_diff)*(1 - y_diff) + (b & 0xff)*(x_diff)*(1 - y_diff) +
 						(c & 0xff)*(y_diff)*(1 - x_diff) + (d & 0xff)*(x_diff*y_diff);
 
 					// green element
-					// Yg = Ag(1-w1)(1-h1) + Bg(w1)(1-h1) + Cg(h1)(1-w1) + Dg(wh)
 					green += ((a >> 8) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 8) & 0xff)*(x_diff)*(1 - y_diff) +
 						((c >> 8) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 8) & 0xff)*(x_diff*y_diff);
 
 					// red element
-					// Yr = Ar(1-w1)(1-h1) + Br(w1)(1-h1) + Cr(h1)(1-w1) + Dr(wh)
 					red += ((a >> 16) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 16) & 0xff)*(x_diff)*(1 - y_diff) +
 						((c >> 16) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 16) & 0xff)*(x_diff*y_diff);
 
 					// alpha element
-					// Ya = Aa(1 - w1)(1 - h1) + Ba(w1)(1 - h1) + Ca(h1)(1 - w1) + Da(wh)
 					alpha += ((a >> 24) & 0xff)*(1 - x_diff)*(1 - y_diff) + ((b >> 24) & 0xff)*(x_diff)*(1 - y_diff) +
 						((c >> 24) & 0xff)*(y_diff)*(1 - x_diff) + ((d >> 24) & 0xff)*(x_diff*y_diff);
 				}
@@ -444,6 +520,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 	}
 	else
 	{
+		
 		ResizeBilinear(pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight());
 	}
 }
@@ -483,6 +560,15 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio)
 			storeLoadedBitmap.GetBitmap(i)->W = new_width;
 			storeLoadedBitmap.GetBitmap(i)->H = new_height;
 			delete lb;
+	}
+}
+
+void IGraphics::SmoothResizedBitmaps()
+{
+	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
+	{
+		LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;
+		BoxBlur((int*)currentBitmap->getBits(), currentBitmap->getWidth(), currentBitmap->getHeight(), 2, 2);
 	}
 }
 
