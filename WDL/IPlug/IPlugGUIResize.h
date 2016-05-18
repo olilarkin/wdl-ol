@@ -785,6 +785,12 @@ public:
 		if (using_bitmaps && fast_bitmap_resizing)
 		{
 			mGraphics->RescaleBitmaps(gui_scale_ratio);
+
+			if (smooth_bitmap_resizing)
+			{
+				mGraphics->SmoothResizedBitmaps();
+			}
+
 			ResizeControlRects();
 			InitializeGUIControls(mGraphics);
 			mouse_is_down = false;
