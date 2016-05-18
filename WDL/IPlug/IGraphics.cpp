@@ -380,39 +380,18 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 					{
 						index = (y*src_width + h*src_width + x);
 
-						if (j + w < w2)
+						if (j + w < w2 - 1 || i + h < h2 - 1)
 						{
 							a = input[index + w];
-						}
-						else
-						{
-							a = 0;
-						}
-
-						if (j + w < w2 - 1)
-						{
 							b = input[index + 1 + w];
-						}
-						else
-						{
-							b = 0;
-						}
-
-						if (j + w < w2 && i + h < h2 - 1)
-						{
 							c = input[index + src_width + w];
-						}
-						else
-						{
-							c = 0;
-						}
-
-						if (j + w < w2 - 1 && i + h < h2 - 1)
-						{
 							d = input[index + src_width + 1 + w];
 						}
 						else
 						{
+							a = 0;
+							b = 0;
+							c = 0;
 							d = 0;
 						}
 					}
@@ -420,39 +399,18 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 					{
 						index = (y*w1 + h*w1 + x);
 
-						if (j + w < w2)
+						if (j + w < w2 - 1 || i + h < h2 - 1)
 						{
 							a = input[index + w];
-						}
-						else
-						{
-							a = 0;
-						}
-
-						if (j + w < w2 - 1)
-						{
 							b = input[index + 1 + w];
-						}
-						else
-						{
-							b = 0;
-						}
-
-						if (j + w < w2 && i + h < h2 - 1)
-						{
 							c = input[index + w1 + w];
-						}
-						else
-						{
-							c = 0;
-						}
-
-						if (j + w < w2 - 1 && i + h < h2 - 1)
-						{
 							d = input[index + w1 + 1 + w];
 						}
 						else
 						{
+							a = 0;
+							b = 0;
+							c = 0;
 							d = 0;
 						}
 					}
