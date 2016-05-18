@@ -349,8 +349,8 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 	int w_ratio =  IPMAX(int((double)w1 / (double)w2), 0);
 	int h_ratio =  IPMAX(int((double)h1 / (double)h2), 0);
 
-	double x_ratio = ((double)(w1 - 1)) / w2;
-	double y_ratio = ((double)(h1 - 1)) / h2;
+	double x_ratio = ((double)(w1 - 0)) / w2;
+	double y_ratio = ((double)(h1 - 0)) / h2;
 
 	double hw_ratio = 1.0 / IPMAX(double(w_ratio * h_ratio), 1.0);
 	double x_diff, y_diff;
@@ -381,8 +381,17 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 						index = (y*src_width + h*src_width + x);
 						a = input[index + w];
 						b = input[index + 1 + w];
-						c = input[index + src_width + w];
-						d = input[index + src_width + 1 + w];
+
+						if (j < w2 - 1 || i < h2 - 1)
+						{
+							c = input[index + src_width + w];
+							d = input[index + src_width + 1 + w];
+						}
+						else
+						{
+							c = 0;
+							d = 0;
+						}
 					}
 					else
 					{
@@ -390,8 +399,17 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 
 						a = input[index + w];
 						b = input[index + 1 + w];
-						c = input[index + w1 + w];
-						d = input[index + w1 + 1 + w];
+
+						if (j < w2 - 1 || i < h2 - 1)
+						{
+							c = input[index + w1 + w];
+							d = input[index + w1 + 1 + w];
+						}
+						else
+						{
+							c = 0;
+							d = 0;
+						}
 
 					}
 
