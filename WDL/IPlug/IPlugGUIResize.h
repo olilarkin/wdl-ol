@@ -586,8 +586,18 @@ public:
 
 	void ResizeGraphics()
 	{
+		bool window_resizing = false;
+
+		if (double_equals(GetDoubleFromFile("guiscale"), gui_scale_ratio))
+		{
+			window_resizing = true;
+		}
+		else
+		{
+			SetDoubleToFile("guiscale", gui_scale_ratio);
+		}
+
 		// Set parameters
-		SetDoubleToFile("guiscale", gui_scale_ratio);
 		mPlug->GetParam(viewMode)->Set(current_view_mode);
 		mPlug->GetParam(windowWidth)->Set(window_width_normalized);
 		mPlug->GetParam(windowHeight)->Set(window_height_normalized);
@@ -604,11 +614,14 @@ public:
 		{
 			if (!fast_bitmap_resizing)
 			{
-				mGraphics->RescaleBitmaps(gui_scale_ratio);
-
-				if (smooth_bitmap_resizing)
+				if (!window_resizing)
 				{
-					mGraphics->SmoothResizedBitmaps();
+					mGraphics->RescaleBitmaps(gui_scale_ratio);
+
+					if (smooth_bitmap_resizing)
+					{
+						mGraphics->SmoothResizedBitmaps();
+					}
 				}
 
 				ResizeControlRects();
@@ -620,6 +633,7 @@ public:
 				if (!mouse_is_down)
 				{
 					ResizeControlRects();
+
 					InitializeGUIControls(mGraphics);
 				}
 
@@ -629,14 +643,14 @@ public:
 		else
 		{
 			ResizeControlRects();
+
 			InitializeGUIControls(mGraphics);
 			mGraphics->Resize(plugin_width, plugin_height);
 		}
 
 		plugin_resized = true;
 
-		global_gui_scale_ratio = gui_scale_ratio;
-
+		mGraphics->SetAllControlsDirty();
 	}
 
 	void SetWindowSize(int width, int height)
@@ -681,7 +695,7 @@ public:
 			{
 				// Sets GUI scale
 				gui_scale_ratio = (((double)x + (double)y) / 2.0) / ((window_width_normalized + window_height_normalized) / 2.0);
-
+				global_gui_scale_ratio = gui_scale_ratio;
 				plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 				plugin_height = (int)(window_height_normalized * gui_scale_ratio);
 			}
