@@ -366,7 +366,7 @@ inline int* SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
 void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
 {
 	int a = 0, b = 0, c = 0, d = 0;
-	int x, y, index;
+	int x, y;
 
 	int w_ratio =  IPMAX(int((double)w1 / (double)w2), 0);
 	int h_ratio =  IPMAX(int((double)h1 / (double)h2), 0);
