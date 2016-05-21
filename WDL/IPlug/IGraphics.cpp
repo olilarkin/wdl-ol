@@ -341,6 +341,29 @@ void BoxBlur(int* data, int width, int height, int h_radius, int v_radius)
 	}
 }
 
+inline int* SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
+{
+	if (x_get < w && y_get < h)
+	{
+		return &input[x_get + (y_get * w)];
+	}
+	else if (x_get >= w && y_get < h)
+	{
+		return &input[w + (y_get * w)];
+	}
+	else if (x_get < w && y_get >= h)
+	{
+		return &input[x_get + ((h - 1) * w)];
+	}
+	else if (x_get >= w && y_get >= h)
+	{
+		return &input[w * h];
+	}
+
+	int out = 0;
+	return &out;
+}
+
 void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
 {
 	int a = 0, b = 0, c = 0, d = 0;
@@ -349,14 +372,13 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 	int w_ratio =  IPMAX(int((double)w1 / (double)w2), 0);
 	int h_ratio =  IPMAX(int((double)h1 / (double)h2), 0);
 
-	double x_ratio = ((double)(w1 - 0) - 0.000001) / w2;
-	double y_ratio = ((double)(h1 - 0) - 0.000001) / h2;
+	double x_ratio = (double)w1 / (double)w2;
+	double y_ratio = (double)h1 / (double)h2;
 
 	double hw_ratio = 1.0 / IPMAX(double(w_ratio * h_ratio), 1.0);
 	double x_diff, y_diff;
 	double blue = 0.0, red = 0.0, green = 0.0, alpha = 0.0;
 	int offset = 0, offset_src = 0, offset_dst = 0;
-	long long output = 0;
 
 	for (int i = 0; i<h2; i++)
 	{
@@ -369,50 +391,26 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 			x_diff = (x_ratio * j) - x;
 			y_diff = (y_ratio * i) - y;
 
-
 			for (int h = -1; h < h_ratio; h++)
 			{
 				if (h == -1) h++;
 				for (int w = -1; w < w_ratio; w++)
 				{
 					if (w == -1) w++;
+
 					if (framesAreHoriztonal)
 					{
-						index = (y*src_width + h*src_width + x);
-
-						if (j + w < w2 - 1 || i + h < h2 - 1)
-						{
-							a = input[index + w];
-							b = input[index + 1 + w];
-							c = input[index + src_width + w];
-							d = input[index + src_width + 1 + w];
-						}
-						else
-						{
-							a = 0;
-							b = 0;
-							c = 0;
-							d = 0;
-						}
+						a = *SafeGetPixel(input, x + w, y + h, src_width, h1);
+						b = *SafeGetPixel(input, x + w + 1, y + h, src_width, h1);
+						c = *SafeGetPixel(input, x + w, y + h + 1, src_width, h1);
+						d = *SafeGetPixel(input, x + w + 1, y + h + 1, src_width, h1);
 					}
 					else
 					{
-						index = (y*w1 + h*w1 + x);
-
-						if (j + w < w2 - 1 || i + h < h2 - 1)
-						{
-							a = input[index + w];
-							b = input[index + 1 + w];
-							c = input[index + w1 + w];
-							d = input[index + w1 + 1 + w];
-						}
-						else
-						{
-							a = 0;
-							b = 0;
-							c = 0;
-							d = 0;
-						}
+						a = *SafeGetPixel(input, x + w, y + h, w1, h1);
+						b = *SafeGetPixel(input, x + w + 1, y + h, w1, h1);
+						c = *SafeGetPixel(input, x + w, y + h + 1, w1, h1);
+						d = *SafeGetPixel(input, x + w + 1, y + h + 1, w1, h1);
 					}
 
 					// blue element
