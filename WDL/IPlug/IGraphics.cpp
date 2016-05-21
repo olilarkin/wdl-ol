@@ -341,23 +341,48 @@ void BoxBlur(int* data, int width, int height, int h_radius, int v_radius)
 	}
 }
 
-inline int* SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
+inline int SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
 {
+	// Inside buffer
 	if (x_get < w && y_get < h)
 	{
-		return &input[x_get + (y_get * w)];
+		return input[x_get + (y_get * w)];
 	}
-	else if (x_get >= w && y_get < h)
+
+	// x is outside buffer by one pixel
+	else if (x_get == w && y_get < h)
 	{
-		return &input[w + (y_get * w)];
+		return input[w + (y_get * w)];
 	}
-	else if (x_get < w && y_get >= h)
+
+	// x is outside buffer by more than one pixel
+	else if (x_get > w && y_get < h)
 	{
-		return &input[x_get + ((h - 1) * w)];
+		return 0;
 	}
-	else if (x_get >= w && y_get >= h)
+	
+	// y is outside buffer by one pixel
+	else if (x_get < w && y_get == h)
 	{
-		return &input[w * h];
+		return input[x_get + ((h - 1) * w)];
+	}
+
+	// x is outside buffer by more than one pixel
+	else if (x_get < w && y_get > h)
+	{
+		return 0;
+	}
+
+	// x and y are outside buffer by one pixel
+	else if (x_get == w && y_get == h)
+	{
+		return input[w * h];
+	}
+
+	// x and y are outside buffer by more than one pixel
+	else if (x_get > w && y_get > h)
+	{
+		return 0;
 	}
 
 	return 0;
@@ -375,6 +400,7 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 	double y_ratio = (double)h1 / (double)h2;
 
 	double hw_ratio = 1.0 / IPMAX(double(w_ratio * h_ratio), 1.0);
+
 	double x_diff, y_diff;
 	double blue = 0.0, red = 0.0, green = 0.0, alpha = 0.0;
 	int offset = 0, offset_src = 0, offset_dst = 0;
@@ -399,17 +425,17 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 
 					if (framesAreHoriztonal)
 					{
-						a = *SafeGetPixel(input, x + w, y + h, src_width, h1);
-						b = *SafeGetPixel(input, x + w + 1, y + h, src_width, h1);
-						c = *SafeGetPixel(input, x + w, y + h + 1, src_width, h1);
-						d = *SafeGetPixel(input, x + w + 1, y + h + 1, src_width, h1);
+						a = SafeGetPixel(input, x + w, y + h, src_width, h1);
+						b = SafeGetPixel(input, x + w + 1, y + h, src_width, h1);
+						c = SafeGetPixel(input, x + w, y + h + 1, src_width, h1);
+						d = SafeGetPixel(input, x + w + 1, y + h + 1, src_width, h1);
 					}
 					else
 					{
-						a = *SafeGetPixel(input, x + w, y + h, w1, h1);
-						b = *SafeGetPixel(input, x + w + 1, y + h, w1, h1);
-						c = *SafeGetPixel(input, x + w, y + h + 1, w1, h1);
-						d = *SafeGetPixel(input, x + w + 1, y + h + 1, w1, h1);
+						a = SafeGetPixel(input, x + w, y + h, w1, h1);
+						b = SafeGetPixel(input, x + w + 1, y + h, w1, h1);
+						c = SafeGetPixel(input, x + w, y + h + 1, w1, h1);
+						d = SafeGetPixel(input, x + w + 1, y + h + 1, w1, h1);
 					}
 
 					// blue element
