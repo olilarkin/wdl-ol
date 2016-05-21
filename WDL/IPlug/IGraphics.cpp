@@ -360,8 +360,7 @@ inline int* SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
 		return &input[w * h];
 	}
 
-	int out = 0;
-	return &out;
+	return 0;
 }
 
 void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
