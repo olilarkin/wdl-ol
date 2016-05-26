@@ -548,9 +548,7 @@ void IGraphicsWin::ForceEndUserEdit()
 void IGraphicsWin::Resize(int w, int h)
 {
   if (w == Width() && h == Height()) return;
-
-  RECT r = { 0, 0, w, h };
-
+   
   int dw = w - Width(), dh = h - Height();
   IGraphics::Resize(w, h);
   
@@ -589,6 +587,8 @@ void IGraphicsWin::Resize(int w, int h)
       }
     }
 	
+	RECT r = { 0, 0, Width(), Height() };
+
 	InvalidateRect(mPlugWnd, &r, FALSE);
 	UpdateWindow(mPlugWnd);
   }
