@@ -1,9 +1,4 @@
 #include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
 
 // Helpers -------------------------------------------------------------------------------------------------------------
 bool IPlugGUIResize::double_equals(double a, double b, double epsilon)
@@ -26,8 +21,6 @@ IRECT IPlugGUIResize::ResizeIRECT(DRECT *old_IRECT, double width_ratio, double h
 	return IRECT((int)(old_IRECT->L * width_ratio), (int)(old_IRECT->T * height_ratio), (int)(old_IRECT->R * width_ratio), (int)(old_IRECT->B * height_ratio));
 }
 // --------------------------------------------------------------------------------------------------------------------
-
-
 
 // IPlugGUIResize -----------------------------------------------------------------------------------------------------
 IPlugGUIResize::IPlugGUIResize(IPlugBase * pPlug, IGraphics * pGraphics, int guiWidth, int guiHeight, const char * bundleName, bool useHandle, int controlSize, int minimumControlSize)
@@ -163,6 +156,14 @@ void IPlugGUIResize::DrawHandle(IGraphics * pGraphics, IRECT * pRECT)
 
 IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 {
+	// Check if we need to attach horisontal and vertical handles
+	if (using_one_size_resize)
+	{
+		mGraphics->AttachControl(new VerticalResizing(mPlug, mGraphics, one_side_handle_size));
+		mGraphics->AttachControl(new HorisontalResizing(mPlug, mGraphics, one_side_handle_size));
+	}
+	
+
 	// Add control sizes to a global container. This is to fix the problem of bitmap resizing on load
 	if (global_layout_container.size() == 0)
 	{
@@ -202,7 +203,7 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 		layout_container.push_back(layout_container[0]);
 	}
 
-	RescaleBitmapsAtLoad(mGraphics);
+	RescaleBitmapsAtLoad();
 
 	InitializeGUIControls(mGraphics);
 
@@ -223,6 +224,76 @@ void IPlugGUIResize::AddNewView(int viewMode, int viewWidth, int viewHeight)
 	view_container.view_height.push_back(viewHeight);
 }
 
+void IPlugGUIResize::UseOneSideResizing(int handleSize, int minHandleSize, resizeOneSide flag)
+{
+	one_side_handle_size = handleSize;
+	one_side_handle_min_size = minHandleSize;
+
+	using_one_size_resize = true;
+
+	int index = mGraphics->GetNControls() - 1;
+	int horisontalControl = (index - 1);
+	int verticalControl = (index - 2);
+
+	// Hide control that is not yet enabled
+    if (flag == justHorisontalResizing)
+	{
+		HideControl(verticalControl);
+	}
+	else if (flag == justVerticalResizing)
+	{
+		HideControl(horisontalControl);
+	}
+}
+
+void IPlugGUIResize::EnableOneSideResizing(resizeOneSide flag)
+{
+	if (using_one_size_resize)
+	{
+		int index = mGraphics->GetNControls() - 1;
+		int horisontalControl = (index - 1);
+		int verticalControl = (index - 2);
+
+		if (flag == horisontalAndVerticalResizing)
+		{
+			ShowControl(horisontalControl);
+			ShowControl(verticalControl);
+		}
+		else if (flag == justHorisontalResizing)
+		{
+			ShowControl(horisontalControl);;
+		}
+		else if (flag == justVerticalResizing)
+		{
+			ShowControl(verticalControl);
+		}
+	}
+}
+
+void IPlugGUIResize::DisableOneSideResizing(resizeOneSide flag)
+{
+	if (using_one_size_resize)
+	{
+		int index = mGraphics->GetNControls() - 1;
+		int horisontalControl = (index - 1);
+		int verticalControl = (index - 2);
+
+		if (flag == horisontalAndVerticalResizing)
+		{
+			HideControl(horisontalControl);
+			HideControl(verticalControl);
+		}
+		else if (flag == justHorisontalResizing)
+		{
+			HideControl(horisontalControl);
+		}
+		else if (flag == justVerticalResizing)
+		{
+			HideControl(verticalControl);
+		}
+	}
+}
+
 void IPlugGUIResize::SelectViewMode(int viewMode)
 {
 	int position = 0;
@@ -241,12 +312,26 @@ void IPlugGUIResize::SelectViewMode(int viewMode)
 	window_height_normalized = (double)view_container.view_height[position];
 }
 
-void IPlugGUIResize::SetWindowSize(int width, int height)
+void IPlugGUIResize::SetWindowSize(double width, double height)
 {
-	window_width_normalized = (double)width;
-	window_height_normalized = (double)height;
+	window_width_normalized = width;
+	window_height_normalized = height;
 
 	window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
+	window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
+}
+
+void IPlugGUIResize::SetWindowWidth(double width)
+{
+	window_width_normalized = width;
+
+	window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
+}
+
+void IPlugGUIResize::SetWindowHeight(double height)
+{
+	window_height_normalized = height;
+
 	window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
 }
 
@@ -432,6 +517,30 @@ void IPlugGUIResize::ResizeControlRects()
 		pControl->SetText(&tmpText);
 	}
 
+	// Keeps one side handle above or at minimum size
+	int index = mGraphics->GetNControls() - 1;
+	IControl* horisontalControl = mGraphics->GetControl(index - 1);
+	IControl* verticalControl = mGraphics->GetControl(index - 2);
+
+	// Take care of one side handles
+	// We will treat draw and target rect the same
+	if (using_one_size_resize)
+	{
+		if (horisontalControl->GetTargetRECT()->W() < one_side_handle_min_size)
+		{
+			IRECT rect = IRECT(horisontalControl->GetTargetRECT()->R - one_side_handle_min_size, 0, horisontalControl->GetTargetRECT()->R, horisontalControl->GetTargetRECT()->B);
+			horisontalControl->SetDrawArea(rect);
+			horisontalControl->SetTargetArea(rect);
+		}
+
+		if (verticalControl->GetTargetRECT()->H() < one_side_handle_min_size)
+		{
+			IRECT rect = IRECT(0, verticalControl->GetTargetRECT()->B - one_side_handle_min_size, verticalControl->GetTargetRECT()->R, verticalControl->GetTargetRECT()->B);
+			verticalControl->SetDrawArea(rect);
+			verticalControl->SetTargetArea(rect);
+		}
+	}
+
 	// Keeps control rect uniform and prevent it to go below specified size
 	int minSize = IPMIN(mRECT.W(), mRECT.H());
 	if (mRECT.W() != mRECT.H())
@@ -465,11 +574,11 @@ void IPlugGUIResize::ResetControlsVisibility()
 	}
 }
 
-void IPlugGUIResize::RescaleBitmapsAtLoad(IGraphics * pGraphics)
+void IPlugGUIResize::RescaleBitmapsAtLoad()
 {
 	if (!bitmaps_rescaled_at_load)
 	{
-		pGraphics->RescaleBitmaps(gui_scale_ratio);
+		mGraphics->RescaleBitmaps(gui_scale_ratio);
 
 		if (smooth_bitmap_resizing)
 		{
@@ -606,25 +715,31 @@ void IPlugGUIResize::ResizeGraphics()
 
 void IPlugGUIResize::MoveHandle()
 {
+	double x;
+	double y;
+
 	int index = layout_container[current_view_mode].org_draw_area.size() - 1;
-	double x = (double)plugin_width / gui_scale_ratio - control_size;
-	double y = (double)plugin_height / gui_scale_ratio - control_size;
+	
+	// Take care of one side handles
+	if (using_one_size_resize)
+	{
+		// Set horisontal handle
+		x = (double)plugin_width / gui_scale_ratio - one_side_handle_size;
+		y = (double)plugin_height / gui_scale_ratio;
+		MoveControl(index - 1, x, 0);
+		MoveControlBottomEdge(index - 1, y);
 
-	double org_draw_width = layout_container[current_view_mode].org_draw_area[index].W();
-	double org_draw_height = layout_container[current_view_mode].org_draw_area[index].H();
-
-	layout_container[current_view_mode].org_draw_area[index].L = x;
-	layout_container[current_view_mode].org_draw_area[index].T = y;
-	layout_container[current_view_mode].org_draw_area[index].R = x + org_draw_width;
-	layout_container[current_view_mode].org_draw_area[index].B = y + org_draw_height;
-
-	double org_target_width = layout_container[current_view_mode].org_draw_area[index].W();
-	double org_target_height = layout_container[current_view_mode].org_draw_area[index].H();
-
-	layout_container[current_view_mode].org_target_area[index].L = x;
-	layout_container[current_view_mode].org_target_area[index].T = y;
-	layout_container[current_view_mode].org_target_area[index].R = x + org_target_width;
-	layout_container[current_view_mode].org_target_area[index].B = y + org_target_height;
+		// Set vertical handle
+		x = (double)plugin_width / gui_scale_ratio;
+		y = (double)plugin_height / gui_scale_ratio - one_side_handle_size;
+		MoveControl(index - 2, 0, y);
+		MoveControlRightEdge(index - 2, x);
+	}
+			
+	// Take care of main handle
+	x = (double)plugin_width / gui_scale_ratio - control_size;
+	y = (double)plugin_height / gui_scale_ratio - control_size;
+	MoveControl(index, x, y);
 }
 
 void IPlugGUIResize::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)

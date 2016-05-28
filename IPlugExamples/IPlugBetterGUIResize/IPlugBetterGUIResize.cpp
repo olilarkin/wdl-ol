@@ -41,6 +41,8 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   // It is important to create on top of all controls because we might use its pointer from other controls
   AttachGUIResize(new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, true, 16, 16));
 
+  GetGUIResize()->UseOneSideResizing(10);
+
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
   //GetGUIResize()->DisableFastBitmapResizing();

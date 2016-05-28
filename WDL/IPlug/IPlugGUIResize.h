@@ -109,12 +109,12 @@ struct layoutContainer
 };
 
 typedef enum _resizeFlag { drawAndTargetArea, drawAreaOnly, targetAreaOnly } resizeFlag;
+typedef enum _resizeOneSide { justHorisontalResizing, justVerticalResizing, horisontalAndVerticalResizing } resizeOneSide;
 
 static bool plugin_resized = false;
 static bool bitmaps_rescaled_at_load = false;
 static double global_gui_scale_ratio = 1.0;
 static vector <layoutContainer> global_layout_container;
-
 
 
 class IPlugGUIResize : public IControl
@@ -129,14 +129,20 @@ public:
 	void DisableFastBitmapResizing();
 	void UseHandleForGUIScaling(bool statement = false);
 	void AddNewView(int viewMode, int viewWidth, int viewHeight);
+	void UseOneSideResizing(int handleSize, int minHandleSize = 10, resizeOneSide flag = horisontalAndVerticalResizing);
 	// ----------------------------------------------------------------------------------------
 
 
 	// These can be called from your custom controls ------------------------------------------
 	void SmoothResizedBitmaps();
 
+	void EnableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
+	void DisableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
+
 	void SelectViewMode(int viewMode);
-	void SetWindowSize(int width, int height);
+	void SetWindowSize(double width, double height);
+	void SetWindowWidth(double width);
+	void SetWindowHeight(double height);
 	void SetGUIScaleLimits(double minSizeInPercentage, double maxSizeInPercentage);
 	void SetWindowSizeLimits(double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight);
 
@@ -160,7 +166,7 @@ public:
 
 	// Used by framework ----------------------------------------------------------------------
 	bool Draw(IGraphics* pGraphics);
-	void RescaleBitmapsAtLoad(IGraphics *pGraphics);
+	void RescaleBitmapsAtLoad();
 	IPlugGUIResize *AttachGUIResize();
 	// ----------------------------------------------------------------------------------------
 
@@ -262,6 +268,10 @@ private:
 	double min_window_width_normalized = 0.0, min_window_height_normalized = 0.0;
 	double max_window_width_normalized = 1000000000.0, max_window_height_normalized = 1000000000.0;
 
+	// One side resizing variables
+	int one_side_handle_size = 0, one_side_handle_min_size = 0;
+	bool using_one_size_resize = false;
+
 	int view_mode;
 	int default_gui_width, default_gui_height;
 	int plugin_width, plugin_height; // This is current plugin instance width
@@ -279,5 +289,99 @@ private:
 	WDL_String settings_ini_path;
 	char buf[128]; // temp buffer for writing integers to profile strings
 };
+
+
+	// NOTE: Horisontal control position is control size - 2
+	// One side handle classes
+	class HorisontalResizing : public IControl
+	{
+	public:
+		HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int width)
+			: IControl(pPlug, IRECT(pGraphics->Width() - width, 0, pGraphics->Width(), pGraphics->Height()))
+		{
+			mGraphics = pGraphics;
+			mGraphics->HandleMouseOver(true);
+		}
+
+		~HorisontalResizing() {}
+
+		bool Draw(IGraphics* pGraphics)
+		{
+			pGraphics->FillIRect(&COLOR_RED, &mRECT);
+			return true;
+		}
+
+		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
+		{
+			SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+
+			double prev_plugin_width = mGraphics->Width();
+
+			double window_width_normalized = (double)x / GetGUIResize()->GetGUIScaleRatio();
+
+			GetGUIResize()->SetWindowWidth(window_width_normalized);
+
+			GetGUIResize()->ResizeGraphics();
+		}
+
+		void OnMouseOver(int x, int y, IMouseMod * pMod)
+		{
+			SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+		}
+
+		void OnMouseOut()
+		{
+			SetCursor(LoadCursor(NULL, IDC_ARROW));
+		}
+
+	private:
+		IGraphics* mGraphics;
+	};
+
+	// NOTE: Vertical control position is control size - 3
+	class VerticalResizing : public IControl
+	{
+	public:
+		VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int height)
+			: IControl(pPlug, IRECT(0, pGraphics->Height() - height, pGraphics->Width(), pGraphics->Height()))
+		{
+			mGraphics = pGraphics;
+			mGraphics->HandleMouseOver(true);
+		}
+
+		~VerticalResizing() {}
+
+		bool Draw(IGraphics* pGraphics)
+		{
+			pGraphics->FillIRect(&COLOR_GREEN, &mRECT);
+			return true;
+		}
+
+		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
+		{
+			SetCursor(LoadCursor(NULL, IDC_SIZENS));
+
+			double prev_plugin_height = mGraphics->Height();
+
+			double window_height_normalized = (double)y / GetGUIResize()->GetGUIScaleRatio();
+
+			GetGUIResize()->SetWindowHeight(window_height_normalized);
+
+			GetGUIResize()->ResizeGraphics();
+		}
+
+		void OnMouseOver(int x, int y, IMouseMod * pMod)
+		{
+			SetCursor(LoadCursor(NULL, IDC_SIZENS));
+		}
+
+		void OnMouseOut()
+		{
+			SetCursor(LoadCursor(NULL, IDC_ARROW));
+		}
+
+	private:
+		IGraphics* mGraphics;
+	};
 
 #endif
