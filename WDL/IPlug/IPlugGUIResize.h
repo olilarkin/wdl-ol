@@ -115,13 +115,15 @@ static bool bitmaps_rescaled_at_load = false;
 static double global_gui_scale_ratio = 1.0;
 static vector <layoutContainer> global_layout_container;
 
+
+
 class IPlugGUIResize : public IControl
 {
 public:
 	IPlugGUIResize(IPlugBase *pPlug, IGraphics *pGraphics, int guiWidth, int guiHeight, const char *bundleName, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10);
 	~IPlugGUIResize(){}
 
-
+	
 	// These must be called in your plugin constructor ----------------------------------------
 	void UsingBitmaps();
 	void DisableFastBitmapResizing();
@@ -132,9 +134,12 @@ public:
 
 	// These can be called from your custom controls ------------------------------------------
 	void SmoothResizedBitmaps();
+
 	void SelectViewMode(int viewMode);
 	void SetWindowSize(int width, int height);
-	
+	void SetGUIScaleLimits(double minSizeInPercentage, double maxSizeInPercentage);
+	void SetWindowSizeLimits(double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight);
+
 	void HideControl(int index);
 	void ShowControl(int index);
 	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea);
@@ -201,20 +206,7 @@ public:
 		}
 	}
 		
-	bool IsDirty()
-	{
-		if (using_bitmaps && plugin_resized && !gui_should_be_closed && !mouse_is_down)
-		{
-			gui_should_be_closed = !double_equals(global_gui_scale_ratio, gui_scale_ratio);
-
-			if (gui_should_be_closed)
-			{
-				mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
-			}
-		}
-
-		return gui_should_be_closed;
-	}
+	bool IsDirty();
 
 private:
 
@@ -251,7 +243,7 @@ private:
 	vector <bool> controls_visibility;
 
 	bool use_handle = true;
-	bool handle_gui_scaling = false;
+	bool handle_controls_gui_scaling = false;
 
 	// Parameters set
 	int viewMode = 0,
@@ -259,7 +251,17 @@ private:
 		windowHeight = 2;
 
 	IGraphics *mGraphics;
+
+	// GUI scale variables
+	double gui_scale_ratio = 1.0;
+	double min_gui_scale_ratio = 0.0;
+	double max_gui_scale_ratio = 1000000000.0;
+
+	// Window size variables
 	double window_width_normalized, window_height_normalized;
+	double min_window_width_normalized = 0.0, min_window_height_normalized = 0.0;
+	double max_window_width_normalized = 1000000000.0, max_window_height_normalized = 1000000000.0;
+
 	int view_mode;
 	int default_gui_width, default_gui_height;
 	int plugin_width, plugin_height; // This is current plugin instance width
@@ -273,7 +275,6 @@ private:
 	bool presets_loaded = false;
 	bool smooth_bitmap_resizing = false;
 	double* backup_parameters;
-	double gui_scale_ratio = 1.0;
 	IRECT gui_resize_area;
 	WDL_String settings_ini_path;
 	char buf[128]; // temp buffer for writing integers to profile strings

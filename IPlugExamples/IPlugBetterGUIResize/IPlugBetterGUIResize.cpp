@@ -50,6 +50,12 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   GetGUIResize()->AddNewView(hugeView, 1000, 800);
 
   GetGUIResize()->SelectViewMode(defaultView);
+
+  // This will limit GUI scaling from 50% to 200%
+  GetGUIResize()->SetGUIScaleLimits(50, 200);
+  // This will limit normalized window size ie. window sizse that is not affected by GUI scale ratio.
+  // To get real window size limits just find 50% of 200 and 200% of 1600
+  GetGUIResize()->SetWindowSizeLimits(200, 200, 1600, 1600);
   // --------------------------------------------------------------------------------------------------------------------------
   
 
@@ -115,29 +121,35 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because layout is separate for every view
 	if (viewMode == defaultView)
 	{
+		GetGUIResize()->SetWindowSizeLimits(800, 800, 1600, 1000);
+
 		GetGUIResize()->MoveControl(grayKnob, 50.0, 450.0);
+
 		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
 
-		// customControl
 		GetGUIResize()->MoveControl(customControl, 600, 0);
 		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
 	}
 
 	if (viewMode == miniView)
 	{
+		GetGUIResize()->SetWindowSizeLimits(200, 400, 800, 800);
+
 		GetGUIResize()->HideControl(grayKnob);
+
 		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
 
-		// customControl
 		GetGUIResize()->HideControl(customControl);
 	}
 
 	if (viewMode == hugeView)
 	{
+		GetGUIResize()->SetWindowSizeLimits(310, 600, 1600, 1600);
+
 		GetGUIResize()->MoveControl(redKnob, windowWidth - 101.0, 0.0);
+
 		GetGUIResize()->MoveControl(grayKnob, windowWidth - 101.0, 150.0);
 
-		// customControl
 		GetGUIResize()->MoveControl(customControl, windowWidth - 100.0, 0);
 		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
 		GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);

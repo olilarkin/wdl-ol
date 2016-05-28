@@ -1,4 +1,9 @@
 #include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
 
 // Helpers -------------------------------------------------------------------------------------------------------------
 bool IPlugGUIResize::double_equals(double a, double b, double epsilon)
@@ -208,7 +213,7 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 
 void IPlugGUIResize::UseHandleForGUIScaling(bool statement) 
 { 
-	handle_gui_scaling = statement; 
+	handle_controls_gui_scaling = statement; 
 }
 
 void IPlugGUIResize::AddNewView(int viewMode, int viewWidth, int viewHeight)
@@ -240,6 +245,29 @@ void IPlugGUIResize::SetWindowSize(int width, int height)
 {
 	window_width_normalized = (double)width;
 	window_height_normalized = (double)height;
+
+	window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
+	window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
+}
+
+void IPlugGUIResize::SetGUIScaleLimits(double minSizeInPercentage, double maxSizeInPercentage)
+{
+	min_gui_scale_ratio = minSizeInPercentage / 100.0;
+	max_gui_scale_ratio = maxSizeInPercentage / 100.0;
+
+	gui_scale_ratio = BOUNDED(gui_scale_ratio, min_gui_scale_ratio, max_gui_scale_ratio);
+}
+
+void IPlugGUIResize::SetWindowSizeLimits(double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight)
+{
+	min_window_width_normalized = minWindowWidth;
+	max_window_width_normalized = maxWindowWidth;
+
+	min_window_height_normalized = minWindowHeight;
+	max_window_height_normalized = maxWindowHeight;
+
+	window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
+	window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
 }
 
 void  IPlugGUIResize::UsingBitmaps()
@@ -608,10 +636,12 @@ void IPlugGUIResize::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
 	{
 		SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 
-		if (handle_gui_scaling)
+		if (handle_controls_gui_scaling)
 		{
 			// Sets GUI scale
 			gui_scale_ratio = (((double)x + (double)y) / 2.0) / ((window_width_normalized + window_height_normalized) / 2.0);
+			gui_scale_ratio = BOUNDED(gui_scale_ratio, min_gui_scale_ratio, max_gui_scale_ratio);
+
 			global_gui_scale_ratio = gui_scale_ratio;
 			plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 			plugin_height = (int)(window_height_normalized * gui_scale_ratio);
@@ -620,10 +650,13 @@ void IPlugGUIResize::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
 		{
 			window_width_normalized = (double)x / gui_scale_ratio;
 			window_height_normalized = (double)y / gui_scale_ratio;
+
+			window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
+			window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
 		}
 
 
-		if (using_bitmaps && fast_bitmap_resizing && handle_gui_scaling)
+		if (using_bitmaps && fast_bitmap_resizing && handle_controls_gui_scaling)
 		{
 			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
 		}
@@ -657,7 +690,7 @@ void IPlugGUIResize::OnMouseDown(int x, int y, IMouseMod * pMod)
 	if (!gui_should_be_closed)
 		SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 
-	if (pMod->L && using_bitmaps && fast_bitmap_resizing && handle_gui_scaling && !gui_should_be_closed)
+	if (pMod->L && using_bitmaps && fast_bitmap_resizing && handle_controls_gui_scaling && !gui_should_be_closed)
 	{
 		mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
 
@@ -720,4 +753,19 @@ double IPlugGUIResize::GetDoubleFromFile(const char * name)
 {
 	GetPrivateProfileString("gui", name, "-1.0", buf, 128, settings_ini_path.Get());
 	return atof(buf);
+}
+
+bool IPlugGUIResize::IsDirty()
+{
+	if (using_bitmaps && plugin_resized && !gui_should_be_closed && !mouse_is_down)
+	{
+		gui_should_be_closed = !double_equals(global_gui_scale_ratio, gui_scale_ratio);
+
+		if (gui_should_be_closed)
+		{
+			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
+		}
+	}
+
+	return gui_should_be_closed;
 }
