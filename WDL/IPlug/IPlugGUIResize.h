@@ -201,14 +201,19 @@ public:
 		}
 	}
 		
-	void OnGUIIdle()
-	{
-
-	}
-
 	bool IsDirty()
 	{
-		return plugin_resized;
+		if (using_bitmaps && plugin_resized && !gui_should_be_closed && !mouse_is_down)
+		{
+			gui_should_be_closed = !double_equals(global_gui_scale_ratio, gui_scale_ratio);
+
+			if (gui_should_be_closed)
+			{
+				mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
+			}
+		}
+
+		return gui_should_be_closed;
 	}
 
 private:

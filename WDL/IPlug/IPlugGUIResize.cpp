@@ -20,7 +20,6 @@ IRECT IPlugGUIResize::ResizeIRECT(DRECT *old_IRECT, double width_ratio, double h
 {
 	return IRECT((int)(old_IRECT->L * width_ratio), (int)(old_IRECT->T * height_ratio), (int)(old_IRECT->R * width_ratio), (int)(old_IRECT->B * height_ratio));
 }
-
 // --------------------------------------------------------------------------------------------------------------------
 
 
@@ -96,12 +95,9 @@ bool IPlugGUIResize::Draw(IGraphics * pGraphics)
 	}
 	else
 	{
-		// Here we are comparing two doubles. This should not be the problem because of implementation
-		if (using_bitmaps && (!double_equals(global_gui_scale_ratio, gui_scale_ratio)))
+		if (gui_should_be_closed)
 		{
-			gui_should_be_closed = true;
 			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
-
 			DrawReopenPluginInterface(pGraphics, &mRECT);
 		}
 		else
@@ -131,7 +127,7 @@ void IPlugGUIResize::DrawReopenPluginInterface(IGraphics * pGraphics, IRECT * pR
 
 	IText textProps = IText(textSize, &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
 
-	IRECT textPosition = IRECT(0, (pGraphics->Height() / 2) - (textSize * 2), mRECT.R, mRECT.B);
+	IRECT textPosition = IRECT(0, (pGraphics->Height() / 2) - textSize, mRECT.R, mRECT.B);
 	int position_correction = 0;
 
 	if (textPosition.T < 0) position_correction = textPosition.T * -1;
@@ -139,7 +135,7 @@ void IPlugGUIResize::DrawReopenPluginInterface(IGraphics * pGraphics, IRECT * pR
 	textPosition.T += position_correction;
 	pGraphics->DrawIText(&textProps, "  Reopen plugin interface", &textPosition);
 
-	textPosition = IRECT(0, (pGraphics->Height() / 2) - (textSize * 1), mRECT.R, mRECT.B);
+	textPosition = IRECT(0, (pGraphics->Height() / 2), mRECT.R, mRECT.B);
 	textPosition.T += position_correction;
 	pGraphics->DrawIText(&textProps, "  to get new size...", &textPosition);
 }
@@ -504,8 +500,7 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 		InitializeGUIControls(mGraphics);
 		mGraphics->Resize(plugin_width, plugin_height);
 
-		plugin_resized = true;
-
+		plugin_resized = false;
 		gui_should_be_closed = false;
 	}
 
@@ -567,6 +562,8 @@ void IPlugGUIResize::ResizeGraphics()
 
 			mGraphics->Resize(plugin_width, plugin_height);
 		}
+
+		plugin_resized = true;
 	}
 	else
 	{
@@ -575,8 +572,6 @@ void IPlugGUIResize::ResizeGraphics()
 		InitializeGUIControls(mGraphics);
 		mGraphics->Resize(plugin_width, plugin_height);
 	}
-
-	plugin_resized = true;
 
 	mGraphics->SetAllControlsDirty();
 }
@@ -662,7 +657,7 @@ void IPlugGUIResize::OnMouseDown(int x, int y, IMouseMod * pMod)
 	if (!gui_should_be_closed)
 		SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 
-	if (pMod->L && using_bitmaps && fast_bitmap_resizing && handle_gui_scaling)
+	if (pMod->L && using_bitmaps && fast_bitmap_resizing && handle_gui_scaling && !gui_should_be_closed)
 	{
 		mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
 
@@ -686,7 +681,7 @@ void IPlugGUIResize::OnMouseUp(int x, int y, IMouseMod * pMod)
 {
 	SetCursor(LoadCursor(NULL, IDC_ARROW));
 
-	if (using_bitmaps && fast_bitmap_resizing)
+	if (using_bitmaps && fast_bitmap_resizing && !gui_should_be_closed)
 	{
 		mGraphics->RescaleBitmaps(gui_scale_ratio);
 
