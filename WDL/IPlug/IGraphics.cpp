@@ -261,86 +261,6 @@ IGraphics::~IGraphics()
   DELETE_NULL(mTmpBitmap);
 }
 
-void BoxBlur(int* data, int width, int height, int h_radius, int v_radius)
-{
-	int r = 0, b = 0, g = 0, a = 0;
-	int wh = width * height;
-	int* tmp = new int[wh];
-	int pointer_mover = 0;
-
-	if (h_radius > 1 || v_radius > 1)
-	{
-		// Horisontal pass
-		for (int h = 0; h < height; h++)
-		{
-			for (int w = 0; w < width; w++)
-			{
-				pointer_mover = 0;
-				r = 0, b = 0, g = 0, a = 0;
-				for (int rd = 0; rd < h_radius; rd++)
-				{
-					if (rd + w >= width) continue;
-
-					r += int(*data >> 24 & 0xff);
-					g += int(*data >> 16 & 0xff);
-					b += int(*data >> 8 & 0xff);
-					a += int(*data & 0xff);
-
-					pointer_mover++;
-					data++;
-				}
-				data -= pointer_mover;
-
-				r /= h_radius;
-				g /= h_radius;
-				b /= h_radius;
-				a /= h_radius;
-
-				*tmp = (r << 24) | (g << 16) | (b << 8) | (a);
-				tmp++;
-				data++;
-			}
-		}
-		data -= wh;
-		tmp -= wh;
-
-		// Vertical pass
-		for (int h = 0; h < height; h++)
-		{
-			for (int w = 0; w < width; w++)
-			{
-				pointer_mover = 0;
-				r = 0, b = 0, g = 0, a = 0;
-				for (int rd = 0; rd < v_radius; rd++)
-				{
-					if (rd + h >= height) continue;
-
-					r += int(*tmp >> 24 & 0xff);
-					g += int(*tmp >> 16 & 0xff);
-					b += int(*tmp >> 8 & 0xff);
-					a += int(*tmp & 0xff);
-
-					pointer_mover++;
-					tmp += width;
-				}
-				tmp -= pointer_mover * width;
-
-				r /= v_radius;
-				g /= v_radius;
-				b /= v_radius;
-				a /= v_radius;
-
-				*data = (r << 24) | (g << 16) | (b << 8) | (a);
-				tmp++;
-				data++;
-			}
-		}
-		data -= wh;
-		tmp -= wh;
-		delete[] tmp;
-	}
-}
-
 inline int SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
 {
 	// Inside buffer
@@ -388,13 +308,13 @@ inline int SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
 	return 0;
 }
 
-void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
+void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool smoothBitmaps, bool verticalFix = false, bool horisontalFix = false, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
 {
 	int a = 0, b = 0, c = 0, d = 0;
 	int x, y;
 
-	int w_ratio =  IPMAX(int((double)w1 / (double)w2), 0);
-	int h_ratio =  IPMAX(int((double)h1 / (double)h2), 0);
+	int w_ratio =  IPMAX(int((double)w1 / (double)w2), 0) + (int)smoothBitmaps;
+	int h_ratio =  IPMAX(int((double)h1 / (double)h2), 0) + (int)smoothBitmaps;
 
 	double x_ratio = (double)w1 / (double)w2;
 	double y_ratio = (double)h1 / (double)h2;
@@ -503,7 +423,7 @@ void ResizeBilinear(int* input, int* out, int w1, int h1, int w2, int h2, bool v
 	}
 }
 
-void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, bool framesAreHoriztonal)
+void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, bool framesAreHoriztonal, bool smoothBitmaps)
 {
 	int* pointer_to_source = (int*)source->getBits();
 	int srcX = 0;
@@ -531,7 +451,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 				pointer_to_source = pointer_to_source + srcX;
 				pointer_to_destination = pointer_to_destination + dstX;
 
-				ResizeBilinear(pointer_to_source, pointer_to_destination, src_width, source->getHeight(), dst_width, destination->getHeight(), false, true, true, source->getWidth(), destination->getWidth());
+				ResizeBilinear(pointer_to_source, pointer_to_destination, src_width, source->getHeight(), dst_width, destination->getHeight(), smoothBitmaps, false, true, true, source->getWidth(), destination->getWidth());
 
 				pointer_to_source = pointer_to_source - srcX;
 				pointer_to_destination = pointer_to_destination - dstX;
@@ -554,7 +474,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 				pointer_to_source = pointer_to_source + (srcY * source->getWidth());
 				pointer_to_destination = pointer_to_destination + (dstY * destination->getWidth());
 
-				ResizeBilinear(pointer_to_source, pointer_to_destination, source->getWidth(), src_height, destination->getWidth(), dst_height, true);
+				ResizeBilinear(pointer_to_source, pointer_to_destination, source->getWidth(), src_height, destination->getWidth(), dst_height, smoothBitmaps, true);
 
 				pointer_to_source = pointer_to_source - (srcY * source->getWidth());
 				pointer_to_destination = pointer_to_destination - (dstY * destination->getWidth());
@@ -564,11 +484,11 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 	else
 	{
 		
-		ResizeBilinear(pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight());
+		ResizeBilinear(pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight(), smoothBitmaps);
 	}
 }
 
-void IGraphics::RescaleBitmaps(double guiScaleRatio)
+void IGraphics::RescaleBitmaps(double guiScaleRatio, bool smoothBitmaps)
 {
 	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
 		{
@@ -592,7 +512,7 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio)
 			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height, 0);
 
 			// Resize old content and write to new bitmap
-			ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal);
+			ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal, smoothBitmaps);
 
 			// Copy resized image to cached bitmap that all plugins are using
 			LICE_Copy(currentBitmap, newBitmap);
@@ -603,15 +523,6 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio)
 			storeLoadedBitmap.GetBitmap(i)->W = new_width;
 			storeLoadedBitmap.GetBitmap(i)->H = new_height;
 			delete lb;
-	}
-}
-
-void IGraphics::SmoothResizedBitmaps()
-{
-	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
-	{
-		LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;
-		BoxBlur((int*)currentBitmap->getBits(), currentBitmap->getWidth(), currentBitmap->getHeight(), 2, 2);
 	}
 }
 

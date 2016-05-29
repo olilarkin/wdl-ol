@@ -131,14 +131,13 @@ public:
 	// These must be called in your plugin constructor ----------------------------------------
 	void UsingBitmaps();
 	void DisableFastBitmapResizing();
+	void SmoothResizedBitmaps();
 	void AddNewView(int viewMode, int viewWidth, int viewHeight);
 	void UseOneSideResizing(int handleSize, int minHandleSize = 5, resizeOneSide flag = horisontalAndVerticalResizing);
 	// ----------------------------------------------------------------------------------------
 
 
 	// These can be called from your custom controls ------------------------------------------
-	void SmoothResizedBitmaps();
-
 	void UseHandleForGUIScaling(bool statement = false);
 
 	void EnableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
