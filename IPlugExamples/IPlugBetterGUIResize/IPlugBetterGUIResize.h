@@ -21,21 +21,6 @@ private:
   int background, redKnob, grayKnob, infoText, customControl;
 };
 
-// This is custom GUI resize control that allowes you to customize graphics
-class IPlugGUIResizeCustom : public IPlugGUIResize
-{
-public:
-	IPlugGUIResizeCustom(IPlugBase *pPlug, IGraphics *pGraphics, int guiWidth, int guiHeight, const char *bundleName, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10)
-		: IPlugGUIResize(pPlug, pGraphics, guiWidth, guiHeight, bundleName, useHandle, controlSize, minimumControlSize) {}
-	~IPlugGUIResizeCustom() {}
-
-	void DrawBackgroundAtFastResizing(IGraphics * pGraphics, IRECT * pRECT)
-	{
-		IColor backgroundColor = IColor(255, 255, 25, 25);
-		pGraphics->FillIRect(&backgroundColor, pRECT);
-	}
-};
-
 class CustomControl : public IControl
 {
 public:
@@ -145,6 +130,21 @@ public:
 		GetGUIResize()->UseHandleForGUIScaling(button);
 
 		SetDirty();
+	}
+};
+
+// This is custom GUI resize control that allowes you to customize graphics
+class IPlugGUIResizeCustom : public IPlugGUIResize
+{
+public:
+	IPlugGUIResizeCustom(IPlugBase *pPlug, IGraphics *pGraphics, int guiWidth, int guiHeight, const char *bundleName, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10)
+		: IPlugGUIResize(pPlug, pGraphics, guiWidth, guiHeight, bundleName, useHandle, controlSize, minimumControlSize) {}
+	~IPlugGUIResizeCustom() {}
+
+	void DrawBackgroundAtFastResizing(IGraphics * pGraphics, IRECT * pRECT)
+	{
+		IColor backgroundColor = IColor(255, 255, 25, 25);
+		pGraphics->FillIRect(&backgroundColor, pRECT);
 	}
 };
 #endif

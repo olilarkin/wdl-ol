@@ -64,14 +64,14 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   
 
   // You can now use bitmaps with higher resolution, so that when you resize interface up, everything will be nice
-  // This must be called before LoadIBitmap
+  // This must be called before LoadPointerToBitmap
   pGraphics->SetBitmapOversample(2);
   
   
   // Your custom controls------------------------------------------------------------------------------------------------------
   pGraphics->AttachPanelBackground(&COLOR_GRAY);
 
-  IBitmap *tube = pGraphics->LoadIBitmap(BACKGROUND_ID, BACKGROUND_FN);
+  IBitmap *tube = pGraphics->LoadPointerToBitmap(BACKGROUND_ID, BACKGROUND_FN);
   background = pGraphics->AttachControl(new IBitmapControl(this, 0, 0, tube));
 
   customControl = pGraphics->AttachControl(new CustomControl(this, IRECT(625, 0, 800, 800), IColor(255, 0, 0, 100)));
@@ -79,13 +79,13 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   //arguments are: name, defaultVal, minVal, maxVal, step, label
   GetParam(kGain)->InitDouble("Gain", 50., 0., 100.0, 0.01, "%");
   GetParam(kGain)->SetShape(2.);
-  IBitmap *knob = pGraphics->LoadIBitmap(KNOB_ID, KNOB_FN, 60);
+  IBitmap *knob = pGraphics->LoadPointerToBitmap(KNOB_ID, KNOB_FN, 60);
   redKnob = pGraphics->AttachControl(new IKnobMultiControl(this, 50, 50, kGain, knob));
 
   //arguments are: name, defaultVal, minVal, maxVal, step, label
   GetParam(kGain1)->InitDouble("Gain1", 50., 0., 100.0, 0.01, "%");
   GetParam(kGain1)->SetShape(2.);
-  IBitmap *knob1 = pGraphics->LoadIBitmap(KNOB1_ID, KNOB1_FN, 60, true);
+  IBitmap *knob1 = pGraphics->LoadPointerToBitmap(KNOB1_ID, KNOB1_FN, 60, true);
   grayKnob = pGraphics->AttachControl(new IKnobMultiControl(this, 600, 200, kGain1, knob1));
 
   IRECT tmpRect3(20, 760, 800, 800);

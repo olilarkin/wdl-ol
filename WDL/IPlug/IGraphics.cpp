@@ -651,7 +651,7 @@ void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, cha
 
 void IGraphics::AttachBackground(int ID, const char* name)
 {
-  IBitmap *bg = LoadIBitmap(ID, name);
+  IBitmap *bg = LoadPointerToBitmap(ID, name);
 
   IControl* pBG = new IBitmapControl(mPlug, 0, 0, -1, bg, IChannelBlend::kBlendClobber);
   mControls.Insert(0, pBG);
@@ -839,7 +839,7 @@ void IGraphics::PromptUserInput(IControl* pControl, IParam* pParam, IRECT* pText
 
 }
 
-IBitmap* IGraphics::LoadIBitmap(int ID, const char* name, int nStates, bool framesAreHoriztonal)
+IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, bool framesAreHoriztonal)
 {
 	LICE_IBitmap* lb = s_bitmapCache.Find(ID);
 	LICE_IBitmap* newBitmap;

@@ -152,7 +152,6 @@ public:
 	void SetGUIScaleLimits(double minSizeInPercentage, double maxSizeInPercentage);
 	void SetWindowSizeLimits(int viewMode, double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight);
 
-	// Control manipulation
 	void HideControl(int index);
 	void ShowControl(int index);
 	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea);
@@ -273,6 +272,8 @@ private:
 
 	// Window size variables
 	double window_width_normalized, window_height_normalized;
+	//double min_window_width_normalized = 0.0, min_window_height_normalized = 0.0;
+	//double max_window_width_normalized = 1000000000.0, max_window_height_normalized = 1000000000.0;
 
 	// One side resizing variables
 	int one_side_handle_size = 0, one_side_handle_min_size = 0;
@@ -297,8 +298,8 @@ private:
 };
 
 
-// One side handle classes ----------------------------------------------------------------------------------------
 // NOTE: Horisontal control position is control size - 2
+// One side handle classes
 class HorisontalResizing : public IControl
 {
 public:
