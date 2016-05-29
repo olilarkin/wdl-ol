@@ -298,8 +298,8 @@ private:
 };
 
 
-// NOTE: Horisontal control position is control size - 2
 // One side handle classes
+// NOTE: Horisontal control position is control size - 2
 class HorisontalResizing : public IControl
 {
 public:
