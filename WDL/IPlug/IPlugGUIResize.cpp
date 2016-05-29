@@ -23,22 +23,22 @@ IRECT IPlugGUIResize::ResizeIRECT(DRECT *old_IRECT, double width_ratio, double h
 // --------------------------------------------------------------------------------------------------------------------
 
 // IPlugGUIResize -----------------------------------------------------------------------------------------------------
-IPlugGUIResize::IPlugGUIResize(IPlugBase * pPlug, IGraphics * pGraphics, int guiWidth, int guiHeight, const char * bundleName, bool useHandle, int controlSize, int minimumControlSize)
+IPlugGUIResize::IPlugGUIResize(IPlugBase* pPlug, IGraphics* pGraphics, bool useHandle, int controlSize, int minimumControlSize)
 	: IControl(pPlug, IRECT(0, 0, 0, 0))
 {
 	mGraphics = pGraphics;
 	layout_container.resize(1);
 	use_handle = useHandle;
 
-	default_gui_width = guiWidth;
-	default_gui_height = guiHeight;
-	window_width_normalized = (double)guiWidth;
-	window_height_normalized = (double)guiHeight;
+	default_gui_width = pGraphics->Width();
+	default_gui_height = pGraphics->Height();
+	window_width_normalized = (double)default_gui_width;
+	window_height_normalized = (double)default_gui_height;
 
 	// Set default view dimensions
 	view_container.view_mode.push_back(0);
-	view_container.view_width.push_back(guiWidth);
-	view_container.view_height.push_back(guiHeight);
+	view_container.view_width.push_back(default_gui_width);
+	view_container.view_height.push_back(default_gui_height);
 	view_container.min_window_width_normalized.push_back(0.0);
 	view_container.min_window_height_normalized.push_back(0.0);
 	view_container.max_window_width_normalized.push_back(999999999999.0);
@@ -66,15 +66,29 @@ IPlugGUIResize::IPlugGUIResize(IPlugBase * pPlug, IGraphics * pGraphics, int gui
 	// Set settings.ini file path
 	pGraphics->AppSupportPath(&settings_ini_path);
 	settings_ini_path.Append("/");
-	settings_ini_path.Append(bundleName);
-	settings_ini_path.Append("/settings.ini");
+	settings_ini_path.Append(pPlug->GetMfrName());
 
-	// Check if gui size was written in settings.ini, if not write defaults
+	// Create directory if it dowsn't exist
+	CreateDirectory(settings_ini_path.Get(), NULL);
+
+	settings_ini_path.Append("/");
+	settings_ini_path.Append(pPlug->GetEffectName());
+	
+	// Create directory if it dowsn't exist
+	CreateDirectory(settings_ini_path.Get(), NULL);
+
+	settings_ini_path.Append("/Settings.ini");
+
 	gui_scale_ratio = GetDoubleFromFile("guiscale");
+
 	if (gui_scale_ratio < 0.0)
 	{
 		SetDoubleToFile("guiscale", 1.0);
 		gui_scale_ratio = 1.0;
+	}
+	else
+	{
+		gui_scale_ratio = GetDoubleFromFile("guiscale");
 	}
 
 	// Initiaize parameters

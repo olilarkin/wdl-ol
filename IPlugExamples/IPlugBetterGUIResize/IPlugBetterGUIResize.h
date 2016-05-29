@@ -25,8 +25,8 @@ private:
 class IPlugGUIResizeCustom : public IPlugGUIResize
 {
 public:
-	IPlugGUIResizeCustom(IPlugBase *pPlug, IGraphics *pGraphics, int guiWidth, int guiHeight, const char *bundleName, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10)
-		: IPlugGUIResize(pPlug, pGraphics, guiWidth, guiHeight, bundleName, useHandle, controlSize, minimumControlSize) {}
+	IPlugGUIResizeCustom(IPlugBase *pPlug, IGraphics *pGraphics, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10)
+		: IPlugGUIResize(pPlug, pGraphics, controlSize, minimumControlSize) {}
 	~IPlugGUIResizeCustom() {}
 
 	void DrawBackgroundAtFastResizing(IGraphics * pGraphics, IRECT * pRECT)

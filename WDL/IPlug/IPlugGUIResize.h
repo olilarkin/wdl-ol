@@ -124,7 +124,7 @@ static vector <layoutContainer> global_layout_container;
 class IPlugGUIResize : public IControl
 {
 public:
-	IPlugGUIResize(IPlugBase *pPlug, IGraphics *pGraphics, int guiWidth, int guiHeight, const char *bundleName, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10);
+	IPlugGUIResize(IPlugBase *pPlug, IGraphics *pGraphics, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10);
 	~IPlugGUIResize(){}
 
 	
@@ -166,12 +166,13 @@ public:
 	virtual void DrawReopenPluginInterface(IGraphics* pGraphics, IRECT *pRECT);
 	virtual void DrawHandle(IGraphics* pGraphics, IRECT *pRECT);
 
-	void ResizeAtGUIOpen();
+	// Call this to resize GUI
 	void ResizeGraphics();
 	// ----------------------------------------------------------------------------------------
 
 
 	// Used by framework ----------------------------------------------------------------------
+	void ResizeAtGUIOpen();
 	bool Draw(IGraphics* pGraphics);
 	void RescaleBitmapsAtLoad();
 	IPlugGUIResize *AttachGUIResize();

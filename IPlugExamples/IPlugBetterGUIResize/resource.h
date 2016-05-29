@@ -1,9 +1,9 @@
-#define PLUG_MFR "AcmeInc"
+#define PLUG_MFR "Youlean"
 #define PLUG_NAME "IPlugBetterGUIResize"
 
 #define PLUG_CLASS_NAME IPlugBetterGUIResize
 
-#define BUNDLE_MFR "AcmeInc"
+#define BUNDLE_MFR "Youlean"
 #define BUNDLE_NAME "IPlugBetterGUIResize"
 
 #define PLUG_ENTRY IPlugBetterGUIResize_Entry
@@ -23,7 +23,7 @@
 // 4 chars, single quotes. At least one capital letter
 #define PLUG_UNIQUE_ID 'Ipef'
 // make sure this is not the same as BUNDLE_MFR
-#define PLUG_MFR_ID 'Acme'
+#define PLUG_MFR_ID 'Yyyy'
 
 // ProTools stuff
 
@@ -33,7 +33,7 @@
   const int PLUG_TYPE_IDS_AS[2] = {'EFA1', 'EFA2'}; // AudioSuite
 #endif
 
-#define PLUG_MFR_PT "AcmeInc\nAcmeInc\nAcme"
+#define PLUG_MFR_PT "Youlean\nYoulean\nAcme"
 #define PLUG_NAME_PT "IPlugBetterGUIResize\nIPEF"
 #define PLUG_TYPE_PT "Effect"
 #define PLUG_DOES_AUDIOSUITE 1
@@ -73,7 +73,7 @@ instrument determined by PLUG _IS _INST
 #endif
 
 // vst3 stuff
-#define MFR_URL "www.olilarkin.co.uk"
+#define MFR_URL "www.github.com/Youlean"
 #define MFR_EMAIL "spam@me.com"
 #define EFFECT_TYPE_VST3 "Fx"
 

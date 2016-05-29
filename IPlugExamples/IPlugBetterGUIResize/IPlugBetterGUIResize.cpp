@@ -39,7 +39,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   // Here we are attaching our GUI resize control ------------------------------------------------------------------------------
   // It is important to create on top of all controls because we might use its pointer from other controls
-  AttachGUIResize(new IPlugGUIResize(this, pGraphics, GUI_WIDTH, GUI_HEIGHT, BUNDLE_NAME, true, 16, 16));
+  AttachGUIResize(new IPlugGUIResize(this, pGraphics, true, 16, 16));
 
   GetGUIResize()->UseOneSideResizing(5,5);
 
