@@ -41,7 +41,8 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   // It is important to create on top of all controls because we might use its pointer from other controls
   AttachGUIResize(new IPlugGUIResize(this, pGraphics, true, 16, 16));
 
-  GetGUIResize()->UseOneSideResizing(5,5);
+  // Enable resizing only one side control
+  GetGUIResize()->UseOneSideResizing(5, 5, horisontalAndVerticalResizing);
 
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
@@ -67,8 +68,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   // You can now use bitmaps with higher resolution, so that when you resize interface up, everything will be nice
   // This must be called before LoadPointerToBitmap
   pGraphics->SetBitmapOversample(2);
-  
-  
+    
   // Your custom controls------------------------------------------------------------------------------------------------------
   pGraphics->AttachPanelBackground(&COLOR_GRAY);
 

@@ -128,16 +128,16 @@ public:
 	~IPlugGUIResize(){}
 
 	
-	// These must be called in your plugin constructor ----------------------------------------
+	// These must be called in your plugin constructor ---------------------------------------------------------------------------------------------
 	void UsingBitmaps();
 	void DisableFastBitmapResizing();
 	void SmoothResizedBitmaps();
 	void AddNewView(int viewMode, int viewWidth, int viewHeight);
 	void UseOneSideResizing(int handleSize, int minHandleSize = 5, resizeOneSide flag = horisontalAndVerticalResizing);
-	// ----------------------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
-	// These can be called from your custom controls ------------------------------------------
+	// These can be called from your custom controls -----------------------------------------------------------------------------------------------
 	void UseHandleForGUIScaling(bool statement = false);
 
 	void EnableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
@@ -151,6 +151,7 @@ public:
 	void SetGUIScaleLimits(double minSizeInPercentage, double maxSizeInPercentage);
 	void SetWindowSizeLimits(int viewMode, double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight);
 
+	// Manipulate controls
 	void HideControl(int index);
 	void ShowControl(int index);
 	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea);
@@ -167,15 +168,15 @@ public:
 
 	// Call this to resize GUI
 	void ResizeGraphics();
-	// ----------------------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
-	// Used by framework ----------------------------------------------------------------------
+	// Used by framework ---------------------------------------------------------------------------------------------------------------------------
 	void ResizeAtGUIOpen();
 	bool Draw(IGraphics* pGraphics);
 	void RescaleBitmapsAtLoad();
 	IPlugGUIResize *AttachGUIResize();
-	// ----------------------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -223,7 +224,7 @@ public:
 
 private:
 
-	// Functions that are used internaly ------------------------------------------
+	// Functions that are used internaly -----------------------------------------------------------------------------------------------
 	bool double_equals(double a, double b, double epsilon = 0.0000000001);
 	DRECT IRECT_to_DRECT(IRECT * iRECT);
 	IRECT DRECT_to_IRECT(DRECT * dRECT);
@@ -246,8 +247,8 @@ private:
 	void OnMouseOut();
 	void OnMouseDown(int x, int y, IMouseMod* pMod);
 	void OnMouseUp(int x, int y, IMouseMod* pMod);
+	// ---------------------------------------------------------------------------------------------------------------------------------
 
-	// ----------------------------------------------------------------------------
 	int current_view_mode;
 
 	viewContainer view_container;
@@ -272,8 +273,6 @@ private:
 
 	// Window size variables
 	double window_width_normalized, window_height_normalized;
-	//double min_window_width_normalized = 0.0, min_window_height_normalized = 0.0;
-	//double max_window_width_normalized = 1000000000.0, max_window_height_normalized = 1000000000.0;
 
 	// One side resizing variables
 	int one_side_handle_size = 0, one_side_handle_min_size = 0;
