@@ -127,14 +127,15 @@ public:
 	// These must be called in your plugin constructor ----------------------------------------
 	void UsingBitmaps();
 	void DisableFastBitmapResizing();
-	void UseHandleForGUIScaling(bool statement = false);
 	void AddNewView(int viewMode, int viewWidth, int viewHeight);
-	void UseOneSideResizing(int handleSize, int minHandleSize = 10, resizeOneSide flag = horisontalAndVerticalResizing);
+	void UseOneSideResizing(int handleSize, int minHandleSize = 5, resizeOneSide flag = horisontalAndVerticalResizing);
 	// ----------------------------------------------------------------------------------------
 
 
 	// These can be called from your custom controls ------------------------------------------
 	void SmoothResizedBitmaps();
+
+	void UseHandleForGUIScaling(bool statement = false);
 
 	void EnableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
 	void DisableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
@@ -180,11 +181,11 @@ public:
 
 		IGraphics* gui = mPlug->GetGUI();
 
-		menu.AddItem("Save Program...");
-		menu.AddItem("Save Bank...");
+		menu.AddItem("Test 1");
+		menu.AddItem("Test 2");
 		menu.AddSeparator();
-		menu.AddItem("Load Program...");
-		menu.AddItem("Load Bank...");
+		menu.AddItem("Test 3");
+		menu.AddItem("Test 4");
 
 		if (gui->CreateIPopupMenu(&menu, &mRECT))
 		{
@@ -296,43 +297,15 @@ private:
 	class HorisontalResizing : public IControl
 	{
 	public:
-		HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int width)
-			: IControl(pPlug, IRECT(pGraphics->Width() - width, 0, pGraphics->Width(), pGraphics->Height()))
-		{
-			mGraphics = pGraphics;
-			mGraphics->HandleMouseOver(true);
-		}
+		HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int width);
 
 		~HorisontalResizing() {}
 
-		bool Draw(IGraphics* pGraphics)
-		{
-			pGraphics->FillIRect(&COLOR_RED, &mRECT);
-			return true;
-		}
-
-		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
-		{
-			SetCursor(LoadCursor(NULL, IDC_SIZEWE));
-
-			double prev_plugin_width = mGraphics->Width();
-
-			double window_width_normalized = (double)x / GetGUIResize()->GetGUIScaleRatio();
-
-			GetGUIResize()->SetWindowWidth(window_width_normalized);
-
-			GetGUIResize()->ResizeGraphics();
-		}
-
-		void OnMouseOver(int x, int y, IMouseMod * pMod)
-		{
-			SetCursor(LoadCursor(NULL, IDC_SIZEWE));
-		}
-
-		void OnMouseOut()
-		{
-			SetCursor(LoadCursor(NULL, IDC_ARROW));
-		}
+		bool Draw(IGraphics* pGraphics);
+		void OnMouseDown(int x, int y, IMouseMod * pMod);
+		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod);
+		void OnMouseOver(int x, int y, IMouseMod * pMod);
+		void OnMouseOut();
 
 	private:
 		IGraphics* mGraphics;
@@ -342,43 +315,15 @@ private:
 	class VerticalResizing : public IControl
 	{
 	public:
-		VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int height)
-			: IControl(pPlug, IRECT(0, pGraphics->Height() - height, pGraphics->Width(), pGraphics->Height()))
-		{
-			mGraphics = pGraphics;
-			mGraphics->HandleMouseOver(true);
-		}
+		VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int height);
 
 		~VerticalResizing() {}
 
-		bool Draw(IGraphics* pGraphics)
-		{
-			pGraphics->FillIRect(&COLOR_GREEN, &mRECT);
-			return true;
-		}
-
-		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
-		{
-			SetCursor(LoadCursor(NULL, IDC_SIZENS));
-
-			double prev_plugin_height = mGraphics->Height();
-
-			double window_height_normalized = (double)y / GetGUIResize()->GetGUIScaleRatio();
-
-			GetGUIResize()->SetWindowHeight(window_height_normalized);
-
-			GetGUIResize()->ResizeGraphics();
-		}
-
-		void OnMouseOver(int x, int y, IMouseMod * pMod)
-		{
-			SetCursor(LoadCursor(NULL, IDC_SIZENS));
-		}
-
-		void OnMouseOut()
-		{
-			SetCursor(LoadCursor(NULL, IDC_ARROW));
-		}
+		bool Draw(IGraphics* pGraphics);
+		void OnMouseDown(int x, int y, IMouseMod * pMod);
+		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod);
+		void OnMouseOver(int x, int y, IMouseMod * pMod);
+		void OnMouseOut();
 
 	private:
 		IGraphics* mGraphics;

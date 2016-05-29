@@ -884,3 +884,89 @@ bool IPlugGUIResize::IsDirty()
 
 	return gui_should_be_closed;
 }
+
+
+// Horisontal handle ------------------------------------------------------------------------------------
+HorisontalResizing::HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int width)
+	: IControl(pPlug, IRECT(pGraphics->Width() - width, 0, pGraphics->Width(), pGraphics->Height()))
+{
+	mGraphics = pGraphics;
+	mGraphics->HandleMouseOver(true);
+}
+
+bool HorisontalResizing::Draw(IGraphics * pGraphics)
+{
+	//pGraphics->FillIRect(&COLOR_RED, &mRECT);
+	return true;
+}
+
+void HorisontalResizing::OnMouseDown(int x, int y, IMouseMod * pMod)
+{
+	SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+}
+
+void HorisontalResizing::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
+{
+	SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+
+	double prev_plugin_width = mGraphics->Width();
+
+	double window_width_normalized = (double)x / GetGUIResize()->GetGUIScaleRatio();
+
+	GetGUIResize()->SetWindowWidth(window_width_normalized);
+
+	GetGUIResize()->ResizeGraphics();
+}
+
+void HorisontalResizing::OnMouseOver(int x, int y, IMouseMod * pMod)
+{
+	SetCursor(LoadCursor(NULL, IDC_SIZEWE));
+}
+
+void HorisontalResizing::OnMouseOut()
+{
+	SetCursor(LoadCursor(NULL, IDC_ARROW));
+}
+
+
+// Vertical handle ------------------------------------------------------------------------------------
+VerticalResizing::VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int height)
+	: IControl(pPlug, IRECT(0, pGraphics->Height() - height, pGraphics->Width(), pGraphics->Height()))
+{
+	mGraphics = pGraphics;
+	mGraphics->HandleMouseOver(true);
+}
+
+bool VerticalResizing::Draw(IGraphics * pGraphics)
+{
+	//pGraphics->FillIRect(&COLOR_GREEN, &mRECT);
+	return true;
+}
+
+void VerticalResizing::OnMouseDown(int x, int y, IMouseMod * pMod)
+{
+	SetCursor(LoadCursor(NULL, IDC_SIZENS));
+}
+
+void VerticalResizing::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
+{
+	SetCursor(LoadCursor(NULL, IDC_SIZENS));
+
+	double prev_plugin_height = mGraphics->Height();
+
+	double window_height_normalized = (double)y / GetGUIResize()->GetGUIScaleRatio();
+
+	GetGUIResize()->SetWindowHeight(window_height_normalized);
+
+	GetGUIResize()->ResizeGraphics();
+}
+
+void VerticalResizing::OnMouseOver(int x, int y, IMouseMod * pMod)
+{
+	SetCursor(LoadCursor(NULL, IDC_SIZENS));
+}
+
+void VerticalResizing::OnMouseOut()
+{
+	SetCursor(LoadCursor(NULL, IDC_ARROW));
+}
