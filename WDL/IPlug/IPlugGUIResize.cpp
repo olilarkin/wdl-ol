@@ -41,6 +41,10 @@ IPlugGUIResize::IPlugGUIResize(IPlugBase * pPlug, IGraphics * pGraphics, int gui
 	view_container.view_mode.push_back(0);
 	view_container.view_width.push_back(guiWidth);
 	view_container.view_height.push_back(guiHeight);
+	view_container.min_window_width_normalized.push_back(0.0);
+	view_container.min_window_height_normalized.push_back(0.0);
+	view_container.max_window_width_normalized.push_back(999999999999.0);
+	view_container.max_window_height_normalized.push_back(999999999999.0);
 
 	current_view_mode = 0;
 
@@ -224,6 +228,10 @@ void IPlugGUIResize::AddNewView(int viewMode, int viewWidth, int viewHeight)
 	view_container.view_mode.push_back(viewMode);
 	view_container.view_width.push_back(viewWidth);
 	view_container.view_height.push_back(viewHeight);
+	view_container.min_window_width_normalized.push_back(0.0);
+	view_container.min_window_height_normalized.push_back(0.0);
+	view_container.max_window_width_normalized.push_back(999999999999.0);
+	view_container.max_window_height_normalized.push_back(999999999999.0);
 }
 
 void IPlugGUIResize::UseOneSideResizing(int handleSize, int minHandleSize, resizeOneSide flag)
@@ -329,22 +337,22 @@ void IPlugGUIResize::SetWindowSize(double width, double height)
 	window_width_normalized = width;
 	window_height_normalized = height;
 
-	window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
-	window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
+	window_width_normalized = BOUNDED(window_width_normalized, view_container.min_window_width_normalized[current_view_mode], view_container.max_window_width_normalized[current_view_mode]);
+	window_height_normalized = BOUNDED(window_height_normalized, view_container.min_window_height_normalized[current_view_mode], view_container.max_window_height_normalized[current_view_mode]);
 }
 
 void IPlugGUIResize::SetWindowWidth(double width)
 {
 	window_width_normalized = width;
 
-	window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
+	window_width_normalized = BOUNDED(window_width_normalized, view_container.min_window_width_normalized[current_view_mode], view_container.max_window_width_normalized[current_view_mode]);
 }
 
 void IPlugGUIResize::SetWindowHeight(double height)
 {
 	window_height_normalized = height;
 
-	window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
+	window_height_normalized = BOUNDED(window_height_normalized, view_container.min_window_height_normalized[current_view_mode], view_container.max_window_height_normalized[current_view_mode]);
 }
 
 void IPlugGUIResize::SetGUIScaleLimits(double minSizeInPercentage, double maxSizeInPercentage)
@@ -355,16 +363,16 @@ void IPlugGUIResize::SetGUIScaleLimits(double minSizeInPercentage, double maxSiz
 	gui_scale_ratio = BOUNDED(gui_scale_ratio, min_gui_scale_ratio, max_gui_scale_ratio);
 }
 
-void IPlugGUIResize::SetWindowSizeLimits(double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight)
+void IPlugGUIResize::SetWindowSizeLimits(int viewMode, double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight)
 {
-	min_window_width_normalized = minWindowWidth;
-	max_window_width_normalized = maxWindowWidth;
+	view_container.min_window_width_normalized[viewMode] = minWindowWidth;
+	view_container.max_window_width_normalized[viewMode] = maxWindowWidth;
 
-	min_window_height_normalized = minWindowHeight;
-	max_window_height_normalized = maxWindowHeight;
+	view_container.min_window_height_normalized[viewMode] = minWindowHeight;
+	view_container.max_window_height_normalized[viewMode] = maxWindowHeight;
 
-	window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
-	window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
+	window_width_normalized = BOUNDED(window_width_normalized, view_container.min_window_width_normalized[current_view_mode], view_container.max_window_width_normalized[current_view_mode]);
+	window_height_normalized = BOUNDED(window_height_normalized, view_container.min_window_height_normalized[current_view_mode], view_container.max_window_height_normalized[current_view_mode]);
 }
 
 void  IPlugGUIResize::UsingBitmaps()
@@ -778,8 +786,8 @@ void IPlugGUIResize::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
 			window_width_normalized = (double)x / gui_scale_ratio;
 			window_height_normalized = (double)y / gui_scale_ratio;
 
-			window_width_normalized = BOUNDED(window_width_normalized, min_window_width_normalized, max_window_width_normalized);
-			window_height_normalized = BOUNDED(window_height_normalized, min_window_height_normalized, max_window_height_normalized);
+			window_width_normalized = BOUNDED(window_width_normalized, view_container.min_window_width_normalized[current_view_mode], view_container.max_window_width_normalized[current_view_mode]);
+			window_height_normalized = BOUNDED(window_height_normalized, view_container.min_window_height_normalized[current_view_mode], view_container.max_window_height_normalized[current_view_mode]);
 		}
 
 

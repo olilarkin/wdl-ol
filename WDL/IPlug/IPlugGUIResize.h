@@ -99,6 +99,10 @@ struct viewContainer
 	vector <int> view_mode;
 	vector <int> view_width;
 	vector <int> view_height;
+	vector <double> min_window_width_normalized; 
+	vector <double> min_window_height_normalized;
+	vector <double> max_window_width_normalized;
+	vector <double> max_window_height_normalized;
 };
 
 struct layoutContainer
@@ -146,7 +150,7 @@ public:
 	void SetWindowWidth(double width);
 	void SetWindowHeight(double height);
 	void SetGUIScaleLimits(double minSizeInPercentage, double maxSizeInPercentage);
-	void SetWindowSizeLimits(double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight);
+	void SetWindowSizeLimits(int viewMode, double minWindowWidth, double minWindowHeight, double maxWindowWidth, double maxWindowHeight);
 
 	void HideControl(int index);
 	void ShowControl(int index);
@@ -268,8 +272,8 @@ private:
 
 	// Window size variables
 	double window_width_normalized, window_height_normalized;
-	double min_window_width_normalized = 0.0, min_window_height_normalized = 0.0;
-	double max_window_width_normalized = 1000000000.0, max_window_height_normalized = 1000000000.0;
+	//double min_window_width_normalized = 0.0, min_window_height_normalized = 0.0;
+	//double max_window_width_normalized = 1000000000.0, max_window_height_normalized = 1000000000.0;
 
 	// One side resizing variables
 	int one_side_handle_size = 0, one_side_handle_min_size = 0;
