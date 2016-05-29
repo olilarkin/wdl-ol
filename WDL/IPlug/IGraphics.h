@@ -153,7 +153,7 @@ public:
 
 	IPlugBase* GetPlug() { return mPlug; }
 
-	IBitmap* LoadPointerToBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);
+	IBitmap* LoadIBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);
 	IBitmap ScaleBitmap(IBitmap* pSrcBitmap, int destW, int destH);
 	IBitmap CropBitmap(IBitmap* pSrcBitmap, IRECT* pR);
 	void AttachBackground(int ID, const char* name);

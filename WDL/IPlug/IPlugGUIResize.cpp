@@ -1,6 +1,4 @@
 #include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
 
 // Helpers -------------------------------------------------------------------------------------------------------------
 bool IPlugGUIResize::double_equals(double a, double b, double epsilon)
