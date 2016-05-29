@@ -141,6 +141,7 @@ public:
 	void DisableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
 
 	void SelectViewMode(int viewMode);
+	void SetGUIScaleRatio(double guiScaleRatio);
 	void SetWindowSize(double width, double height);
 	void SetWindowWidth(double width);
 	void SetWindowHeight(double height);
@@ -156,6 +157,7 @@ public:
 	double GetGUIScaleRatio();
 	int GetViewMode();
 	
+	// You can override this to use in your custom resizing control
 	virtual void DrawBackgroundAtFastResizing(IGraphics* pGraphics, IRECT *pRECT);
 	virtual void DrawReopenPluginInterface(IGraphics* pGraphics, IRECT *pRECT);
 	virtual void DrawHandle(IGraphics* pGraphics, IRECT *pRECT);
@@ -292,41 +294,41 @@ private:
 };
 
 
-	// NOTE: Horisontal control position is control size - 2
-	// One side handle classes
-	class HorisontalResizing : public IControl
-	{
-	public:
-		HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int width);
+// NOTE: Horisontal control position is control size - 2
+// One side handle classes
+class HorisontalResizing : public IControl
+{
+public:
+	HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int width);
 
-		~HorisontalResizing() {}
+	~HorisontalResizing() {}
 
-		bool Draw(IGraphics* pGraphics);
-		void OnMouseDown(int x, int y, IMouseMod * pMod);
-		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod);
-		void OnMouseOver(int x, int y, IMouseMod * pMod);
-		void OnMouseOut();
+	bool Draw(IGraphics* pGraphics);
+	void OnMouseDown(int x, int y, IMouseMod * pMod);
+	void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod);
+	void OnMouseOver(int x, int y, IMouseMod * pMod);
+	void OnMouseOut();
 
-	private:
-		IGraphics* mGraphics;
-	};
+private:
+	IGraphics* mGraphics;
+};
 
-	// NOTE: Vertical control position is control size - 3
-	class VerticalResizing : public IControl
-	{
-	public:
-		VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int height);
+// NOTE: Vertical control position is control size - 3
+class VerticalResizing : public IControl
+{
+public:
+	VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int height);
 
-		~VerticalResizing() {}
+	~VerticalResizing() {}
 
-		bool Draw(IGraphics* pGraphics);
-		void OnMouseDown(int x, int y, IMouseMod * pMod);
-		void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod);
-		void OnMouseOver(int x, int y, IMouseMod * pMod);
-		void OnMouseOut();
+	bool Draw(IGraphics* pGraphics);
+	void OnMouseDown(int x, int y, IMouseMod * pMod);
+	void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod);
+	void OnMouseOver(int x, int y, IMouseMod * pMod);
+	void OnMouseOut();
 
-	private:
-		IGraphics* mGraphics;
-	};
+private:
+	IGraphics* mGraphics;
+};
 
 #endif

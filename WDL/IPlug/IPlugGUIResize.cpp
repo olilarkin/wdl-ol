@@ -1,4 +1,6 @@
 #include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
 
 // Helpers -------------------------------------------------------------------------------------------------------------
 bool IPlugGUIResize::double_equals(double a, double b, double epsilon)
@@ -162,7 +164,7 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 		mGraphics->AttachControl(new VerticalResizing(mPlug, mGraphics, one_side_handle_size));
 		mGraphics->AttachControl(new HorisontalResizing(mPlug, mGraphics, one_side_handle_size));
 	}
-	
+
 
 	// Add control sizes to a global container. This is to fix the problem of bitmap resizing on load
 	if (global_layout_container.size() == 0)
@@ -212,9 +214,9 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 	return this;
 }
 
-void IPlugGUIResize::UseHandleForGUIScaling(bool statement) 
-{ 
-	handle_controls_gui_scaling = statement; 
+void IPlugGUIResize::UseHandleForGUIScaling(bool statement)
+{
+	handle_controls_gui_scaling = statement;
 }
 
 void IPlugGUIResize::AddNewView(int viewMode, int viewWidth, int viewHeight)
@@ -236,7 +238,7 @@ void IPlugGUIResize::UseOneSideResizing(int handleSize, int minHandleSize, resiz
 	int verticalControl = (index - 2);
 
 	// Hide control that is not yet enabled
-    if (flag == justHorisontalResizing)
+	if (flag == justHorisontalResizing)
 	{
 		HideControl(verticalControl);
 	}
@@ -310,6 +312,16 @@ void IPlugGUIResize::SelectViewMode(int viewMode)
 	current_view_mode = position;
 	window_width_normalized = (double)view_container.view_width[position];
 	window_height_normalized = (double)view_container.view_height[position];
+}
+
+void IPlugGUIResize::SetGUIScaleRatio(double guiScaleRatio)
+{
+	gui_scale_ratio = guiScaleRatio;
+	gui_scale_ratio = BOUNDED(gui_scale_ratio, min_gui_scale_ratio, max_gui_scale_ratio);
+
+	global_gui_scale_ratio = gui_scale_ratio;
+	plugin_width = (int)(window_width_normalized * gui_scale_ratio);
+	plugin_height = (int)(window_height_normalized * gui_scale_ratio);
 }
 
 void IPlugGUIResize::SetWindowSize(double width, double height)
@@ -719,7 +731,7 @@ void IPlugGUIResize::MoveHandle()
 	double y;
 
 	int index = layout_container[current_view_mode].org_draw_area.size() - 1;
-	
+
 	// Take care of one side handles
 	if (using_one_size_resize)
 	{
@@ -735,7 +747,7 @@ void IPlugGUIResize::MoveHandle()
 		MoveControl(index - 2, 0, y);
 		MoveControlRightEdge(index - 2, x);
 	}
-			
+
 	// Take care of main handle
 	x = (double)plugin_width / gui_scale_ratio - control_size;
 	y = (double)plugin_height / gui_scale_ratio - control_size;

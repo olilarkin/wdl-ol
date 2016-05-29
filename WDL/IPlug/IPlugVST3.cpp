@@ -1128,6 +1128,7 @@ tresult PLUGIN_API IPlugVST3View::attached (void* parent, FIDString type)
       mPlug->GetGUI()->OpenWindow(parent, 0);
     #endif
     mPlug->OnGUIOpen();
+	mPlug->ResizeAtGUIOpen(mPlug->GetGUI());
 
     return kResultTrue;
   }

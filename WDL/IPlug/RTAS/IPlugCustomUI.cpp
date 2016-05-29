@@ -67,6 +67,7 @@ bool IPlugCustomUI::Open(void *winPtr, short leftOffset, short topOffset)
     mGraphics->SetAllControlsDirty();
     #endif
     mPlug->OnGUIOpen();
+	mPlug->ResizeAtGUIOpen(mGraphics);
   }
 
   return true;
@@ -247,6 +248,7 @@ bool IPlugCustomUI::Open(void *winPtr, short leftOffset, short topOffset)
   {
     mGraphics->OpenWindow((void*)mLocalPIWin);
     mPlug->OnGUIOpen();
+	mPlug->ResizeAtGUIOpen(mGraphics);
   }
 
   if(mProcess)

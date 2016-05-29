@@ -44,8 +44,9 @@ public:
 
   virtual bool Draw(IGraphics* pGraphics) = 0;
 
-  // This is used for GUI resize
-  virtual void InitializeGUI(double scaleRatio) {}
+  // This is used for GUI resize ----------------------------------------------------------------------------------------
+  virtual void InitializeGUI(double guiScaleRatio) {}
+  // --------------------------------------------------------------------------------------------------------------------
 
   // Ask the IGraphics object to open an edit box so the user can enter a value for this control.
   void PromptUserInput();

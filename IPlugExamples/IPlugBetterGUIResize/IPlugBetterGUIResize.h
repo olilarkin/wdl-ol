@@ -2,7 +2,6 @@
 #define __IPLUGBETTERGUIRESIZE__
 
 #include "IPlug_include_in_plug_hdr.h"
-#include "IPlugGUIResize.h"
 
 class IPlugBetterGUIResize : public IPlug
 {
@@ -13,7 +12,6 @@ public:
   void Reset();
   void OnParamChange(int paramIdx);
   void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
-  void OnGUIOpen();
   void SetGUILayout(int viewMode, double windowWidth, double windowHeight);
 
 private:
@@ -32,7 +30,7 @@ public:
 	~CustomControl() {}
 
 	// Initialize GUI size here. This will be called after gui resize
-	void InitializeGUI(double scaleRatio)
+	void InitializeGUI(double guiScaleRatio)
 	{
 		// We could actually just use mRECT, but this is just to demonstrate this function
 
@@ -132,6 +130,21 @@ public:
 		GetGUIResize()->UseHandleForGUIScaling(button);
 
 		SetDirty();
+	}
+};
+
+// This is custom GUI resize control that allowes you to customize graphics
+class IPlugGUIResizeCustom : public IPlugGUIResize
+{
+public:
+	IPlugGUIResizeCustom(IPlugBase *pPlug, IGraphics *pGraphics, int guiWidth, int guiHeight, const char *bundleName, bool useHandle = true, int controlSize = 0, int minimumControlSize = 10)
+		: IPlugGUIResize(pPlug, pGraphics, guiWidth, guiHeight, bundleName, useHandle, controlSize, minimumControlSize) {}
+	~IPlugGUIResizeCustom() {}
+
+	void DrawBackgroundAtFastResizing(IGraphics * pGraphics, IRECT * pRECT)
+	{
+		IColor backgroundColor = IColor(255, 255, 25, 25);
+		pGraphics->FillIRect(&backgroundColor, pRECT);
 	}
 };
 #endif

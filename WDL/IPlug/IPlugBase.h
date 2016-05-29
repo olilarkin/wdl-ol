@@ -105,14 +105,11 @@ public:
   IParam* GetParam(int idx) { return mParams.Get(idx); }
   IGraphics* GetGUI() { return mGraphics; }
 
-
-
-
+  // GUI resize functions ------------------------------------------------------------------------------------------------------
   void AttachGUIResize(IPlugGUIResize* pGUIResize) { mGUIResize = pGUIResize; }
+  void ResizeAtGUIOpen(IGraphics* pGraphics);
   IPlugGUIResize* GetGUIResize() { return mGUIResize; }
-
-
-
+  // ---------------------------------------------------------------------------------------------------------------------------
 
   const char* GetEffectName() { return mEffectName; }
   int GetEffectVersion(bool decimal);   // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.

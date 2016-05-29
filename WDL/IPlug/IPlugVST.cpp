@@ -482,6 +482,7 @@ VstIntPtr VSTCALLBACK IPlugVST::VSTDispatcher(AEffect *pEffect, VstInt32 opCode,
         if (pGraphics)
         {
           _this->OnGUIOpen();
+		  _this->ResizeAtGUIOpen(pGraphics);
           return 1;
         }
       }

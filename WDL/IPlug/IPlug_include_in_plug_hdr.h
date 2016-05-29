@@ -7,6 +7,8 @@
 #include "IPlugOSDetect.h"
 #include "resource.h" // This is your plugin's resource.h
 
+#include "IPlugGUIResize.h"
+
 #ifdef VST_API
   #include "IPlugVST.h"
   typedef IPlugVST IPlug;

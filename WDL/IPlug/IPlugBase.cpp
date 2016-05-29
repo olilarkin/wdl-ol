@@ -250,6 +250,14 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 }
 #endif
 
+void IPlugBase::ResizeAtGUIOpen(IGraphics * pGraphics)
+{
+	if (GetGUIResize() != NULL)
+	{
+		GetGUIResize()->ResizeAtGUIOpen();
+	}
+}
+
 // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
 int IPlugBase::GetEffectVersion(bool decimal)
 {

@@ -106,13 +106,6 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
 IPlugBetterGUIResize::~IPlugBetterGUIResize() {}
 
-void IPlugBetterGUIResize::OnGUIOpen()
-{ 
-	TRACE; 
-	GetGUIResize()->ResizeAtGUIOpen();
-
-}
-
 void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double windowHeight)
 {
 	// You can use switch instead, but in this way it is easier to visualize the changes
