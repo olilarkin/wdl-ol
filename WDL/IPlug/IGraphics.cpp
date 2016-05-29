@@ -6,8 +6,8 @@
 // If not dirty for this many timer ticks, we call OnGUIIDle.
 // Only looked at if USE_IDLE_CALLS is defined.
 
-#define USE_IDLE_CALLS
-#define IDLE_TICKS 1
+//#define USE_IDLE_CALLS
+//#define IDLE_TICKS 1
 
 #ifndef CONTROL_BOUNDS_COLOR
   #define CONTROL_BOUNDS_COLOR COLOR_GREEN
