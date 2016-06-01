@@ -681,6 +681,13 @@ bool IBitmapOverlayControl::Draw(IGraphics* pGraphics)
   }
 }
 
+void ITextControl::InitializeGUI(double guiScaleRatio)
+{
+	mText = IText((int)((double)defaultText.mSize * guiScaleRatio), &mText.mColor,
+		mText.mFont, mText.mStyle, mText.mAlign, mText.mOrientation,
+		mText.mQuality, &mText.mTextEntryBGColor, &mText.mTextEntryFGColor);
+}
+
 void ITextControl::SetTextFromPlug(char* str)
 {
   if (strcmp(mStr.Get(), str))

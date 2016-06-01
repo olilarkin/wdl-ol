@@ -194,14 +194,11 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 
 			global_layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&*pControl->GetRECT()));
 			global_layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&*pControl->GetTargetRECT()));
-			global_layout_container[0].org_text_size.push_back(*pControl->GetText());
 		}
 
 		// Add IPlugGUIResize control size
 		global_layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&gui_resize_area));
 		global_layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&gui_resize_area));
-		IText tmpIText;
-		global_layout_container[0].org_text_size.push_back(tmpIText);
 	}
 
 	// Adding global layout container to a local one
@@ -540,13 +537,6 @@ void IPlugGUIResize::ResizeControlRects()
 		IControl* pControl = mGraphics->GetControl(i);
 		pControl->SetDrawArea(ResizeIRECT(&layout_container[current_view_mode].org_draw_area[i], gui_scale_ratio, gui_scale_ratio));
 		pControl->SetTargetArea(ResizeIRECT(&layout_container[current_view_mode].org_target_area[i], gui_scale_ratio, gui_scale_ratio));
-
-		// This updates IText size
-		IText tmpText = IText((int)((double)layout_container[current_view_mode].org_text_size[i].mSize * gui_scale_ratio), &layout_container[current_view_mode].org_text_size[i].mColor,
-			layout_container[current_view_mode].org_text_size[i].mFont, layout_container[current_view_mode].org_text_size[i].mStyle, layout_container[current_view_mode].org_text_size[i].mAlign, layout_container[current_view_mode].org_text_size[i].mOrientation,
-			layout_container[current_view_mode].org_text_size[i].mQuality, &layout_container[current_view_mode].org_text_size[i].mTextEntryBGColor, &layout_container[current_view_mode].org_text_size[i].mTextEntryFGColor);
-
-		pControl->SetText(&tmpText);
 	}
 
 	// Keeps one side handle above or at minimum size

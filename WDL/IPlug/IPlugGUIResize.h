@@ -109,7 +109,6 @@ struct layoutContainer
 {
 	vector <DRECT> org_draw_area;
 	vector <DRECT> org_target_area;
-	vector <IText> org_text_size;
 };
 
 typedef enum _resizeFlag { drawAndTargetArea, drawAreaOnly, targetAreaOnly } resizeFlag;

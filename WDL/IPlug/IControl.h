@@ -434,10 +434,14 @@ public:
     : IControl(pPlug, pR)
   {
     mText = *pText;
+	defaultText = mText;
     mStr.Set(str);
+
+	InitializeGUI(1.0);
   }
   ~ITextControl() {}
 
+  void InitializeGUI(double guiScaleRatio);
   void SetTextFromPlug(char* str);
   void ClearTextFromPlug() { SetTextFromPlug( (char *) ""); }
 
@@ -445,6 +449,7 @@ public:
 
 protected:
   WDL_String mStr;
+  IText defaultText;
 };
 
 // If paramIdx is specified, the text is automatically set to the output
