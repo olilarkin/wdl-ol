@@ -283,61 +283,78 @@ IRadioButtonsControl::IRadioButtonsControl(IPlugBase* pPlug, IRECT pR, int param
     IBitmap* pBitmap, EDirection direction, bool reverse)
   :   IControl(pPlug, pR, paramIdx)
 {
+  mDefaultRECT = pR;
   mBitmap = pBitmap;
   mRECTs.Resize(nButtons);
-  int h = int((double) pBitmap->H / (double) pBitmap->N);
-  
-  if (reverse) 
-  {
-    if (direction == kHorizontal)
-    {
-      int dX = int((double) (pR.W() - nButtons * pBitmap->W) / (double) (nButtons - 1));
-      int x = mRECT.R - pBitmap->W - dX;
-      int y = mRECT.T;
-      
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        x -= pBitmap->W + dX;
-      }
-    }
-    else
-    {
-      int dY = int((double) (pR.H() - nButtons * h) /  (double) (nButtons - 1));
-      int x = mRECT.L;
-      int y = mRECT.B - h - dY;
-      
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        y -= h + dY;
-      }
-    }
-    
-  }
-  else
-  {
-    int x = mRECT.L, y = mRECT.T;
-    
-    if (direction == kHorizontal)
-    {
-      int dX = int((double) (pR.W() - nButtons * pBitmap->W) / (double) (nButtons - 1));
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        x += pBitmap->W + dX;
-      }
-    }
-    else
-    {
-      int dY = int((double) (pR.H() - nButtons * h) /  (double) (nButtons - 1));
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        y += h + dY;
-      }
-    }
-  }
+  mDirection = direction;
+  mReverse = reverse;
+  mNButtons = nButtons;
+
+  InitializeGUI(1.0);
+}
+
+void IRadioButtonsControl::InitializeGUI(double guiScaleRatio)
+{
+	IRECT scaledDefaultRECT;
+
+	scaledDefaultRECT.L = int((double)mDefaultRECT.L * guiScaleRatio);
+	scaledDefaultRECT.T = int((double)mDefaultRECT.T * guiScaleRatio);
+	scaledDefaultRECT.R = int((double)mDefaultRECT.R * guiScaleRatio);
+	scaledDefaultRECT.B = int((double)mDefaultRECT.B * guiScaleRatio);
+
+	int h = int((double)mBitmap->H / (double)mBitmap->N);
+
+	if (mDirection)
+	{
+		if (mDirection == kHorizontal)
+		{
+			int dX = int((double)(scaledDefaultRECT.W() - mNButtons * mBitmap->W) / (double)(mNButtons - 1));
+			int x = scaledDefaultRECT.R - mBitmap->W - dX;
+			int y = scaledDefaultRECT.T;
+
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				x -= mBitmap->W + dX;
+			}
+		}
+		else
+		{
+			int dY = int((double)(scaledDefaultRECT.H() - mNButtons * h) / (double)(mNButtons - 1));
+			int x = scaledDefaultRECT.L;
+			int y = scaledDefaultRECT.B - h - dY;
+
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				y -= h + dY;
+			}
+		}
+
+	}
+	else
+	{
+		int x = mRECT.L, y = mRECT.T;
+
+		if (mDirection == kHorizontal)
+		{
+			int dX = int((double)(scaledDefaultRECT.W() - mNButtons * mBitmap->W) / (double)(mNButtons - 1));
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				x += mBitmap->W + dX;
+			}
+		}
+		else
+		{
+			int dY = int((double)(scaledDefaultRECT.H() - mNButtons * h) / (double)(mNButtons - 1));
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				y += h + dY;
+			}
+		}
+	}
 }
 
 void IRadioButtonsControl::OnMouseDown(int x, int y, IMouseMod* pMod)
@@ -403,16 +420,26 @@ IFaderControl::IFaderControl(IPlugBase* pPlug, int x, int y, int len, int paramI
   : IControl(pPlug, IRECT(), paramIdx), mLen(len), mDirection(direction), mOnlyHandle(onlyHandle)
 {
 	mBitmap = pBitmap;
-  if (direction == kVertical)
-  {
-    mHandleHeadroom = mBitmap->H;
-    mRECT = mTargetRECT = IRECT(x, y, x + mBitmap->W, y + len);
-  }
-  else
-  {
-    mHandleHeadroom = mBitmap->W;
-    mRECT = mTargetRECT = IRECT(x, y, x + len, y + mBitmap->H);
-  }
+	if (direction == kVertical)
+	{
+		mHandleHeadroom = mBitmap->H;
+		mRECT = mTargetRECT = IRECT(x, y, x + mBitmap->W, y + len);
+	}
+	else
+	{
+		mHandleHeadroom = mBitmap->W;
+		mRECT = mTargetRECT = IRECT(x, y, x + len, y + mBitmap->H);
+	}
+	defaultLen = mLen;
+	defaultHandleHeadroom = mHandleHeadroom;
+
+	InitializeGUI(1.0);
+}
+
+void IFaderControl::InitializeGUI(double guiScaleRatio)
+{
+	mHandleHeadroom = int((double)defaultHandleHeadroom * guiScaleRatio);
+	mLen = int((double)defaultLen * guiScaleRatio);
 }
 
 IRECT IFaderControl::GetHandleRECT(double value) const
@@ -580,6 +607,13 @@ IKnobLineControl::IKnobLineControl(IPlugBase* pPlug, IRECT pR, int paramIdx,
     mOuterRadius = 0.5f * (float) pR.W();
   }
   mBlend = IChannelBlend(IChannelBlend::kBlendClobber);
+
+  InitializeGUI(1.0);
+}
+
+void IKnobLineControl::InitializeGUI(double guiScaleRatio)
+{
+	mGUIScaleRatio = guiScaleRatio;
 }
 
 bool IKnobLineControl::Draw(IGraphics* pGraphics)
@@ -588,8 +622,18 @@ bool IKnobLineControl::Draw(IGraphics* pGraphics)
   float sinV = (float) sin(v);
   float cosV = (float) cos(v);
   float cx = mRECT.MW(), cy = mRECT.MH();
-  float x1 = cx + mInnerRadius * sinV, y1 = cy - mInnerRadius * cosV;
-  float x2 = cx + mOuterRadius * sinV, y2 = cy - mOuterRadius * cosV;
+
+  float scaledInnerRadius = mInnerRadius;
+  float scaledOuterRadius = mOuterRadius;
+
+  if (mPlug->GetGUIResize() != NULL)
+  {
+	  scaledInnerRadius = scaledInnerRadius * (float)mGUIScaleRatio;
+	  scaledOuterRadius = scaledOuterRadius * (float)mGUIScaleRatio;
+  }
+
+  float x1 = cx + scaledInnerRadius * sinV, y1 = cy - scaledInnerRadius * cosV;
+  float x2 = cx + scaledOuterRadius * sinV, y2 = cy - scaledOuterRadius * cosV;
   return pGraphics->DrawLine(&mColor, x1, y1, x2, y2, &mBlend, true);
 }
 
@@ -613,6 +657,14 @@ bool IKnobRotatingMaskControl::Draw(IGraphics* pGraphics)
 {
   double angle = mMinAngle + mValue * (mMaxAngle - mMinAngle);
   return pGraphics->DrawRotatedMask(mBase, mMask, mTop, mRECT.L, mRECT.T, angle, &mBlend);
+}
+
+void IBitmapOverlayControl::InitializeGUI(double guiScaleRatio)
+{
+	mTargetArea.L = int((double)defaultTargetArea.L * guiScaleRatio);
+	mTargetArea.T = int((double)defaultTargetArea.T * guiScaleRatio);
+	mTargetArea.R = int((double)defaultTargetArea.R * guiScaleRatio);
+	mTargetArea.B = int((double)defaultTargetArea.B * guiScaleRatio);
 }
 
 bool IBitmapOverlayControl::Draw(IGraphics* pGraphics)

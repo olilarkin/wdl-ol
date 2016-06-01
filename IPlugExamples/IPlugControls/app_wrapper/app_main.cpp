@@ -616,6 +616,7 @@ extern bool AttachGUI()
     if (pGraphics)
     {
       gPluginInstance->OnGUIOpen();
+	  gPluginInstance->ResizeAtGUIOpen(pGraphics);
       return true;
     }
   }
@@ -796,7 +797,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 
       TranslateMessage(&msg);
       DispatchMessage(&msg);
-
     }
 
     // in case gHWND didnt get destroyed -- this corresponds to SWELLAPP_DESTROY roughly
@@ -975,7 +975,7 @@ INT_PTR SWELLAppMain(int msg, INT_PTR parm1, INT_PTR parm2)
 
 SWELL_DEFINE_DIALOG_RESOURCE_BEGIN(IDD_DIALOG_MAIN, SET_IDD_STYLE, BUNDLE_NAME, GUI_WIDTH, GUI_HEIGHT, SET_IDD_SCALE)
 BEGIN
-//   EDITTEXT        IDC_EDIT1,59,50,145,14,ES_AUTOHSCROLL
+//   EDITTEXT        IDC_EDIT1,5   9,50,145,14,ES_AUTOHSCROLL
 //   LTEXT           "Enter some text here:",IDC_STATIC,59,39,73,8
 END
 SWELL_DEFINE_DIALOG_RESOURCE_END(IDD_DIALOG_MAIN)

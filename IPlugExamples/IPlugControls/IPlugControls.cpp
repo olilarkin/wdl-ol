@@ -40,6 +40,20 @@ IPlugControls::IPlugControls(IPlugInstanceInfo instanceInfo)
   // Instantiate a graphics engine.
 
   IGraphics* pGraphics = MakeGraphics(this, kW, kH); // MakeGraphics(this, kW, kH);
+
+  // Here we are attaching our GUI resize control ----------------------------------------------------------------------------
+  AttachGUIResize(new IPlugGUIResize(this, pGraphics, true, 16, 16));
+
+  // Enable resizing only one side control
+  GetGUIResize()->UseHandleForGUIScaling(true);
+
+  // You must call UsingBitmaps() if you want to use bitmaps
+  GetGUIResize()->UsingBitmaps();
+
+  // This will limit GUI scaling from 50% to 200%
+  GetGUIResize()->SetGUIScaleLimits(50, 200);
+  // --------------------------------------------------------------------------------------------------------------------------
+
   pGraphics->AttachBackground(BG_ID, BG_FN);
 
   // Attach controls to the graphics engine.  Controls are automatically associated
@@ -134,7 +148,7 @@ IPlugControls::IPlugControls(IPlugInstanceInfo instanceInfo)
   // Attach the graphics engine to the plugin.
 
   AttachGraphics(pGraphics);
-
+  pGraphics->ShowControlBounds(true);
   // No cleanup necessary, the graphics engine manages all of its resources and cleans up when closed.
 
   MakeDefaultPreset((char *) "-", kNumPrograms);

@@ -244,12 +244,17 @@ public:
                        EDirection direction = kVertical, bool reverse = false);
   ~IRadioButtonsControl() {}
 
+  void InitializeGUI(double guiScaleRatio);
   void OnMouseDown(int x, int y, IMouseMod* pMod);
   bool Draw(IGraphics* pGraphics);
 
 protected:
   WDL_TypedBuf<IRECT> mRECTs;
+  IRECT mDefaultRECT;
   IBitmap *mBitmap;
+  EDirection mDirection;
+  bool mReverse;
+  int mNButtons;
 };
 
 // A switch that reverts to 0.0 when released.
@@ -279,6 +284,8 @@ public:
   // Where is the handle right now?
   IRECT GetHandleRECT(double value = -1.0) const;
 
+  void InitializeGUI(double guiScaleRatio);
+
   virtual void OnMouseDown(int x, int y, IMouseMod* pMod);
   virtual void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod);
   virtual void OnMouseWheel(int x, int y, IMouseMod* pMod, int d);
@@ -290,7 +297,7 @@ public:
  
 protected:
   virtual void SnapToMouse(int x, int y);
-  int mLen, mHandleHeadroom;
+  int mLen, mHandleHeadroom, defaultLen, defaultHandleHeadroom;
   EDirection mDirection;
   bool mOnlyHandle; // if true only by clicking on the handle do you click the slider
   IBitmap *mBitmap;
@@ -326,11 +333,13 @@ public:
                    EDirection direction = kVertical, double gearing = DEFAULT_GEARING);
   ~IKnobLineControl() {}
 
+  void InitializeGUI(double guiScaleRatio);
   bool Draw(IGraphics* pGraphics);
 
 protected:
   IColor mColor;
   float mMinAngle, mMaxAngle, mInnerRadius, mOuterRadius;
+  double mGUIScaleRatio;
 };
 
 // A rotating knob.  The bitmap rotates with any mouse drag.
@@ -393,17 +402,28 @@ class IBitmapOverlayControl : public ISwitchControl
 {
 public:
   IBitmapOverlayControl(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap, IRECT pTargetArea)
-    : ISwitchControl(pPlug, x, y, paramIdx, pBitmap), mTargetArea(pTargetArea) {}
+	  : ISwitchControl(pPlug, x, y, paramIdx, pBitmap), mTargetArea(pTargetArea) 
+  {
+	  defaultTargetArea = pTargetArea;
+
+	  InitializeGUI(1.0);
+  }
 
   IBitmapOverlayControl(IPlugBase* pPlug, int x, int y, IBitmap* pBitmap, IRECT pTargetArea)
-    : ISwitchControl(pPlug, x, y, -1, pBitmap), mTargetArea(pTargetArea) {}
+    : ISwitchControl(pPlug, x, y, -1, pBitmap), mTargetArea(pTargetArea)
+  {
+	  defaultTargetArea = pTargetArea;
+
+	  InitializeGUI(1.0);
+  }
 
   ~IBitmapOverlayControl() {}
 
+  void InitializeGUI(double guiScaleRatio);
   bool Draw(IGraphics* pGraphics);
 
 protected:
-  IRECT mTargetArea;  // Keep this around to swap in & out.
+	IRECT mTargetArea, defaultTargetArea;;  // Keep this around to swap in & out.
 };
 
 // Output text to the screen.
