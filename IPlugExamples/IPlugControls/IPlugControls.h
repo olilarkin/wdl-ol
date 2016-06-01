@@ -23,6 +23,12 @@ const int kNumPrograms = 1;
 
 enum EParams
 {
+	// This is reserved for GUI resize
+	viewMode = 0,
+	windowWidth = 1,
+	windowHeight = 2,
+	// -------------------------------
+
   kISwitchControl_2,
   kISwitchControl_3,
   kIInvisibleSwitchControl,
