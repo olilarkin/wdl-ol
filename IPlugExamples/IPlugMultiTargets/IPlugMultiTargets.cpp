@@ -57,11 +57,11 @@ IPlugMultiTargets::IPlugMultiTargets(IPlugInstanceInfo instanceInfo)
   IGraphics* pGraphics = MakeGraphics(this, kWidth, kHeight);
   pGraphics->AttachBackground(BG_ID, BG_FN);
 
-  IBitmap knob = pGraphics->LoadIBitmap(KNOB_ID, KNOB_FN, kKnobFrames);
+  IBitmap* knob = pGraphics->LoadPointerToBitmap(KNOB_ID, KNOB_FN, kKnobFrames);
   IText text = IText(14);
 
-  pGraphics->AttachControl(new IKnobMultiControlText(this, IRECT(kGainX, kGainY, kGainX + 48, kGainY + 48 + 20), kGainL, &knob, &text));
-  pGraphics->AttachControl(new IKnobMultiControlText(this, IRECT(kGainX + 75, kGainY, kGainX + 48 + 75, kGainY + 48 + 20), kGainR, &knob, &text));
+  pGraphics->AttachControl(new IKnobMultiControlText(this, IRECT(kGainX, kGainY, kGainX + 48, kGainY + 48 + 20), kGainL, knob, &text));
+  pGraphics->AttachControl(new IKnobMultiControlText(this, IRECT(kGainX + 75, kGainY, kGainX + 48 + 75, kGainY + 48 + 20), kGainR, knob, &text));
   pGraphics->AttachControl(new ITempoDisplay(this, IRECT(300, 10, kWidth, 20), &text, &mTimeInfo));
 
   pGraphics->AttachControl(new ITestPopupMenu(this, IRECT(410, 100, 460, 115)));
@@ -72,19 +72,19 @@ IPlugMultiTargets::IPlugMultiTargets(IPlugInstanceInfo instanceInfo)
   mMeterIdx_L = pGraphics->AttachControl(new IPeakMeterVert(this, IRECT(300, 100, 310, 200)));
   mMeterIdx_R = pGraphics->AttachControl(new IPeakMeterVert(this, IRECT(312, 100, 322, 200)));
 
-  IBitmap regular = pGraphics->LoadIBitmap(WHITE_KEY_ID, WHITE_KEY_FN, 6);
-  IBitmap sharp   = pGraphics->LoadIBitmap(BLACK_KEY_ID, BLACK_KEY_FN);
+  IBitmap* regular = pGraphics->LoadPointerToBitmap(WHITE_KEY_ID, WHITE_KEY_FN, 6);
+  IBitmap* sharp   = pGraphics->LoadPointerToBitmap(BLACK_KEY_ID, BLACK_KEY_FN);
 
   //                    C#     D#          F#      G#      A#
   int coords[12] = { 0, 7, 12, 20, 24, 36, 43, 48, 56, 60, 69, 72 };
-  mKeyboard = new IKeyboardControl(this, kKeybX, kKeybY, 48, 5, &regular, &sharp, coords);
+  mKeyboard = new IKeyboardControl(this, kKeybX, kKeybY, 48, 5, regular, sharp, coords);
 
   pGraphics->AttachControl(mKeyboard);
 
   pGraphics->AttachControl(new IPresetMenu(this, IRECT(10, 10, 250, 25)));
 
-  IBitmap about = pGraphics->LoadIBitmap(ABOUTBOX_ID, ABOUTBOX_FN);
-  mAboutBox = new IBitmapOverlayControl(this, 100, 100, &about, IRECT(540, 250, 680, 290));
+  IBitmap* about = pGraphics->LoadPointerToBitmap(ABOUTBOX_ID, ABOUTBOX_FN);
+  mAboutBox = new IBitmapOverlayControl(this, 100, 100, about, IRECT(540, 250, 680, 290));
   pGraphics->AttachControl(mAboutBox);
   AttachGraphics(pGraphics);
 #endif
@@ -313,7 +313,7 @@ bool IPlugMultiTargets::HostRequestingAboutBox()
   IMutexLock lock(this);
   if(GetGUI())
   {
-    // get the IBitmapOverlay to show
+    // get the IBitmap*Overlay to show
     mAboutBox->SetValueFromPlug(1.);
     mAboutBox->Hide(false);
   }

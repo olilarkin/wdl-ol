@@ -52,9 +52,9 @@ IPlugEEL::IPlugEEL(IPlugInstanceInfo instanceInfo)
   IGraphics* pGraphics = MakeGraphics(this, kWidth, kHeight);
   pGraphics->AttachPanelBackground(&COLOR_RED);
 
-  IBitmap knob = pGraphics->LoadIBitmap(KNOB_ID, KNOB_FN, kKnobFrames);
+  IBitmap* knob = pGraphics->LoadPointerToBitmap(KNOB_ID, KNOB_FN, kKnobFrames);
 
-  pGraphics->AttachControl(new IKnobMultiControl(this, kGainX, kGainY, kGain, &knob));
+  pGraphics->AttachControl(new IKnobMultiControl(this, kGainX, kGainY, kGain, knob));
   
   IRECT textRect(5, 70, kWidth-5, kHeight-5);
   IText textProps(15, &COLOR_BLACK, "Arial", IText::kStyleNormal, IText::kAlignNear, 0, IText::kQualityDefault);

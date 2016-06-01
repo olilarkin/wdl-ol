@@ -59,16 +59,16 @@ IPlugText::IPlugText(IPlugInstanceInfo instanceInfo)
   tmpRect5 = IRECT(10, 100, 370, 170);
   pGraphics->AttachControl(new ITextControl(this, tmpRect5, &textProps5, "hello iplug!"));
   
-  IBitmap blackText = pGraphics->LoadIBitmap(TEXT_BLACK_ID, TEXT_BLACK_FN, 95, true);
-  IBitmap whiteText = pGraphics->LoadIBitmap(TEXT_WHITE_ID, TEXT_WHITE_FN, 95, true);
+  IBitmap* blackText = pGraphics->LoadPointerToBitmap(TEXT_BLACK_ID, TEXT_BLACK_FN, 95, true);
+  IBitmap* whiteText = pGraphics->LoadPointerToBitmap(TEXT_WHITE_ID, TEXT_WHITE_FN, 95, true);
   
   IRECT tmpRect6(10, 200, 300, 220);
   IText textProps6(12, &COLOR_BLACK, "Arial", IText::kStyleNormal, IText::kAlignCenter, 0, IText::kQualityDefault);
-  pGraphics->AttachControl(new IBitmapTextControl(this, tmpRect6, &blackText, "i'm bitmap monospace text", &textProps6, 6, 12, 0));
+  pGraphics->AttachControl(new IBitmapTextControl(this, tmpRect6, blackText, "i'm bitmap monospace text", &textProps6, 6, 12, 0));
 
   IRECT tmpRect7(10, 220, 300, 260);
   IText textProps7(12, &COLOR_BLACK, "Arial", IText::kStyleNormal, IText::kAlignNear, 0, IText::kQualityDefault);
-  pGraphics->AttachControl(new IBitmapTextControl(this, tmpRect7, &whiteText, "i'm also bitmap monospace text, but i'm a long string and i might overflow the control bounds or wrap onto new lines", &textProps7, 6, 12, 0, true, false));
+  pGraphics->AttachControl(new IBitmapTextControl(this, tmpRect7, whiteText, "i'm also bitmap monospace text, but i'm a long string and i might overflow the control bounds or wrap onto new lines", &textProps7, 6, 12, 0, true, false));
   
   pGraphics->ShowControlBounds(true);
   

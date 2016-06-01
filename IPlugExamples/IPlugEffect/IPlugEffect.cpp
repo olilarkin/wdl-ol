@@ -33,9 +33,9 @@ IPlugEffect::IPlugEffect(IPlugInstanceInfo instanceInfo)
   IGraphics* pGraphics = MakeGraphics(this, kWidth, kHeight);
   pGraphics->AttachPanelBackground(&COLOR_RED);
 
-  IBitmap knob = pGraphics->LoadIBitmap(KNOB_ID, KNOB_FN, kKnobFrames);
+  IBitmap* knob = pGraphics->LoadPointerToBitmap(KNOB_ID, KNOB_FN, kKnobFrames);
 
-  pGraphics->AttachControl(new IKnobMultiControl(this, kGainX, kGainY, kGain, &knob));
+  pGraphics->AttachControl(new IKnobMultiControl(this, kGainX, kGainY, kGain, knob));
 
   AttachGraphics(pGraphics);
 
