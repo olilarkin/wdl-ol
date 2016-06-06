@@ -2,6 +2,7 @@
 #define __IPLUGBETTERGUIRESIZE__
 
 #include "IPlug_include_in_plug_hdr.h"
+#include <time.h>
 
 class IPlugBetterGUIResize : public IPlug
 {
@@ -85,11 +86,19 @@ public:
 
 	~viewSelector() {}
 
+	void InitializeGUI(double guiScaleRatio)
+	{
+		mText = IText((int)((double)24 * guiScaleRatio), &mText.mColor,
+			mText.mFont, mText.mStyle, mText.mAlign, mText.mOrientation,
+			mText.mQuality, &mText.mTextEntryBGColor, &mText.mTextEntryFGColor);
+	}
+
 	bool Draw(IGraphics* pGraphics)
 	{
 		pGraphics->FillIRect(&COLOR_GRAY, &mRECT, &mBlend);
 		char* cStr = mStr.Get();
-		return pGraphics->DrawIText(&mText, cStr, &mRECT);
+		pGraphics->DrawIText(&mText, cStr, &mRECT);
+		return true;
 	}
 
 	void OnMouseDown(int x, int y, IMouseMod* pMod)
@@ -119,6 +128,13 @@ public:
 	}
 
 	~handleSelector() {}
+
+	void InitializeGUI(double guiScaleRatio)
+	{
+		mText = IText((int)((double)24 * guiScaleRatio), &mText.mColor,
+			mText.mFont, mText.mStyle, mText.mAlign, mText.mOrientation,
+			mText.mQuality, &mText.mTextEntryBGColor, &mText.mTextEntryFGColor);
+	}
 
 	bool Draw(IGraphics* pGraphics)
 	{
