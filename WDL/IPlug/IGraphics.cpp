@@ -1528,16 +1528,6 @@ bool IGraphics::Draw(IRECT* pR)
 					  finalLineL = lineR;
 					  finalSnapL = snapR;
 				  }
-
-				  // Snap control
-				  if (finalSnapL != 0)
-				  {
-					  drawArea.L = drawArea.L + finalSnapL;
-					  drawArea.R = drawArea.R + finalSnapL;
-				  }
-
-				  // Draw snap line
-				  DrawLine(&CONTROL_BOUNDS_COLOR, finalLineL.L, finalLineL.T, finalLineL.R + finalSnapL, finalLineL.B);
 			  }
 
 			  if (didSnappedT)
@@ -1574,6 +1564,26 @@ bool IGraphics::Draw(IRECT* pR)
 					  finalSnapT = snapB;
 				  }
 
+			  }
+
+
+			  if (didSnappedL)
+			  {
+				  // Snap control
+				  if (finalSnapL != 0)
+				  {
+					  drawArea.L = drawArea.L + finalSnapL;
+					  drawArea.R = drawArea.R + finalSnapL;
+				  }
+
+				  // Draw snap line
+				  //DrawLine(&CONTROL_BOUNDS_COLOR, finalLineL.L, finalLineL.T, finalLineL.R + finalSnapL, finalLineL.B + finalSnapT);
+				  LICE_DashedLine(mDrawBitmap, finalLineL.L, finalLineL.T, finalLineL.R + finalSnapL, finalLineL.B + finalSnapT, 1, 1,
+					  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A));
+			  }
+
+			  if (didSnappedT)
+			  {
 				  // Snap control
 				  if (finalSnapT != 0)
 				  {
@@ -1582,7 +1592,9 @@ bool IGraphics::Draw(IRECT* pR)
 				  }
 
 				  // Draw snap line
-				  DrawLine(&CONTROL_BOUNDS_COLOR, finalLineT.L, finalLineT.T, finalLineT.R, finalLineT.B + finalSnapT);
+				  //DrawLine(&CONTROL_BOUNDS_COLOR, finalLineT.L, finalLineT.T, finalLineT.R + finalSnapL, finalLineT.B + finalSnapT);
+				  LICE_DashedLine(mDrawBitmap, finalLineT.L, finalLineT.T, finalLineT.R + finalSnapL, finalLineT.B + finalSnapT, 1, 1, 
+					  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A));
 			  }
 		  }
 
