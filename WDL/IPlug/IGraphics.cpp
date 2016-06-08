@@ -1161,9 +1161,25 @@ bool IGraphics::Draw(IRECT* pR)
 #ifndef NDEBUG
   if (mShowControlBounds) 
   {
-    for (int j = 1; j < mControls.GetSize(); j++)
+	  int controlSize = mControls.GetSize();
+	  if (mPlug->GetGUIResize() != NULL) controlSize -= 3;
+
+    for (int j = 1; j < controlSize; j++)
     {
       IControl* pControl = mControls.Get(j);
+
+	  // If control is hidden cross it with lines
+	  if (pControl->IsHidden())
+	  {
+		  IRECT drawRECT = *pControl->GetRECT();
+		  WDL_String strHidden;
+		  strHidden.Set("Hidden");
+		  IText txtHidden(IPMIN(drawRECT.W() / 4, drawRECT.H()), &CONTROL_BOUNDS_COLOR);
+		  DrawIText(&txtHidden, strHidden.Get(), &drawRECT);
+
+		  DrawRect(&CONTROL_BOUNDS_COLOR, &drawRECT);
+	  }
+	  else
       DrawRect(&CONTROL_BOUNDS_COLOR, pControl->GetRECT());
     }
     
@@ -1173,6 +1189,434 @@ bool IGraphics::Draw(IRECT* pR)
     IRECT rect(Width() - 150, Height() - 20, Width(), Height());
     DrawIText(&txt, str.Get(), &rect);
   }
+
+  if (mLiveEditing)
+  {
+	  // Moving controls --------------------------------------------------------------------
+
+	  // If mouse was clicked
+	  if (mLiveEditingMod.L && mLiveEditingMod.C)
+	  {
+		  IControl* pControl = mControls.Get(mMouseCapture);
+		  int controlSize = mControls.GetSize();
+
+		  int slowMove = 1;
+		  if (mLiveEditingMod.A)
+		  {
+			  HideMouseCursor();
+			  slowMove = 4;
+		  }
+
+		  liveSelectedRECT = *pControl->GetRECT();
+		  liveSelectedTargetRECT = *pControl->GetTargetRECT();
+		  liveControlNumber = mMouseCapture;
+
+		  if (mMouseCapture != lastLiveMouseCapture)
+		  {
+			  liveDifferenceX = mMouseX;
+			  liveDifferenceY = mMouseY;
+			  liveClickedRECT = liveSelectedRECT;
+			  liveClickedTargetRECT = liveSelectedTargetRECT;
+		  }
+		  
+		  IRECT drawArea;
+		  drawArea.L = liveClickedRECT.L + (mMouseX - liveDifferenceX) / slowMove;
+		  drawArea.T = liveClickedRECT.T + (mMouseY - liveDifferenceY) / slowMove;
+		  drawArea.R = liveClickedRECT.R + (mMouseX - liveDifferenceX) / slowMove;
+		  drawArea.B = liveClickedRECT.B + (mMouseY - liveDifferenceY) / slowMove;
+
+		  IRECT targetArea;
+		  targetArea.L = liveClickedRECT.L + (mMouseX - liveDifferenceX) / slowMove;
+		  targetArea.T = liveClickedRECT.T + (mMouseY - liveDifferenceY) / slowMove;
+		  targetArea.R = liveClickedRECT.R + (mMouseX - liveDifferenceX) / slowMove;
+		  targetArea.B = liveClickedRECT.B + (mMouseY - liveDifferenceY) / slowMove;
+
+
+		  // Snap feature
+		  if (mLiveEditingMod.S)
+		  {
+			  int snapBy = 5;
+
+			  int snapL = 0;
+			  int snapMinL = 999999999;
+			  int snapMaxL = -999999999;
+			  int prevsnapMinL = 999999999;
+			  int prevsnapMaxL = -999999999;
+
+			  int snapT = 0;
+			  int snapMinT = 999999999;
+			  int snapMaxT = -999999999;
+			  int prevsnapMinT = 999999999;
+			  int prevsnapMaxT = -999999999;
+
+			  int snapR = 0;
+			  int snapMinR = 999999999;
+			  int snapMaxR = -999999999;
+			  int prevsnapMinR = 999999999;
+			  int prevsnapMaxR = -999999999;
+
+			  int snapB = 0;
+			  int snapMinB = 999999999;
+			  int snapMaxB = -999999999;
+			  int prevsnapMinB = 999999999;
+			  int prevsnapMaxB = -999999999;
+
+			  int finalSnapL = 0;
+			  int finalSnapT = 0;
+
+			  bool didSnappedT = false;
+			  bool didSnappedL = false;
+
+			  IRECT lineMinL, lineMinT, lineMinR, lineMinB;
+			  IRECT lineMaxL, lineMaxT, lineMaxR, lineMaxB;
+			  IRECT lineL, lineT, lineR, lineB;
+			  IRECT finalLineL, finalLineT;
+
+			  for (int index = 1; index < controlSize; index++)
+			  {
+				  if (index == mMouseCapture) continue;
+
+				  IControl* pSnapControl = mControls.Get(index);
+				  IRECT tmpDrawArea = *pSnapControl->GetRECT();
+
+				  // Left edge snap -----------------------------
+				  int LSnapL = tmpDrawArea.L - drawArea.L;
+				  if (LSnapL < snapBy && LSnapL >= 0)
+				  { 
+					  snapMinL = IPMIN(snapMinL, LSnapL);
+
+					  if (snapMinL != prevsnapMinL)
+					  {
+						  lineMinL = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMinL = snapMinL;
+
+					  didSnappedL = true;
+				  }
+				  if (LSnapL > -snapBy && LSnapL <= 0)
+				  {
+					  snapMaxL = IPMAX(snapMaxL, LSnapL);
+
+					  if (snapMaxL != prevsnapMaxL)
+					  {
+						  lineMaxL = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMaxL = snapMaxL;
+
+					  didSnappedL = true;
+				  }
+
+				  int RSnapL = tmpDrawArea.R - drawArea.L;
+				  if (RSnapL < snapBy && RSnapL >= 0)
+				  {
+					  snapMinL = IPMIN(snapMinL, RSnapL);
+
+					  if (snapMinL != prevsnapMinL)
+					  {
+						  lineMinL = IRECT(tmpDrawArea.R, tmpDrawArea.T, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMinL = snapMinL;
+
+					  didSnappedL = true;
+				  }
+				  if (RSnapL > -snapBy && RSnapL <= 0)
+				  {
+					  snapMaxL = IPMAX(snapMaxL, RSnapL);
+
+					  if (snapMaxL != prevsnapMaxL)
+					  {
+						  lineMaxL = IRECT(tmpDrawArea.R, tmpDrawArea.T, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMaxL = snapMaxL;
+
+					  didSnappedL = true;
+				  }
+				  
+				  // Top edge snap -------------------------------
+				  int TSnapT = tmpDrawArea.T - drawArea.T;
+				  if (TSnapT < snapBy && TSnapT >= 0)
+				  {
+					  snapMinT = IPMIN(snapMinT, TSnapT);
+
+					  if (snapMinT != prevsnapMinT)
+					  {
+						  lineMinT = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMinT = snapMinT;
+
+					  didSnappedT = true;
+				  }
+				  if (TSnapT > -snapBy && TSnapT <= 0)
+				  {
+					  snapMaxT = IPMAX(snapMaxT, TSnapT);
+
+					  if (snapMaxT != prevsnapMaxT)
+					  {
+						  lineMaxT = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMaxT = snapMaxT;
+
+					  didSnappedT = true;
+				  }
+
+				  int BSnapT = tmpDrawArea.B - drawArea.T;
+				  if (BSnapT < snapBy && BSnapT >= 0)
+				  {
+					  snapMinT = IPMIN(snapMinT, BSnapT);
+
+					  if (snapMinT != prevsnapMinT)
+					  {
+						  lineMinT = IRECT(tmpDrawArea.L, tmpDrawArea.B, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMinT = snapMinT;
+
+					  didSnappedT = true;
+				  }
+				  if (BSnapT > -snapBy && BSnapT <= 0)
+				  {
+					  snapMaxT = IPMAX(snapMaxT, BSnapT);
+
+					  if (snapMaxT != prevsnapMaxT)
+					  {
+						  lineMaxT = IRECT(tmpDrawArea.L, tmpDrawArea.B, drawArea.L, drawArea.T);
+					  }
+					  prevsnapMaxT = snapMaxT;
+
+					  didSnappedT = true;
+				  }
+
+				  ////////////////////////////////////////////////
+
+				  // Right edge snap -----------------------------
+				  int LSnapR = tmpDrawArea.L - drawArea.R;
+				  if (LSnapR < snapBy && LSnapR >= 0)
+				  {
+					  snapMinR = IPMIN(snapMinR, LSnapR);
+
+					  if (snapMinR != prevsnapMinR)
+					  {
+						  lineMinR = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.R, drawArea.T);
+					  }
+					  prevsnapMinR = snapMinR;
+
+					  didSnappedL = true;
+				  }
+				  if (LSnapR > -snapBy && LSnapR <= 0)
+				  {
+					  snapMaxR = IPMAX(snapMaxR, LSnapR);
+
+					  if (snapMaxR != prevsnapMaxR)
+					  {
+						  lineMaxR = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.R, drawArea.T);
+					  }
+					  prevsnapMaxR = snapMaxR;
+
+					  didSnappedL = true;
+				  }
+
+				  int RSnapR = tmpDrawArea.R - drawArea.R;
+				  if (RSnapR < snapBy && RSnapR >= 0)
+				  {
+					  snapMinR = IPMIN(snapMinR, RSnapR);
+
+					  if (snapMinR != prevsnapMinR)
+					  {
+						  lineMinR = IRECT(tmpDrawArea.R, tmpDrawArea.T, drawArea.R, drawArea.T);
+					  }
+					  prevsnapMinR = snapMinR;
+
+					  didSnappedL = true;
+				  }
+				  if (RSnapR > -snapBy && RSnapR <= 0)
+				  {
+					  snapMaxR = IPMAX(snapMaxR, RSnapR);
+
+					  if (snapMaxR != prevsnapMaxR)
+					  {
+						  lineMaxR = IRECT(tmpDrawArea.R, tmpDrawArea.T, drawArea.R, drawArea.T);
+					  }
+					  prevsnapMaxR = snapMaxR;
+
+					  didSnappedL = true;
+				  }
+
+				  // Bottom edge snap -------------------------------
+				  int TSnapB = tmpDrawArea.T - drawArea.B;
+				  if (TSnapB < snapBy && TSnapB >= 0)
+				  {
+					  snapMinB = IPMIN(snapMinB, TSnapB);
+
+					  if (snapMinB != prevsnapMinB)
+					  {
+						  lineMinB = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.L, drawArea.B);
+					  }
+					  prevsnapMinB = snapMinB;
+
+					  didSnappedT = true;
+				  }
+				  if (TSnapB > -snapBy && TSnapB <= 0)
+				  {
+					  snapMaxB = IPMAX(snapMaxB, TSnapB);
+
+					  if (snapMaxB != prevsnapMaxB)
+					  {
+						  lineMaxB = IRECT(tmpDrawArea.L, tmpDrawArea.T, drawArea.L, drawArea.B);
+					  }
+					  prevsnapMaxB = snapMaxB;
+
+					  didSnappedT = true;
+				  }
+
+				  int BSnapB = tmpDrawArea.B - drawArea.B;
+				  if (BSnapB < snapBy && BSnapB >= 0)
+				  {
+					  snapMinB = IPMIN(snapMinB, BSnapB);
+
+					  if (snapMinB != prevsnapMinB)
+					  {
+						  lineMinB = IRECT(tmpDrawArea.L, tmpDrawArea.B, drawArea.L, drawArea.B);
+					  }
+					  prevsnapMinB = snapMinB;
+
+					  didSnappedT = true;
+				  }
+				  if (BSnapB > -snapBy && BSnapB <= 0)
+				  {
+					  snapMaxB = IPMAX(snapMaxB, BSnapB);
+
+					  if (snapMaxB != prevsnapMaxB)
+					  {
+						  lineMaxB = IRECT(tmpDrawArea.L, tmpDrawArea.B, drawArea.L, drawArea.B);
+					  }
+					  prevsnapMaxB = snapMaxB;
+
+					  didSnappedT = true;
+				  }
+			  }
+
+			  if (didSnappedL)
+			  {
+				  if (snapMinL <= abs(snapMaxL))
+				  {
+					  lineL = lineMinL;
+					  snapL = snapMinL;
+				  }
+				  else
+				  {
+					  lineL = lineMaxL;
+					  snapL = snapMaxL;
+				  }
+
+				  if (snapMinR <= abs(snapMaxR))
+				  {
+					  lineR = lineMinR;
+					  snapR = snapMinR;
+				  }
+				  else
+				  {
+					  lineR = lineMaxR;
+					  snapR = snapMaxR;
+				  }
+
+				  if (abs(snapL) <= abs(snapR))
+				  {
+					  finalLineL = lineL;
+					  finalSnapL = snapL;
+				  }
+				  else
+				  {
+					  finalLineL = lineR;
+					  finalSnapL = snapR;
+				  }
+
+				  // Snap control
+				  if (finalSnapL != 0)
+				  {
+					  drawArea.L = drawArea.L + finalSnapL;
+					  drawArea.R = drawArea.R + finalSnapL;
+				  }
+
+				  // Draw snap line
+				  DrawLine(&CONTROL_BOUNDS_COLOR, finalLineL.L, finalLineL.T, finalLineL.R + finalSnapL, finalLineL.B);
+			  }
+
+			  if (didSnappedT)
+			  {
+				  if (snapMinT <= abs(snapMaxT))
+				  {
+					  lineT = lineMinT;
+					  snapT = snapMinT;
+				  }
+				  else
+				  {
+					  lineT = lineMaxT;
+					  snapT = snapMaxT;
+				  }
+				  if (snapMinB <= abs(snapMaxB))
+				  {
+					  lineB = lineMinB;
+					  snapB = snapMinB;
+				  }
+				  else
+				  {
+					  lineB = lineMaxB;
+					  snapB = snapMaxB;
+				  }
+
+				  if (abs(snapT) <= abs(snapB))
+				  {
+					  finalLineT = lineT;
+					  finalSnapT = snapT;
+				  }
+				  else
+				  {
+					  finalLineT = lineB;
+					  finalSnapT = snapB;
+				  }
+
+				  // Snap control
+				  if (finalSnapT != 0)
+				  {
+					  drawArea.T = drawArea.T + finalSnapT;
+					  drawArea.B = drawArea.B + finalSnapT;
+				  }
+
+				  // Draw snap line
+				  DrawLine(&CONTROL_BOUNDS_COLOR, finalLineT.L, finalLineT.T, finalLineT.R, finalLineT.B + finalSnapT);
+			  }
+		  }
+
+		  
+		  pControl->SetDrawArea(drawArea);
+		  pControl->SetTargetArea(targetArea);
+
+		  liveSelectedRECT = drawArea;
+	  }
+	  else
+	  {
+		  ShowMouseCursor();
+	  }
+
+	  lastLiveMouseCapture = mMouseCapture;
+	  
+	  // Print selected control
+	  WDL_String controlPosition;
+	  controlPosition.SetFormatted(100, "L: %i, T: %i, R: %i, B: %i",
+		  liveSelectedRECT.L, liveSelectedRECT.T, liveSelectedRECT.R, liveSelectedRECT.B);
+	  IText txtControlPosition(20, &CONTROL_BOUNDS_COLOR);
+	  txtControlPosition.mAlign = IText::kAlignNear;
+	  IRECT rectControlPosition(4, 22, 304, 42);
+	  DrawIText(&txtControlPosition, controlPosition.Get(), &rectControlPosition);
+
+	  WDL_String controlNumber;
+	  controlNumber.SetFormatted(100, "Control Number: %i", liveControlNumber);
+	  IText txtControlNumber(20, &CONTROL_BOUNDS_COLOR);
+	  txtControlNumber.mAlign = IText::kAlignNear;
+	  IRECT rectControlNumber(4, 0, 304, 20);
+	  DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
+  }
+
+
 #endif
 
   return DrawScreen(pR);
@@ -1186,6 +1630,7 @@ void IGraphics::SetStrictDrawing(bool strict)
 
 void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 {
+  mLiveEditingMod = *pMod;
   ReleaseMouseCapture();
   int c = GetMouseControlIdx(x, y);
   if (c >= 0)
@@ -1234,18 +1679,21 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
       mPlug->BeginInformHostOfParamChange(paramIdx);
     }
         
-    pControl->OnMouseDown(x, y, pMod);
+	if (mLiveEditing == true && mLiveEditingMod.C == false) pControl->OnMouseDown(x, y, pMod);
+	else if (mLiveEditing == false) pControl->OnMouseDown(x, y, pMod);
   }
 }
 
 void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 {
+  mLiveEditingMod = *pMod;
   int c = GetMouseControlIdx(x, y);
   mMouseCapture = mMouseX = mMouseY = -1;
   if (c >= 0)
   {
     IControl* pControl = mControls.Get(c);
-    pControl->OnMouseUp(x, y, pMod);
+	if (mLiveEditing == true && mLiveEditingMod.C == false) pControl->OnMouseUp(x, y, pMod);
+	else if (mLiveEditing == false) pControl->OnMouseUp(x, y, pMod);
     pControl = mControls.Get(c); // needed if the mouse message caused a resize/rebuild
     int paramIdx = pControl->ParamIdx();
     if (paramIdx >= 0)
@@ -1299,7 +1747,8 @@ void IGraphics::OnMouseDrag(int x, int y, IMouseMod* pMod)
     {
       mMouseX = x;
       mMouseY = y;
-      mControls.Get(c)->OnMouseDrag(x, y, dX, dY, pMod);
+	  if (mLiveEditing == true && mLiveEditingMod.C == false) mControls.Get(c)->OnMouseDrag(x, y, dX, dY, pMod);
+	  else if (mLiveEditing == false) mControls.Get(c)->OnMouseDrag(x, y, dX, dY, pMod);
     }
   }
 }
@@ -1317,12 +1766,14 @@ bool IGraphics::OnMouseDblClick(int x, int y, IMouseMod* pMod)
       mMouseCapture = c;
       mMouseX = x;
       mMouseY = y;
-      pControl->OnMouseDown(x, y, pMod);
+	  if (mLiveEditing == true && mLiveEditingMod.C == false) pControl->OnMouseDown(x, y, pMod);
+	  else if (mLiveEditing == false) pControl->OnMouseDown(x, y, pMod);
       newCapture = true;
     }
     else
     {
-      pControl->OnMouseDblClick(x, y, pMod);
+	  if (mLiveEditing == true && mLiveEditingMod.C == false) pControl->OnMouseDblClick(x, y, pMod);
+	  else if (mLiveEditing == false) pControl->OnMouseDblClick(x, y, pMod);
     }
   }
   return newCapture;
@@ -1333,7 +1784,7 @@ void IGraphics::OnMouseWheel(int x, int y, IMouseMod* pMod, int d)
   int c = GetMouseControlIdx(x, y);
   if (c >= 0)
   {
-    mControls.Get(c)->OnMouseWheel(x, y, pMod, d);
+	 mControls.Get(c)->OnMouseWheel(x, y, pMod, d);
   }
 }
 
