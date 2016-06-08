@@ -293,6 +293,7 @@ private:
 	IRECT gui_resize_area;
 	WDL_String settings_ini_path;
 	char buf[128]; // temp buffer for writing integers to profile strings
+	resizeOneSide one_side_flag;
 };
 
 

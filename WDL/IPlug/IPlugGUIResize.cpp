@@ -175,12 +175,29 @@ void IPlugGUIResize::DrawHandle(IGraphics * pGraphics, IRECT * pRECT)
 IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 {
 	// Check if we need to attach horisontal and vertical handles
+	int verticalControl = mGraphics->AttachControl(new VerticalResizing(mPlug, mGraphics, one_side_handle_size));
+	int horisontalControl = mGraphics->AttachControl(new HorisontalResizing(mPlug, mGraphics, one_side_handle_size));
+
 	if (using_one_size_resize)
 	{
-		mGraphics->AttachControl(new VerticalResizing(mPlug, mGraphics, one_side_handle_size));
-		mGraphics->AttachControl(new HorisontalResizing(mPlug, mGraphics, one_side_handle_size));
+		// Hide control that is not yet enabled
+		if (one_side_flag == justHorisontalResizing)
+		{
+			HideControl(verticalControl);
+		}
+		else if (one_side_flag == justVerticalResizing)
+		{
+			HideControl(horisontalControl);
+		}
+	}
+	else
+	{
+		HideControl(verticalControl);
+		HideControl(horisontalControl);
 	}
 
+	HideControl(verticalControl);
+	HideControl(horisontalControl);
 
 	// Add control sizes to a global container. This is to fix the problem of bitmap resizing on load
 	if (global_layout_container.size() == 0)
@@ -211,6 +228,9 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 
 		controls_visibility.push_back(pControl->IsHidden());
 	}
+
+	// Adding control visibility for this handle
+	controls_visibility.push_back(false);
 
 	// Adding new layout for this view. By default it is copying default view layout
 	for (int i = 0; i < view_container.view_mode.size(); i++)
@@ -249,20 +269,7 @@ void IPlugGUIResize::UseOneSideResizing(int handleSize, int minHandleSize, resiz
 	one_side_handle_min_size = minHandleSize;
 
 	using_one_size_resize = true;
-
-	int index = mGraphics->GetNControls() - 1;
-	int horisontalControl = (index - 1);
-	int verticalControl = (index - 2);
-
-	// Hide control that is not yet enabled
-	if (flag == justHorisontalResizing)
-	{
-		HideControl(verticalControl);
-	}
-	else if (flag == justVerticalResizing)
-	{
-		HideControl(horisontalControl);
-	}
+	one_side_flag = flag;
 }
 
 void IPlugGUIResize::EnableOneSideResizing(resizeOneSide flag)
@@ -592,7 +599,7 @@ void IPlugGUIResize::ResetControlsVisibility()
 	for (int i = 0; i < mGraphics->GetNControls(); i++)
 	{
 		IControl* pControl = mGraphics->GetControl(i);
-		pControl->Hide(controls_visibility[0]);
+		pControl->Hide(controls_visibility[i]);
 	}
 }
 
@@ -898,7 +905,7 @@ HorisontalResizing::HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, i
 
 bool HorisontalResizing::Draw(IGraphics * pGraphics)
 {
-	//pGraphics->FillIRect(&COLOR_RED, &mRECT);
+	pGraphics->FillIRect(&COLOR_RED, &mRECT);
 	return true;
 }
 
@@ -941,7 +948,7 @@ VerticalResizing::VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int h
 
 bool VerticalResizing::Draw(IGraphics * pGraphics)
 {
-	//pGraphics->FillIRect(&COLOR_GREEN, &mRECT);
+	pGraphics->FillIRect(&COLOR_GREEN, &mRECT);
 	return true;
 }
 
