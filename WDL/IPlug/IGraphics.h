@@ -148,6 +148,7 @@ public:
 	// This is needed for GUI resizing------------------------------------------------------------------------
 	void RescaleBitmaps(double guiScaleRatio, bool smoothBitmaps);
 	void SetBitmapOversample(unsigned oversample) { bitmapOversample = oversample; }
+	void UpdateGUIScaleRatioValue(double scaleRatio) { guiScaleRatio = scaleRatio; }
 	//--------------------------------------------------------------------------------------------------------
 
 	IPlugBase* GetPlug() { return mPlug; }
@@ -231,6 +232,18 @@ public:
 		mShowControlBounds = enable;
 	}
 
+	// In debug mode you can use this to move controls live and to make GUI layout setting more easy
+	inline void LiveEditing(bool enable, int gridSize = 6, int snapSize = 4)
+	{
+		if (gridSize > 0) liveGridSize = gridSize;
+		else liveGridSize = 1;
+
+		if (snapSize > 0) liveSnap = snapSize;
+		else liveSnap = 0;
+
+		liveEditing = enable;
+	}
+
 	// Updates tooltips after (un)hiding controls.
 	virtual void UpdateTooltips() = 0;
 
@@ -283,6 +296,28 @@ private:
 	bool mHandleMouseOver, mStrict, mEnableTooltips, mShowControlBounds;
 	IControl* mKeyCatcher;
 	unsigned bitmapOversample = 1;
+	double guiScaleRatio = 1.0;
+
+	// Live editing stuff
+	int liveGetControlIdx(int x, int y, bool mo = false);
+	IRECT liveSelectedRECT = IRECT(0, 0, 0, 0);
+	IRECT liveSelectedTargetRECT = IRECT(0, 0, 0, 0);
+	IRECT liveClickedRECT = IRECT(0, 0, 0, 0);
+	IRECT liveClickedTargetRECT = IRECT(0, 0, 0, 0);
+	int liveControlNumber = -1;
+	int lastLiveMouseCapture = -1;
+	int liveClickedX = 0, liveClickedY = 0;
+	bool liveEditing = false;
+	IMouseMod liveEditingMod;
+	int liveScaledGridSize = 1, liveGridSize = 1;
+	int liveSnap = 0;
+	bool liveClickedOnHandle = false;
+	int liveKeyDown = -1;
+	bool liveToogleEditing = false;
+	bool liveLastMouseDownL = false;
+	int liveMouseCapture = -1;
+	int liveMouseXLock = 0;
+	int liveMouseYLock = 0;
 };
 
 

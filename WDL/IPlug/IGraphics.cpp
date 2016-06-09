@@ -1198,6 +1198,10 @@ bool IGraphics::Draw(IRECT* pR)
 		// Moving controls --------------------------------------------------------------------
 		SetAllControlsDirty();
 		
+		if (mPlug->GetGUIResize() != NULL) liveScaledGridSize = int((double)liveGridSize * guiScaleRatio);
+		else liveScaledGridSize = liveGridSize;
+
+		
 		// Toogle live editing
 		if (liveToogleEditing)
 		{
@@ -1221,7 +1225,12 @@ bool IGraphics::Draw(IRECT* pR)
 		{
 			// Draw control rects
 			int controlSize = mControls.GetSize();
-			if (mPlug->GetGUIResize() != NULL) controlSize -= 3;
+
+			if (mPlug->GetGUIResize() != NULL)
+			{
+				controlSize -= 3;
+				if (liveMouseCapture > controlSize) liveMouseCapture = -1;
+			}
 
 			for (int j = 1; j < controlSize; j++)
 			{
@@ -1281,10 +1290,7 @@ bool IGraphics::Draw(IRECT* pR)
 				if (overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 				else SetCursor(LoadCursor(NULL, IDC_ARROW));
 			}
-
-			if (liveMouseCapture > controlSize - 1) liveEditingMod.L = false;
-
-
+			
 			if (liveEditingMod.L)
 			{
 				IControl* pControl = mControls.Get(liveMouseCapture);
@@ -1351,8 +1357,8 @@ bool IGraphics::Draw(IRECT* pR)
 					{
 						if (!liveClickedOnHandle)
 						{
-							int gridL = (drawArea.L / liveGridSize) * liveGridSize;
-							int gridT = (drawArea.T / liveGridSize) * liveGridSize;
+							int gridL = (drawArea.L / liveScaledGridSize) * liveScaledGridSize;
+							int gridT = (drawArea.T / liveScaledGridSize) * liveScaledGridSize;
 
 							int diffL = gridL - drawArea.L;
 							int diffT = gridT - drawArea.T;
@@ -1369,8 +1375,8 @@ bool IGraphics::Draw(IRECT* pR)
 						}
 						else
 						{
-							int gridR = (drawArea.R / liveGridSize) * liveGridSize;
-							int gridB = (drawArea.B / liveGridSize) * liveGridSize;
+							int gridR = (drawArea.R / liveScaledGridSize) * liveScaledGridSize;
+							int gridB = (drawArea.B / liveScaledGridSize) * liveScaledGridSize;
 
 							int diffR = gridR - drawArea.R;
 							int diffB = gridB - drawArea.B;
@@ -1703,17 +1709,17 @@ bool IGraphics::Draw(IRECT* pR)
 
 		if (liveToogleEditing)
 		{
-			if (liveGridSize > 1)
+			if (liveScaledGridSize > 1)
 			{
 				// Vertical Lines grid
-				for (int i = 0; i < Width(); i += liveGridSize)
+				for (int i = 0; i < Width(); i += liveScaledGridSize)
 				{
 					_LICE::LICE_Line(mDrawBitmap, i, 0, i, Height(),
 						LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A), 0.17f);
 				}
 
 				// Horisontal Lines grid
-				for (int i = 0; i < Height(); i += liveGridSize)
+				for (int i = 0; i < Height(); i += liveScaledGridSize)
 				{
 					_LICE::LICE_Line(mDrawBitmap, 0, i, Width(), i,
 						LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A), 0.17f);
@@ -1725,6 +1731,22 @@ bool IGraphics::Draw(IRECT* pR)
 					LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A), 0.11f);
 			}
 
+
+			// Check if gui resize is active, if so scale out rect
+
+			IRECT printRECT;
+			if (mPlug->GetGUIResize() != NULL)
+			{
+				printRECT.L = int((double)liveSelectedRECT.L * guiScaleRatio);
+				printRECT.T = int((double)liveSelectedRECT.T * guiScaleRatio);
+				printRECT.R = int((double)liveSelectedRECT.R * guiScaleRatio);
+				printRECT.B = int((double)liveSelectedRECT.B * guiScaleRatio);
+			}
+			else
+			{
+				printRECT = liveSelectedRECT;
+			}
+
 			// Print selected control
 			WDL_String controlNumber;
 			controlNumber.SetFormatted(100, "Control Pos: %i", liveControlNumber);
@@ -1734,14 +1756,14 @@ bool IGraphics::Draw(IRECT* pR)
 			DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
 
 			WDL_String controlPositionL;
-			controlPositionL.SetFormatted(100, "L: %i, T: %i", liveSelectedRECT.L, liveSelectedRECT.T);
+			controlPositionL.SetFormatted(100, "L: %i, T: %i", printRECT.L, printRECT.T);
 			IText txtControlPositionL(17, &CONTROL_BOUNDS_COLOR);
 			txtControlPositionL.mAlign = IText::kAlignNear;
 			IRECT rectControlPositionL(4, 20, 150, 37);
 			DrawIText(&txtControlPositionL, controlPositionL.Get(), &rectControlPositionL);
 
 			WDL_String controlPositionR;
-			controlPositionR.SetFormatted(100, "R: %i, B: %i", liveSelectedRECT.R, liveSelectedRECT.B);
+			controlPositionR.SetFormatted(100, "R: %i, B: %i", printRECT.R, printRECT.B);
 			IText txtControlPositionR(17, &CONTROL_BOUNDS_COLOR);
 			txtControlPositionR.mAlign = IText::kAlignNear;
 			IRECT rectControlPositionR(4, 38, 150, 55);
@@ -1850,6 +1872,8 @@ void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 
 bool IGraphics::OnMouseOver(int x, int y, IMouseMod* pMod)
 {
+	liveEditingMod.S = pMod->S;
+
 	if (mHandleMouseOver)
 	{
 		int c = GetMouseControlIdx(x, y, true);
