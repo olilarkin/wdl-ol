@@ -1159,7 +1159,7 @@ bool IGraphics::Draw(IRECT* pR)
   }
 
 #ifndef NDEBUG
-  if (mShowControlBounds) 
+  if (mShowControlBounds && !liveEditing)
   {
 	  int controlSize = mControls.GetSize();
 	  if (mPlug->GetGUIResize() != NULL) controlSize -= 3;
@@ -1190,347 +1190,510 @@ bool IGraphics::Draw(IRECT* pR)
     DrawIText(&txt, str.Get(), &rect);
   }
 
+#endif
+
+
   if (liveEditing)
   {
 	  // Moving controls --------------------------------------------------------------------
+	  SetAllControlsDirty();
+
+	  // Toogle live editing
+	  if (liveToogleEditing)
+	  {
+		  if (liveKeyDown == 19)
+		  {
+			  liveToogleEditing = false;
+			  liveKeyDown = -1;
+		  }
+	  }
+	  else
+	  {
+		  if (liveKeyDown == 19)
+		  {
+			  liveToogleEditing = true;
+			  liveKeyDown = -1;
+		  }
+	  }	  
 
 	  // If mouse was clicked
-	  if (liveEditingMod.L && liveEditingMod.C)
+	  if (liveToogleEditing)
 	  {
-		  IControl* pControl = mControls.Get(mMouseCapture);
+		  // Draw control rects
 		  int controlSize = mControls.GetSize();
+		  if (mPlug->GetGUIResize() != NULL) controlSize -= 3;
 
-		  int slowMove = 1;
-		  if (liveEditingMod.R)
+		  for (int j = 1; j < controlSize; j++)
 		  {
-			  HideMouseCursor();
-			  slowMove = 4;
-		  }
+			  IControl* pControl = mControls.Get(j);
 
-		  liveSelectedRECT = *pControl->GetRECT();
-		  liveSelectedTargetRECT = *pControl->GetTargetRECT();
-		  liveControlNumber = mMouseCapture;
-
-		  if (mMouseCapture != lastLiveMouseCapture)
-		  {
-			  liveDifferenceX = mMouseX;
-			  liveDifferenceY = mMouseY;
-			  liveClickedRECT = liveSelectedRECT;
-			  liveClickedTargetRECT = liveSelectedTargetRECT;
-		  }
-		  
-		  IRECT drawArea;
-		  drawArea.L = liveClickedRECT.L + (mMouseX - liveDifferenceX) / slowMove;
-		  drawArea.T = liveClickedRECT.T + (mMouseY - liveDifferenceY) / slowMove;
-		  drawArea.R = liveClickedRECT.R + (mMouseX - liveDifferenceX) / slowMove;
-		  drawArea.B = liveClickedRECT.B + (mMouseY - liveDifferenceY) / slowMove;
-
-		  IRECT targetArea;
-		  targetArea.L = liveClickedRECT.L + (mMouseX - liveDifferenceX) / slowMove;
-		  targetArea.T = liveClickedRECT.T + (mMouseY - liveDifferenceY) / slowMove;
-		  targetArea.R = liveClickedRECT.R + (mMouseX - liveDifferenceX) / slowMove;
-		  targetArea.B = liveClickedRECT.B + (mMouseY - liveDifferenceY) / slowMove;
-
-		  // Snap to grid
-		  if (!liveEditingMod.A)
-		  {
-			  int gridL = (drawArea.L / liveGridSize) * liveGridSize;
-			  int gridT = (drawArea.T / liveGridSize) * liveGridSize;
-
-			  int diffL = gridL - drawArea.L;
-			  int diffT = gridT - drawArea.T;
-
-			  drawArea.L += diffL;
-			  drawArea.T += diffT;
-			  drawArea.R += diffL;
-			  drawArea.B += diffT;
-
-			  targetArea.L += diffL;
-			  targetArea.T += diffT;
-			  targetArea.R += diffL;
-			  targetArea.B += diffT;
-		  }
-		  
-		  if (liveEditingMod.S)
-		  {
-			  int snapSize = liveSnap + 1;
-
-			  int snapL = 0;
-			  int snapMinL = 999999999;
-			  int snapMaxL = -999999999;
-			  int prevsnapMinL = 999999999;
-			  int prevsnapMaxL = -999999999;
-
-			  int snapT = 0;
-			  int snapMinT = 999999999;
-			  int snapMaxT = -999999999;
-			  int prevsnapMinT = 999999999;
-			  int prevsnapMaxT = -999999999;
-
-			  bool didSnappedT = false;
-			  bool didSnappedL = false;
-
-			  IRECT lineMinL, lineMinT;
-			  IRECT lineMaxL, lineMaxT;
-			  IRECT lineL, lineT;
-
-			  for (int index = 0; index < controlSize; index++)
+			  // If control is hidden cross it with lines
+			  if (pControl->IsHidden())
 			  {
-				  if (index == mMouseCapture) continue;
+				  IRECT drawRECT = *pControl->GetRECT();
+				  WDL_String strHidden;
+				  strHidden.Set("Hidden");
+				  IText txtHidden(IPMIN(drawRECT.W() / 4, drawRECT.H()), &CONTROL_BOUNDS_COLOR);
+				  DrawIText(&txtHidden, strHidden.Get(), &drawRECT);
 
-				  IControl* pSnapControl = mControls.Get(index);
-				  IRECT tmpDrawArea = *pSnapControl->GetRECT();
-				  int tmpSnapL;
-				  IRECT tmpRECTL;
+				  DrawRect(&CONTROL_BOUNDS_COLOR, &drawRECT);
+			  }
+			  else
+				  DrawRect(&CONTROL_BOUNDS_COLOR, pControl->GetRECT());
+		  }
 
-				  int tmpDrawArea_L = tmpDrawArea.L;
-				  int tmpDrawArea_LM = tmpDrawArea.L + tmpDrawArea.W() / 2;
-				  int tmpDrawArea_R = tmpDrawArea.R;
-				  int tmpDrawArea_T = tmpDrawArea.T;
-				  int tmpDrawArea_TM = tmpDrawArea.T + tmpDrawArea.H() / 2;
-				  int tmpDrawArea_B = tmpDrawArea.B;
+		  WDL_String str;
+		  str.SetFormatted(32, "x: %i, y: %i", mMouseX, mMouseY);
+		  IText txt(20, &CONTROL_BOUNDS_COLOR);
+		  IRECT rect(Width() - 150, Height() - 20, Width(), Height());
+		  DrawIText(&txt, str.Get(), &rect);
 
-				  int drawArea_L = drawArea.L;
-				  int drawArea_LM = drawArea.L + drawArea.W() / 2;
-				  int drawArea_R = drawArea.R;
-				  int drawArea_T = drawArea.T;
-				  int drawArea_TM = drawArea.T + drawArea.H() / 2;
-				  int drawArea_B = drawArea.B;
+		  // Draw resizing handles
+		  int liveHandleSize = 8;
 
-				  // Find snap to L
-				  for (int j = 0; j < 9; j++)
-				  {
-					  if (j == 0) // L to L
-					  {
-						  tmpSnapL = tmpDrawArea_L - drawArea_L;
-						  tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_L, drawArea_TM);
-					  }
-					  if (j == 1) // L to LM
-					  {
-						  tmpSnapL = tmpDrawArea_L - drawArea_LM;
-						  tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
-					  }
-					  if (j == 2) // L to R
-					  {
-						  tmpSnapL = tmpDrawArea_L - drawArea_R;
-						  tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_R, drawArea_TM);
-					  }
-					  if (j == 3) // LM to L
-					  {
-						  tmpSnapL = tmpDrawArea_LM - drawArea_L;
-						  tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_L, drawArea_TM);
-					  }
-					  if (j == 4) // LM to LM
-					  {
-						  tmpSnapL = tmpDrawArea_LM - drawArea_LM;
-						  tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
-					  }
-					  if (j == 5) // LM to R
-					  {
-						  tmpSnapL = tmpDrawArea_LM - drawArea_R;
-						  tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_R, drawArea_TM);
-					  }
-					  if (j == 6) // R to L
-					  {
-						  tmpSnapL = tmpDrawArea_R - drawArea_L;
-						  tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_L, drawArea_TM);
-					  }
-					  if (j == 7) // R to LM
-					  {
-						  tmpSnapL = tmpDrawArea_R - drawArea_LM;
-						  tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
-					  }
-					  if (j == 8) // R to R
-					  {
-						  tmpSnapL = tmpDrawArea_R - drawArea_R;
-						  tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_R, drawArea_TM);
-					  }
+		  for (int j = 1; j < controlSize; j++)
+		  {
+			  IControl* pControl = mControls.Get(j);
 
-					  // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					  if (tmpSnapL < snapSize && tmpSnapL >= 0)
-					  {
-						  snapMinL = IPMIN(snapMinL, tmpSnapL);
+			  IRECT drawRECT = *pControl->GetRECT();
+			  IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
+			  FillTriangle(&CONTROL_BOUNDS_COLOR, handle.L, handle.B, handle.R, handle.B, handle.R, handle.T, 0);
+		  }
 
-						  if (snapMinL != prevsnapMinL)
-						  {
-							  lineMinL = tmpRECTL;
-						  }
-						  prevsnapMinL = snapMinL;
+		  bool overControlHandle = false;
+		  // Find if over control handle
+		  for (int j = 1; j < controlSize; j++)
+		  {
+			  IControl* pControl = mControls.Get(j);
 
-						  didSnappedL = true;
-					  }
-					  if (tmpSnapL > -snapSize && tmpSnapL <= 0)
-					  {
-						  snapMaxL = IPMAX(snapMaxL, tmpSnapL);
+			  IRECT drawRECT = *pControl->GetRECT();
+			  IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
 
-						  if (snapMaxL != prevsnapMaxL)
-						  {
-							  lineMaxL = tmpRECTL;
-						  }
-						  prevsnapMaxL = snapMaxL;
+			  if (drawRECT.Contains(mMouseX, mMouseY))
+			  {
+				  overControlHandle = handle.Contains(mMouseX, mMouseY);
+			  }
+		  }
 
-						  didSnappedL = true;
-					  }
-				  }
+		  // Change cursor when over handle
+		  if (overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+		  else SetCursor(LoadCursor(NULL, IDC_ARROW));
+
+		  if (liveMouseCapture > controlSize - 1) liveEditingMod.L = false;
+		  
+	      if (liveEditingMod.L)
+		  {
+			  IControl* pControl = mControls.Get(liveMouseCapture);
+
+			  liveSelectedRECT = *pControl->GetRECT();
+			  liveSelectedTargetRECT = *pControl->GetTargetRECT();
+			  liveControlNumber = liveMouseCapture;
+
+			  // Find where mouse was clicked
+			  if (liveMouseCapture != lastLiveMouseCapture)
+			  {
+				  liveClickedX = mMouseX;
+				  liveClickedY = mMouseY;
+				  liveClickedRECT = liveSelectedRECT;
+				  liveClickedTargetRECT = liveSelectedTargetRECT;
+
+				  IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
+				  liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
 			  }
 
-			  if (didSnappedL)
+			  // Change cursor when clicked on handle
+			  if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+			  else SetCursor(LoadCursor(NULL, IDC_ARROW));
+			  		 
+			  
+			  IRECT drawArea;
+			  if (!liveClickedOnHandle)
 			  {
-				  if (snapMinL <= abs(snapMaxL))
+				  drawArea.L = liveClickedRECT.L + (mMouseX - liveClickedX);
+				  drawArea.T = liveClickedRECT.T + (mMouseY - liveClickedY);
+				  drawArea.R = liveClickedRECT.R + (mMouseX - liveClickedX);
+				  drawArea.B = liveClickedRECT.B + (mMouseY - liveClickedY);
+			  }
+			  else
+			  {
+				  drawArea.L = liveClickedRECT.L;
+				  drawArea.T = liveClickedRECT.T;
+				  drawArea.R = liveClickedRECT.R + (mMouseX - liveClickedX);
+				  drawArea.B = liveClickedRECT.B + (mMouseY - liveClickedY);
+			  }
+
+			  IRECT targetArea;
+			  if (!liveClickedOnHandle)
+			  {
+				  targetArea.L = liveClickedRECT.L + (mMouseX - liveClickedX);
+				  targetArea.T = liveClickedRECT.T + (mMouseY - liveClickedY);
+				  targetArea.R = liveClickedRECT.R + (mMouseX - liveClickedX);
+				  targetArea.B = liveClickedRECT.B + (mMouseY - liveClickedY);
+			  }
+			  else
+			  {
+				  targetArea.L = liveClickedRECT.L;
+				  targetArea.T = liveClickedRECT.T;
+				  targetArea.R = liveClickedRECT.R + (mMouseX - liveClickedX);
+				  targetArea.B = liveClickedRECT.B + (mMouseY - liveClickedY);
+			  }
+
+			  // Snap to grid
+			  if (!liveEditingMod.A)
+			  {
+				  if (!liveClickedOnHandle)
 				  {
-					  lineL = lineMinL;
-					  snapL = snapMinL;
+					  int gridL = (drawArea.L / liveGridSize) * liveGridSize;
+					  int gridT = (drawArea.T / liveGridSize) * liveGridSize;
+
+					  int diffL = gridL - drawArea.L;
+					  int diffT = gridT - drawArea.T;
+
+					  drawArea.L += diffL;
+					  drawArea.T += diffT;
+					  drawArea.R += diffL;
+					  drawArea.B += diffT;
+
+					  targetArea.L += diffL;
+					  targetArea.T += diffT;
+					  targetArea.R += diffL;
+					  targetArea.B += diffT;
 				  }
 				  else
 				  {
-					  lineL = lineMaxL;
-					  snapL = snapMaxL;
+					  int gridR = (drawArea.R / liveGridSize) * liveGridSize;
+					  int gridB = (drawArea.B / liveGridSize) * liveGridSize;
+
+					  int diffR = gridR - drawArea.R;
+					  int diffB = gridB - drawArea.B;
+
+					  drawArea.R += diffR;
+					  drawArea.B += diffB;
+
+					  targetArea.R += diffR;
+					  targetArea.B += diffB;
 				  }
-
-				  // Snap control
-				  if (snapL != 0)
-				  {
-					  drawArea.L = drawArea.L + snapL;
-					  drawArea.R = drawArea.R + snapL;
-
-					  targetArea.L = targetArea.L + snapL;
-					  targetArea.R = targetArea.R + snapL;
-				  }
-
-				  // Draw snap line
-				  LICE_DashedLine(mDrawBitmap, lineL.L, lineL.T, lineL.R + snapL, lineL.B, 2, 2,
-					  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A));
 			  }
 
-			  for (int index = 0; index < controlSize; index++)
+			  // Snap to other control
+			  if (liveEditingMod.C)
 			  {
-				  if (index == mMouseCapture) continue;
+				  int snapSize = liveSnap + 1;
 
-				  IControl* pSnapControl = mControls.Get(index);
-				  IRECT tmpDrawArea = *pSnapControl->GetRECT();
-				  int tmpSnapT;
-				  IRECT tmpRECTT;
+				  int snapL = 0;
+				  int snapMinL = 999999999;
+				  int snapMaxL = -999999999;
+				  int prevsnapMinL = 999999999;
+				  int prevsnapMaxL = -999999999;
 
-				  int tmpDrawArea_L = tmpDrawArea.L;
-				  int tmpDrawArea_LM = tmpDrawArea.L + tmpDrawArea.W() / 2;
-				  int tmpDrawArea_R = tmpDrawArea.R;
-				  int tmpDrawArea_T = tmpDrawArea.T;
-				  int tmpDrawArea_TM = tmpDrawArea.T + tmpDrawArea.H() / 2;
-				  int tmpDrawArea_B = tmpDrawArea.B;
+				  int snapT = 0;
+				  int snapMinT = 999999999;
+				  int snapMaxT = -999999999;
+				  int prevsnapMinT = 999999999;
+				  int prevsnapMaxT = -999999999;
 
-				  int drawArea_L = drawArea.L;
-				  int drawArea_LM = drawArea.L + drawArea.W() / 2;
-				  int drawArea_R = drawArea.R;
-				  int drawArea_T = drawArea.T;
-				  int drawArea_TM = drawArea.T + drawArea.H() / 2;
-				  int drawArea_B = drawArea.B;
+				  bool didSnappedT = false;
+				  bool didSnappedL = false;
 
-				  // Find snap to T
-				  for (int j = 0; j < 9; j++)
+				  IRECT lineMinL, lineMinT;
+				  IRECT lineMaxL, lineMaxT;
+				  IRECT lineL, lineT;
+
+				  for (int index = 0; index < controlSize; index++)
 				  {
-					  if (j == 0) // T to T
-					  {
-						  tmpSnapT = tmpDrawArea_T - drawArea_T;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_T);
-					  }
-					  if (j == 1) // T to TM
-					  {
-						  tmpSnapT = tmpDrawArea_T - drawArea_TM;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_TM);
-					  }
-					  if (j == 2) // T to B
-					  {
-						  tmpSnapT = tmpDrawArea_T - drawArea_B;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_B);
-					  }
-					  if (j == 3) // TM to T
-					  {
-						  tmpSnapT = tmpDrawArea_TM - drawArea_T;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_T);
-					  }
-					  if (j == 4) // TM to TM
-					  {
-						  tmpSnapT = tmpDrawArea_TM - drawArea_TM;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
-					  }
-					  if (j == 5) // TM to B
-					  {
-						  tmpSnapT = tmpDrawArea_TM - drawArea_B;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_B);
-					  }
-					  if (j == 6) // B to T
-					  {
-						  tmpSnapT = tmpDrawArea_B - drawArea_T;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_T);
-					  }
-					  if (j == 7) // B to TM
-					  {
-						  tmpSnapT = tmpDrawArea_B - drawArea_TM;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_TM);
-					  }
-					  if (j == 8) // B to B
-					  {
-						  tmpSnapT = tmpDrawArea_B - drawArea_B;
-						  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_B);
-					  }
+					  if (index == liveMouseCapture) continue;
 
-					  // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					  if (tmpSnapT < snapSize && tmpSnapT >= 0)
-					  {
-						  snapMinT = IPMIN(snapMinT, tmpSnapT);
+					  IControl* pSnapControl = mControls.Get(index);
+					  IRECT tmpDrawArea = *pSnapControl->GetRECT();
+					  int tmpSnapL;
+					  IRECT tmpRECTL;
 
-						  if (snapMinT != prevsnapMinT)
+					  int tmpDrawArea_L = tmpDrawArea.L;
+					  int tmpDrawArea_LM = tmpDrawArea.L + tmpDrawArea.W() / 2;
+					  int tmpDrawArea_R = tmpDrawArea.R;
+					  int tmpDrawArea_T = tmpDrawArea.T;
+					  int tmpDrawArea_TM = tmpDrawArea.T + tmpDrawArea.H() / 2;
+					  int tmpDrawArea_B = tmpDrawArea.B;
+
+					  int drawArea_L = drawArea.L;
+					  int drawArea_LM = drawArea.L + drawArea.W() / 2;
+					  int drawArea_R = drawArea.R;
+					  int drawArea_T = drawArea.T;
+					  int drawArea_TM = drawArea.T + drawArea.H() / 2;
+					  int drawArea_B = drawArea.B;
+
+					  // Find snap to L
+					  for (int j = 0; j < 9; j++)
+					  {
+						  if (liveClickedOnHandle)
 						  {
-							  lineMinT = tmpRECTT;
+							  if ((j / 3) * 3 == j) continue;
 						  }
-						  prevsnapMinT = snapMinT;
 
-						  didSnappedT = true;
-					  }
-					  if (tmpSnapT > -snapSize && tmpSnapT <= 0)
-					  {
-						  snapMaxT = IPMAX(snapMaxT, tmpSnapT);
-
-						  if (snapMaxT != prevsnapMaxT)
+						  if (j == 0) // L to L
 						  {
-							  lineMaxT = tmpRECTT;
+							  tmpSnapL = tmpDrawArea_L - drawArea_L;
+							  tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_L, drawArea_TM);
 						  }
-						  prevsnapMaxT = snapMaxL;
+						  if (j == 1) // L to LM
+						  {
+							  tmpSnapL = tmpDrawArea_L - drawArea_LM;
+							  tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						  }
+						  if (j == 2) // L to R
+						  {
+							  tmpSnapL = tmpDrawArea_L - drawArea_R;
+							  tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_R, drawArea_TM);
+						  }
+						  if (j == 3) // LM to L
+						  {
+							  tmpSnapL = tmpDrawArea_LM - drawArea_L;
+							  tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_L, drawArea_TM);
+						  }
+						  if (j == 4) // LM to LM
+						  {
+							  tmpSnapL = tmpDrawArea_LM - drawArea_LM;
+							  tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						  }
+						  if (j == 5) // LM to R
+						  {
+							  tmpSnapL = tmpDrawArea_LM - drawArea_R;
+							  tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_R, drawArea_TM);
+						  }
+						  if (j == 6) // R to L
+						  {
+							  tmpSnapL = tmpDrawArea_R - drawArea_L;
+							  tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_L, drawArea_TM);
+						  }
+						  if (j == 7) // R to LM
+						  {
+							  tmpSnapL = tmpDrawArea_R - drawArea_LM;
+							  tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						  }
+						  if (j == 8) // R to R
+						  {
+							  tmpSnapL = tmpDrawArea_R - drawArea_R;
+							  tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_R, drawArea_TM);
+						  }
 
-						  didSnappedT = true;
+						  // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+						  if (tmpSnapL < snapSize && tmpSnapL >= 0)
+						  {
+							  snapMinL = IPMIN(snapMinL, tmpSnapL);
+
+							  if (snapMinL != prevsnapMinL)
+							  {
+								  lineMinL = tmpRECTL;
+							  }
+							  prevsnapMinL = snapMinL;
+
+							  didSnappedL = true;
+						  }
+						  if (tmpSnapL > -snapSize && tmpSnapL <= 0)
+						  {
+							  snapMaxL = IPMAX(snapMaxL, tmpSnapL);
+
+							  if (snapMaxL != prevsnapMaxL)
+							  {
+								  lineMaxL = tmpRECTL;
+							  }
+							  prevsnapMaxL = snapMaxL;
+
+							  didSnappedL = true;
+						  }
 					  }
+				  }
+
+				  if (didSnappedL)
+				  {
+					  if (snapMinL <= abs(snapMaxL))
+					  {
+						  lineL = lineMinL;
+						  snapL = snapMinL;
+					  }
+					  else
+					  {
+						  lineL = lineMaxL;
+						  snapL = snapMaxL;
+					  }
+
+					  // Snap control
+					  if (snapL != 0)
+					  {
+						  if (!liveClickedOnHandle)
+						  {
+							  drawArea.L = drawArea.L + snapL;
+							  drawArea.R = drawArea.R + snapL;
+						  }
+						  else drawArea.R = drawArea.R + snapL;
+
+						  if (!liveClickedOnHandle)
+						  {
+							  targetArea.L = targetArea.L + snapL;
+							  targetArea.R = targetArea.R + snapL;
+						  }
+						  else targetArea.R = targetArea.R + snapL;
+					  }
+
+					  // Draw snap line
+					  LICE_DashedLine(mDrawBitmap, lineL.L, lineL.T, lineL.R + snapL, lineL.B, 2, 2,
+						  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A));
+				  }
+
+				  for (int index = 0; index < controlSize; index++)
+				  {
+					  if (index == liveMouseCapture) continue;
+
+					  IControl* pSnapControl = mControls.Get(index);
+					  IRECT tmpDrawArea = *pSnapControl->GetRECT();
+					  int tmpSnapT;
+					  IRECT tmpRECTT;
+
+					  int tmpDrawArea_L = tmpDrawArea.L;
+					  int tmpDrawArea_LM = tmpDrawArea.L + tmpDrawArea.W() / 2;
+					  int tmpDrawArea_R = tmpDrawArea.R;
+					  int tmpDrawArea_T = tmpDrawArea.T;
+					  int tmpDrawArea_TM = tmpDrawArea.T + tmpDrawArea.H() / 2;
+					  int tmpDrawArea_B = tmpDrawArea.B;
+
+					  int drawArea_L = drawArea.L;
+					  int drawArea_LM = drawArea.L + drawArea.W() / 2;
+					  int drawArea_R = drawArea.R;
+					  int drawArea_T = drawArea.T;
+					  int drawArea_TM = drawArea.T + drawArea.H() / 2;
+					  int drawArea_B = drawArea.B;
+
+					  // Find snap to T
+					  for (int j = 0; j < 9; j++)
+					  {
+						  if (liveClickedOnHandle)
+						  {
+							  if ((j / 3) * 3 == j) continue;
+						  }
+
+						  if (j == 0) // T to T
+						  {
+							  tmpSnapT = tmpDrawArea_T - drawArea_T;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_T);
+						  }
+						  if (j == 1) // T to TM
+						  {
+							  tmpSnapT = tmpDrawArea_T - drawArea_TM;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_TM);
+						  }
+						  if (j == 2) // T to B
+						  {
+							  tmpSnapT = tmpDrawArea_T - drawArea_B;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_B);
+						  }
+						  if (j == 3) // TM to T
+						  {
+							  tmpSnapT = tmpDrawArea_TM - drawArea_T;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_T);
+						  }
+						  if (j == 4) // TM to TM
+						  {
+							  tmpSnapT = tmpDrawArea_TM - drawArea_TM;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						  }
+						  if (j == 5) // TM to B
+						  {
+							  tmpSnapT = tmpDrawArea_TM - drawArea_B;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_B);
+						  }
+						  if (j == 6) // B to T
+						  {
+							  tmpSnapT = tmpDrawArea_B - drawArea_T;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_T);
+						  }
+						  if (j == 7) // B to TM
+						  {
+							  tmpSnapT = tmpDrawArea_B - drawArea_TM;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_TM);
+						  }
+						  if (j == 8) // B to B
+						  {
+							  tmpSnapT = tmpDrawArea_B - drawArea_B;
+							  tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_B);
+						  }
+
+						  // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+						  if (tmpSnapT < snapSize && tmpSnapT >= 0)
+						  {
+							  snapMinT = IPMIN(snapMinT, tmpSnapT);
+
+							  if (snapMinT != prevsnapMinT)
+							  {
+								  lineMinT = tmpRECTT;
+							  }
+							  prevsnapMinT = snapMinT;
+
+							  didSnappedT = true;
+						  }
+						  if (tmpSnapT > -snapSize && tmpSnapT <= 0)
+						  {
+							  snapMaxT = IPMAX(snapMaxT, tmpSnapT);
+
+							  if (snapMaxT != prevsnapMaxT)
+							  {
+								  lineMaxT = tmpRECTT;
+							  }
+							  prevsnapMaxT = snapMaxL;
+
+							  didSnappedT = true;
+						  }
+					  }
+				  }
+
+				  if (didSnappedT)
+				  {
+					  if (snapMinT <= abs(snapMaxT))
+					  {
+						  lineT = lineMinT;
+						  snapT = snapMinT;
+					  }
+					  else
+					  {
+						  lineT = lineMaxT;
+						  snapT = snapMaxT;
+					  }
+
+					  // Snap control
+					  if (snapT != 0)
+					  {
+						  if (!liveClickedOnHandle)
+						  {
+							  drawArea.T = drawArea.T + snapT;
+							  drawArea.B = drawArea.B + snapT;
+						  }
+						  else drawArea.B = drawArea.B + snapT;
+
+
+						  if (!liveClickedOnHandle)
+						  {
+							  targetArea.T = targetArea.T + snapT;
+							  targetArea.B = targetArea.B + snapT;
+						  }
+						  else targetArea.B = targetArea.B + snapT;
+					  }
+
+					  // Draw snap line
+					  LICE_DashedLine(mDrawBitmap, lineT.L, lineT.T, lineT.R, lineT.B + snapT, 2, 2,
+						  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A));
 				  }
 			  }
 
-			  if (didSnappedT)
-			  {
-				  if (snapMinT <= abs(snapMaxT))
-				  {
-					  lineT = lineMinT;
-					  snapT = snapMinT;
-				  }
-				  else
-				  {
-					  lineT = lineMaxT;
-					  snapT = snapMaxT;
-				  }
+			  pControl->SetDrawArea(drawArea);
+			  pControl->SetTargetArea(targetArea);
 
-				  // Snap control
-				  if (snapT != 0)
-				  {
-					  drawArea.T = drawArea.T + snapT;
-					  drawArea.B = drawArea.B + snapT;
-
-					  targetArea.T = targetArea.T + snapT;
-					  targetArea.B = targetArea.B + snapT;
-				  }
-
-				  // Draw snap line
-				  LICE_DashedLine(mDrawBitmap, lineT.L, lineT.T, lineT.R, lineT.B + snapT, 2, 2,
-					  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A));
-			  }
+			  liveSelectedRECT = drawArea;
 		  }
 
+		  lastLiveMouseCapture = liveMouseCapture;
+	  }
+
+	  if (liveToogleEditing)
+	  {
 		  if (liveGridSize > 1)
 		  {
 			  // Vertical Lines grid
@@ -1547,39 +1710,36 @@ bool IGraphics::Draw(IRECT* pR)
 					  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A), 0.17f);
 			  }
 		  }
+		  else
+		  {
+			  _LICE::LICE_FillRect(mDrawBitmap, 0, 0, Width(), Height(),
+				  LICE_RGBA(CONTROL_BOUNDS_COLOR.R, CONTROL_BOUNDS_COLOR.G, CONTROL_BOUNDS_COLOR.B, CONTROL_BOUNDS_COLOR.A), 0.11f);
+		  }
+		  
+		  // Print selected control
+		  WDL_String controlNumber;
+		  controlNumber.SetFormatted(100, "Control Pos: %i", liveControlNumber);
+		  IText txtControlNumber(17, &CONTROL_BOUNDS_COLOR);
+		  txtControlNumber.mAlign = IText::kAlignNear;
+		  IRECT rectControlNumber(4, 2, 150, 17);
+		  DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
 
-		  pControl->SetDrawArea(drawArea);
-		  pControl->SetTargetArea(targetArea);
+		  WDL_String controlPositionL;
+		  controlPositionL.SetFormatted(100, "L: %i, T: %i", liveSelectedRECT.L, liveSelectedRECT.T);
+		  IText txtControlPositionL(17, &CONTROL_BOUNDS_COLOR);
+		  txtControlPositionL.mAlign = IText::kAlignNear;
+		  IRECT rectControlPositionL(4, 20, 150, 37);
+		  DrawIText(&txtControlPositionL, controlPositionL.Get(), &rectControlPositionL);
 
-		  liveSelectedRECT = drawArea;
+		  WDL_String controlPositionR;
+		  controlPositionR.SetFormatted(100, "R: %i, B: %i", liveSelectedRECT.R, liveSelectedRECT.B);
+		  IText txtControlPositionR(17, &CONTROL_BOUNDS_COLOR);
+		  txtControlPositionR.mAlign = IText::kAlignNear;
+		  IRECT rectControlPositionR(4, 38, 150, 55);
+		  DrawIText(&txtControlPositionR, controlPositionR.Get(), &rectControlPositionR);
+
 	  }
-	  else
-	  {
-		  ShowMouseCursor();
-	  }
-
-	  lastLiveMouseCapture = mMouseCapture;
-	  
-	  // Print selected control
-	  WDL_String controlPosition;
-	  controlPosition.SetFormatted(100, "L: %i, T: %i, R: %i, B: %i",
-		  liveSelectedRECT.L, liveSelectedRECT.T, liveSelectedRECT.R, liveSelectedRECT.B);
-	  IText txtControlPosition(20, &CONTROL_BOUNDS_COLOR);
-	  txtControlPosition.mAlign = IText::kAlignNear;
-	  IRECT rectControlPosition(4, 22, 304, 42);
-	  DrawIText(&txtControlPosition, controlPosition.Get(), &rectControlPosition);
-
-	  WDL_String controlNumber;
-	  controlNumber.SetFormatted(100, "Control Number: %i", liveControlNumber);
-	  IText txtControlNumber(20, &CONTROL_BOUNDS_COLOR);
-	  txtControlNumber.mAlign = IText::kAlignNear;
-	  IRECT rectControlNumber(4, 0, 304, 20);
-	  DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
   }
-
-
-#endif
-
   return DrawScreen(pR);
 }
 
@@ -1591,7 +1751,14 @@ void IGraphics::SetStrictDrawing(bool strict)
 
 void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 {
-  liveEditingMod = *pMod;
+  int l = liveGetControlIdx(x, y);
+  if (l >= 0)
+  {
+	  liveMouseCapture = l;
+  }
+
+  liveEditingMod.L = pMod->L;
+
   ReleaseMouseCapture();
   int c = GetMouseControlIdx(x, y);
   if (c >= 0)
@@ -1640,20 +1807,22 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
       mPlug->BeginInformHostOfParamChange(paramIdx);
     }
         
-	if (liveEditing == true && liveEditingMod.C == false) pControl->OnMouseDown(x, y, pMod);
+	if (liveEditing == true && liveToogleEditing == false) pControl->OnMouseDown(x, y, pMod);
 	else if (liveEditing == false) pControl->OnMouseDown(x, y, pMod);
   }
 }
 
 void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 {
-  liveEditingMod = *pMod;
+  liveMouseCapture = -1;
+  liveEditingMod.L = pMod->L;
+
   int c = GetMouseControlIdx(x, y);
   mMouseCapture = mMouseX = mMouseY = -1;
   if (c >= 0)
   {
     IControl* pControl = mControls.Get(c);
-	if (liveEditing == true && liveEditingMod.C == false) pControl->OnMouseUp(x, y, pMod);
+	if (liveEditing == true && liveToogleEditing == false) pControl->OnMouseUp(x, y, pMod);
 	else if (liveEditing == false) pControl->OnMouseUp(x, y, pMod);
     pControl = mControls.Get(c); // needed if the mouse message caused a resize/rebuild
     int paramIdx = pControl->ParamIdx();
@@ -1699,6 +1868,10 @@ void IGraphics::OnMouseOut()
 
 void IGraphics::OnMouseDrag(int x, int y, IMouseMod* pMod)
 {
+	liveEditingMod.A = pMod->A;
+	liveEditingMod.C = pMod->C;
+	liveEditingMod.S = pMod->S;
+
   int c = mMouseCapture;
   if (c >= 0)
   {
@@ -1708,7 +1881,7 @@ void IGraphics::OnMouseDrag(int x, int y, IMouseMod* pMod)
     {
       mMouseX = x;
       mMouseY = y;
-	  if (liveEditing == true && liveEditingMod.C == false) mControls.Get(c)->OnMouseDrag(x, y, dX, dY, pMod);
+	  if (liveEditing == true && liveToogleEditing == false) mControls.Get(c)->OnMouseDrag(x, y, dX, dY, pMod);
 	  else if (liveEditing == false) mControls.Get(c)->OnMouseDrag(x, y, dX, dY, pMod);
     }
   }
@@ -1727,13 +1900,13 @@ bool IGraphics::OnMouseDblClick(int x, int y, IMouseMod* pMod)
       mMouseCapture = c;
       mMouseX = x;
       mMouseY = y;
-	  if (liveEditing == true && liveEditingMod.C == false) pControl->OnMouseDown(x, y, pMod);
+	  if (liveEditing == true && liveToogleEditing == false) pControl->OnMouseDown(x, y, pMod);
 	  else if (liveEditing == false) pControl->OnMouseDown(x, y, pMod);
       newCapture = true;
     }
     else
     {
-	  if (liveEditing == true && liveEditingMod.C == false) pControl->OnMouseDblClick(x, y, pMod);
+	  if (liveEditing == true && liveToogleEditing == false) pControl->OnMouseDblClick(x, y, pMod);
 	  else if (liveEditing == false) pControl->OnMouseDblClick(x, y, pMod);
     }
   }
@@ -1756,6 +1929,7 @@ void IGraphics::ReleaseMouseCapture()
 
 bool IGraphics::OnKeyDown(int x, int y, int key)
 {
+  liveKeyDown = key;
   int c = GetMouseControlIdx(x, y);
   if (c > 0)
     return mControls.Get(c)->OnKeyDown(x, y, key);
@@ -1801,6 +1975,44 @@ int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
   }
   return -1;
 }
+
+int IGraphics::liveGetControlIdx(int x, int y, bool mo)
+{
+	if (liveMouseCapture >= 0)
+	{
+		return liveMouseCapture;
+	}
+
+	bool allow; // this is so that mouseovers can still be called when a control is greyed out
+
+				// The BG is a control and will catch everything, so assume the programmer
+				// attached the controls from back to front, and return the frontmost match.
+	int i = mControls.GetSize() - 1;
+	IControl** ppControl = mControls.GetList() + i;
+	for (/* */; i >= 0; --i, --ppControl)
+	{
+		IControl* pControl = *ppControl;
+
+		if (mo)
+		{
+			if (pControl->GetMOWhenGrayed())
+				allow = true;
+			else
+				allow = !pControl->IsGrayed();
+		}
+		else
+		{
+			allow = !pControl->IsGrayed();
+		}
+
+		if (!pControl->IsHidden() && allow && pControl->IsHit(x, y))
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 
 int IGraphics::GetParamIdxForPTAutomation(int x, int y)
 {
