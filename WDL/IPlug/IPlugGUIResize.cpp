@@ -634,6 +634,7 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 	}
 
 	gui_scale_ratio = GetDoubleFromFile("guiscale");
+	mGraphics->UpdateGUIScaleRatioValue(gui_scale_ratio);
 
 	plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 	plugin_height = (int)(window_height_normalized * gui_scale_ratio);
@@ -675,6 +676,8 @@ void IPlugGUIResize::ResizeGraphics()
 	{
 		SetDoubleToFile("guiscale", gui_scale_ratio);
 	}
+
+	mGraphics->UpdateGUIScaleRatioValue(gui_scale_ratio);
 
 	// Set parameters
 	mPlug->GetParam(viewMode)->Set(current_view_mode);

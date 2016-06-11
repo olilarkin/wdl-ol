@@ -1291,6 +1291,8 @@ bool IGraphics::Draw(IRECT* pR)
 				else SetCursor(LoadCursor(NULL, IDC_ARROW));
 			}
 			
+			if (liveMouseCapture == 0) liveEditingMod.L = false;
+
 			if (liveEditingMod.L)
 			{
 				IControl* pControl = mControls.Get(liveMouseCapture);
