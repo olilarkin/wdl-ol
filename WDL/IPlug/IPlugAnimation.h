@@ -141,8 +141,8 @@ public:
 		// Set frame duration for startToEnd and endToStart
 		if (animation_last_state[position] != state)
 		{
-			if (state) animation_frame[position] = 0;
-			else animation_frame[position] = endToStartFrames;
+			if (state && animation_frame[position] < 0) animation_frame[position] = 0;
+			else if (!state && animation_frame[position] > endToStartFrames) animation_frame[position] = endToStartFrames;
 		}
 		animation_last_state[position] = state;
 

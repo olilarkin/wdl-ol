@@ -2,6 +2,7 @@
 #define __IPLUGBETTERGUIRESIZE__
 
 #include "IPlug_include_in_plug_hdr.h"
+#include "IPlugAnimation.h"
 #include <time.h>
 
 class IPlugBetterGUIResize : public IPlug
@@ -109,14 +110,8 @@ public:
 
 };
 
-class handleSelector : public IControl
+class handleSelector : public IControl, IPlugAnimation
 {
-private:
-	WDL_String scaling;
-	WDL_String resize;
-	IPlugGUIResize *GUIResize;
-	bool button = false;
-
 public:
 	handleSelector(IPlugBase* pPlug, IRECT pR)
 		: IControl(pPlug, pR)
@@ -148,6 +143,13 @@ public:
 		{
 			pGraphics->DrawIText(&mText, scaling.Get(), &mRECT);
 		}
+
+				
+		double animatePosition = Animation("animatePosition", button, false, 0, mRECT.W() - 50, 60, 60, animationFlag::_BezierSwiftMove, animationFlag::_BezierSwiftMove);
+		double animateHeight = 0;// = Animation("animateHeight", button, false, 0, 50, 10, 10, animationFlag::_BackEaseOut, animationFlag::_BackEaseIn);
+
+		pGraphics->FillIRect(&COLOR_BLACK, &IRECT(mRECT.L + (int)animatePosition, mRECT.T + 50, mRECT.L + 50 + (int)animatePosition, mRECT.B - 50 + (int)animateHeight), &mBlend);
+
 		return true;
 	}
 
@@ -162,5 +164,17 @@ public:
 
 		SetDirty();
 	}
+
+	bool IsDirty()
+	{ 
+		return mDirty || AnimationRequestDirty();
+	}
+
+
+private:
+	WDL_String scaling;
+	WDL_String resize;
+	IPlugGUIResize *GUIResize;
+	bool button = false;
 };
 #endif
