@@ -1,3 +1,5 @@
+#ifndef _IPLUGANIMATION_
+#define _IPLUGANIMATION_
 /*
 Youlean - IPlugAnimation - Adding easy animations to IPlug
 
@@ -21,9 +23,7 @@ appreciated but is not required.
 
 #include <vector>
 #include <algorithm>
-#include "Containers.h"
 #include <string>
-#include "IGraphics.h"
 
 
 #ifndef M_PI
@@ -33,6 +33,8 @@ appreciated but is not required.
 #ifndef M_PI_2
 #define M_PI_2     1.57079632679489661923132169164      // Pi/2 
 #endif
+
+#define SMOOTHSTEP(x) ((x) * (x) * (3 - 2 * (x)))
 
 /*
 Use this site to create custom bezier animations: https://matthewlein.com/ceaser/
@@ -108,9 +110,11 @@ public:
 	double Animation(const char* uniqueAnimationName, bool state, bool disableAnimation, double start, double end, int startToEndFrames, int endToStartFrames, 
 		animationFlag startToEnd = _LinearInterpolation, animationFlag endToStart = _LinearInterpolation);
 		
-	void DrawAnimationCurve_DEBUG(IGraphics* pGraphics, animationFlag flag, int size = 300, int x = 0, int y = 0);
+	//void DrawAnimationCurve_DEBUG(IGraphics* pGraphics, animationFlag flag, int size = 300, int x = 0, int y = 0);
 
 	void SetCustomBezier(double X1, double Y1, double X2, double Y2);
+
+	void UsingSmoothStep();
 	
 	bool AnimationRequestDirty();
 
@@ -207,4 +211,7 @@ private:
 	vector <int> animation_end_to_start_frames;
 
 	double x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0;
+	bool smooth_step = false;
 };
+
+#endif

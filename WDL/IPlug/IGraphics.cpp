@@ -1063,6 +1063,7 @@ bool IGraphics::IsDirty(IRECT* pR)
 	for (i = 0; i < n; ++i, ++ppControl)
 	{
 		IControl* pControl = *ppControl;
+		if (pControl->GetAnimation()->AnimationRequestDirty()) pControl->SetDirty();
 		if (pControl->IsDirty())
 		{
 			*pR = pR->Union(pControl->GetRECT());

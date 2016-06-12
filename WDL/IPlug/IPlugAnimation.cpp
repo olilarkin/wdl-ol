@@ -119,6 +119,7 @@ double IPlugAnimation::Animation(const char * uniqueAnimationName, bool state, b
 	return 0.0;
 }
 
+/*
 void IPlugAnimation::DrawAnimationCurve_DEBUG(IGraphics * pGraphics, animationFlag flag, int size, int x, int y)
 {
 	// Draw background
@@ -230,7 +231,7 @@ void IPlugAnimation::DrawAnimationCurve_DEBUG(IGraphics * pGraphics, animationFl
 
 	pGraphics->SetAllControlsDirty();
 }
-
+*/
 void IPlugAnimation::SetCustomBezier(double X1, double Y1, double X2, double Y2)
 {
 	x1 = X1;
@@ -238,6 +239,8 @@ void IPlugAnimation::SetCustomBezier(double X1, double Y1, double X2, double Y2)
 	x2 = X2;
 	y2 = Y2;
 }
+
+void IPlugAnimation::UsingSmoothStep() { smooth_step = true; }
 
 bool IPlugAnimation::AnimationRequestDirty()
 {
@@ -254,11 +257,14 @@ bool IPlugAnimation::AnimationRequestDirty()
 
 inline double IPlugAnimation::LinearInterpolate(double y1, double y2, double mu)
 {
+	smooth_step = false;
 	return(y1*(1 - mu) + y2*mu);
 }
 
 inline double IPlugAnimation::TransferFunction(double start, double end, double pos, animationFlag using_animation)
 {
+	if (smooth_step) pos = SMOOTHSTEP(pos);
+
 	switch (using_animation)
 	{
 	case _LinearInterpolation: return LinearInterpolate(start, end, pos); break;

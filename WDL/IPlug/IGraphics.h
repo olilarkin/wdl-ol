@@ -150,7 +150,7 @@ public:
 	void SetBitmapOversample(unsigned oversample) { bitmapOversample = oversample; }
 	void UpdateGUIScaleRatioValue(double scaleRatio) { guiScaleRatio = scaleRatio; }
 	//--------------------------------------------------------------------------------------------------------
-
+	
 	IPlugBase* GetPlug() { return mPlug; }
 
 	IBitmap* LoadPointerToBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);

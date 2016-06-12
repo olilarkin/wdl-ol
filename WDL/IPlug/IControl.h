@@ -3,6 +3,7 @@
 
 #include "IPlugBase.h"
 #include "IGraphics.h"
+#include "IPlugAnimation.h"
 
 // A control is anything on the GUI, it could be a static bitmap, or
 // something that moves or changes.  The control could manipulate
@@ -47,6 +48,9 @@ public:
   // This is used for GUI resize ----------------------------------------------------------------------------------------
   virtual void InitializeGUI(double guiScaleRatio) {}
   // --------------------------------------------------------------------------------------------------------------------
+
+  // Get animation object. 
+  IPlugAnimation* GetAnimation() { return &mAnimation; }
 
   // Ask the IGraphics object to open an edit box so the user can enter a value for this control.
   void PromptUserInput();
@@ -142,6 +146,9 @@ protected:
   IControl* mValDisplayControl;
   IControl* mNameDisplayControl;
   WDL_String mTooltip;
+
+  private:
+	  IPlugAnimation mAnimation;
 };
 
 enum EDirection { kVertical, kHorizontal };
