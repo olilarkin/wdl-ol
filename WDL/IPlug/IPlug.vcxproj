@@ -265,6 +265,7 @@
     <ClInclude Include="IParam.h" />
     <ClInclude Include="IPlugAnimation.h" />
     <ClInclude Include="IPlugBase.h" />
+    <ClInclude Include="IPlugGUILiveEdit.h" />
     <ClInclude Include="IPlugGUIResize.h" />
     <ClInclude Include="IPlugOSDetect.h" />
     <ClInclude Include="IPlugStructs.h" />

@@ -3,6 +3,7 @@
 #include "IGraphics.h"
 #include "IControl.h"
 #include "IPlugGUIResize.h"
+#include "IPlugGUILiveEdit.h"
 #endif
 #include <math.h>
 #include <stdio.h>
@@ -20,6 +21,8 @@
 #endif
 
 const double DEFAULT_SAMPLE_RATE = 44100.0;
+
+IPlugGUILiveEdit liveEdit1;
 
 template <class SRC, class DEST>
 void CastCopy(DEST* pDest, SRC* pSrc, int n)
@@ -230,6 +233,9 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 {
   if (pGraphics)
   {
+	  // Load control positions from file if user was live editing the GUI
+	 // liveEdit1.LoadIRECTsFromFile(this, pGraphics, "edited");
+
 	  if (GetGUIResize() != NULL)
 	  {
 		  // Here we are attaching our GUI resize control.
@@ -246,6 +252,9 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
     
     pGraphics->PrepDraw();
     mGraphics = pGraphics;
+
+	// Load control positions from file if user was live editing the GUI
+	liveEdit1.LoadIRECTsFromFile(this, pGraphics, "edited");
   }
 }
 #endif

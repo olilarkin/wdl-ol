@@ -3,6 +3,7 @@
 #include "IControl.h"
 #include "resource.h"
 
+
 const int kNumPrograms = 2;
 
 enum EParams
@@ -42,7 +43,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   AttachGUIResize(new IPlugGUIResize(this, pGraphics, true, 16, 16));
 
   // Enable resizing only one side control
-  GetGUIResize()->UseOneSideResizing(5, 5, horisontalAndVerticalResizing);
+  GetGUIResize()->UseOneSideResizing(5, 5, justHorisontalResizing);
 
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
@@ -97,11 +98,13 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 50 + 200, 150 + 25, 80 + 200), "defaultView", defaultView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", hugeView));
 
-  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
+  //pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
+  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 400, 600)));
   // --------------------------------------------------------------------------------------------------------------------------
   
   AttachGraphics(pGraphics);
   pGraphics->ShowControlBounds(true);
+  pGraphics->LiveEditing(true, 18);
   
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
@@ -119,10 +122,10 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because layout is separate for every view
 	if (viewMode == defaultView)
 	{
-		GetGUIResize()->MoveControl(grayKnob, 50.0, 450.0);
-		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
-		GetGUIResize()->MoveControl(customControl, 600, 0);
-		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
+		//GetGUIResize()->MoveControl(grayKnob, 50.0, 450.0);
+		//GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
+		//GetGUIResize()->MoveControl(customControl, 600, 0);
+		//GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
 	}
 
 	if (viewMode == miniView)
