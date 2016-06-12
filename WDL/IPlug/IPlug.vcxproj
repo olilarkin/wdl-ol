@@ -249,6 +249,7 @@
     <ClCompile Include="IGraphics.cpp" />
     <ClCompile Include="IGraphicsWin.cpp" />
     <ClCompile Include="IParam.cpp" />
+    <ClCompile Include="IPlugAnimation.cpp" />
     <ClCompile Include="IPlugBase.cpp" />
     <ClCompile Include="IPlugGUIResize.cpp" />
     <ClCompile Include="IPlugStructs.cpp" />
