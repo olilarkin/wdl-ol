@@ -1,4 +1,5 @@
 #include "IPlugAnimation.h"
+#include "IGraphics.h"
 
 double IPlugAnimation::Animation(const char * uniqueAnimationName, bool state, bool disableAnimation, double start, double end, int startToEndFrames, int endToStartFrames, animationFlag startToEnd, animationFlag endToStart)
 {
@@ -119,7 +120,7 @@ double IPlugAnimation::Animation(const char * uniqueAnimationName, bool state, b
 	return 0.0;
 }
 
-/*
+
 void IPlugAnimation::DrawAnimationCurve_DEBUG(IGraphics * pGraphics, animationFlag flag, int size, int x, int y)
 {
 	// Draw background
@@ -231,7 +232,7 @@ void IPlugAnimation::DrawAnimationCurve_DEBUG(IGraphics * pGraphics, animationFl
 
 	pGraphics->SetAllControlsDirty();
 }
-*/
+
 void IPlugAnimation::SetCustomBezier(double X1, double Y1, double X2, double Y2)
 {
 	x1 = X1;

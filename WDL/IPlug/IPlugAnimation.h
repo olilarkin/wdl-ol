@@ -24,7 +24,7 @@ appreciated but is not required.
 #include <vector>
 #include <algorithm>
 #include <string>
-
+#include "IPlugBase.h"
 
 #ifndef M_PI
 #define M_PI       3.14159265358979323846264338328      // Pi 
@@ -110,7 +110,7 @@ public:
 	double Animation(const char* uniqueAnimationName, bool state, bool disableAnimation, double start, double end, int startToEndFrames, int endToStartFrames, 
 		animationFlag startToEnd = _LinearInterpolation, animationFlag endToStart = _LinearInterpolation);
 		
-	//void DrawAnimationCurve_DEBUG(IGraphics* pGraphics, animationFlag flag, int size = 300, int x = 0, int y = 0);
+	void DrawAnimationCurve_DEBUG(IGraphics* pGraphics, animationFlag flag, int size = 300, int x = 0, int y = 0);
 
 	void SetCustomBezier(double X1, double Y1, double X2, double Y2);
 
