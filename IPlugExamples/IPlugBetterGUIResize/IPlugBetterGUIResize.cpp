@@ -97,7 +97,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 50 + 200, 150 + 25, 80 + 200), "defaultView", defaultView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", hugeView));
 
-  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
+  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 400, 550)));
   // --------------------------------------------------------------------------------------------------------------------------
   
   AttachGraphics(pGraphics);
