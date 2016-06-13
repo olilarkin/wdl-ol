@@ -66,9 +66,9 @@ public:
   void SetTextEntryLength(int len) { mTextEntryLength = len;  }
   void SetText(IText* txt) { mText = *txt; }
   IRECT* GetRECT() { return &mRECT; }       // The draw area for this control.
-  void SetDrawArea(IRECT pR) { mRECT = pR; }
+  void SetDrawRECT(IRECT pR) { mRECT = pR; }
   IRECT* GetTargetRECT() { return &mTargetRECT; } // The mouse target area (default = draw area).
-  void SetTargetArea(IRECT pR) { mTargetRECT = pR; }
+  void SetTargetRECT(IRECT pR) { mTargetRECT = pR; }
   virtual void TextFromTextEntry( const char* txt ) { return; } // does nothing by default
   
   virtual void Hide(bool hide);

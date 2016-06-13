@@ -431,7 +431,7 @@ void IPlugGUIResize::MoveControl(int index, double x, double y, resizeFlag flag)
 		double drawAreaH = (double)pControl->GetRECT()->H();
 
 		DRECT drawArea = DRECT(x_relative, y_relative, x_relative + drawAreaW, y_relative + drawAreaH);
-		pControl->SetDrawArea(DRECT_to_IRECT(&drawArea));
+		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
 
 		double org_draw_width = layout_container[current_view_mode].org_draw_area[index].W();
 		double org_draw_height = layout_container[current_view_mode].org_draw_area[index].H();
@@ -449,7 +449,7 @@ void IPlugGUIResize::MoveControl(int index, double x, double y, resizeFlag flag)
 		double targetAreaH = (double)pControl->GetTargetRECT()->H();
 
 		DRECT targetArea = DRECT(x_relative, y_relative, x_relative + targetAreaW, y_relative + targetAreaH);
-		pControl->SetTargetArea(DRECT_to_IRECT(&targetArea));
+		pControl->SetTargetRECT(DRECT_to_IRECT(&targetArea));
 
 		double org_target_width = layout_container[current_view_mode].org_draw_area[index].W();
 		double org_target_height = layout_container[current_view_mode].org_draw_area[index].H();
@@ -475,7 +475,7 @@ void IPlugGUIResize::MoveControlRightEdge(int index, double R, resizeFlag flag)
 		double drawAreaB = (double)pControl->GetRECT()->B;
 
 		DRECT drawArea = DRECT(drawAreaL, drawAreaT, R_relative, drawAreaB);
-		pControl->SetDrawArea(DRECT_to_IRECT(&drawArea));
+		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
 
 		layout_container[current_view_mode].org_draw_area[index].R = R;
 	}
@@ -487,7 +487,7 @@ void IPlugGUIResize::MoveControlRightEdge(int index, double R, resizeFlag flag)
 		double targetAreaB = (double)pControl->GetTargetRECT()->B;
 
 		DRECT targetArea = DRECT(targetAreaL, targetAreaT, R_relative, targetAreaB);
-		pControl->SetTargetArea(DRECT_to_IRECT(&targetArea));
+		pControl->SetTargetRECT(DRECT_to_IRECT(&targetArea));
 
 		layout_container[current_view_mode].org_target_area[index].R = R;
 	}
@@ -506,7 +506,7 @@ void IPlugGUIResize::MoveControlBottomEdge(int index, double B, resizeFlag flag)
 		double drawAreaT = (double)pControl->GetRECT()->T;
 
 		DRECT drawArea = DRECT(drawAreaL, drawAreaT, drawAreaR, B_relative);
-		pControl->SetDrawArea(DRECT_to_IRECT(&drawArea));
+		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
 
 		layout_container[current_view_mode].org_draw_area[index].B = B;
 
@@ -519,7 +519,7 @@ void IPlugGUIResize::MoveControlBottomEdge(int index, double B, resizeFlag flag)
 		double targetAreaT = (double)pControl->GetTargetRECT()->T;
 
 		DRECT targetArea = DRECT(targetAreaL, targetAreaT, targetAreaR, B_relative);
-		pControl->SetTargetArea(DRECT_to_IRECT(&targetArea));
+		pControl->SetTargetRECT(DRECT_to_IRECT(&targetArea));
 
 		layout_container[current_view_mode].org_target_area[index].B = B;
 	}
@@ -542,8 +542,8 @@ void IPlugGUIResize::ResizeControlRects()
 	{
 		// This updates draw and control rect
 		IControl* pControl = mGraphics->GetControl(i);
-		pControl->SetDrawArea(ResizeIRECT(&layout_container[current_view_mode].org_draw_area[i], gui_scale_ratio, gui_scale_ratio));
-		pControl->SetTargetArea(ResizeIRECT(&layout_container[current_view_mode].org_target_area[i], gui_scale_ratio, gui_scale_ratio));
+		pControl->SetDrawRECT(ResizeIRECT(&layout_container[current_view_mode].org_draw_area[i], gui_scale_ratio, gui_scale_ratio));
+		pControl->SetTargetRECT(ResizeIRECT(&layout_container[current_view_mode].org_target_area[i], gui_scale_ratio, gui_scale_ratio));
 	}
 
 	// Keeps one side handle above or at minimum size
@@ -558,15 +558,15 @@ void IPlugGUIResize::ResizeControlRects()
 		if (horisontalControl->GetTargetRECT()->W() < one_side_handle_min_size)
 		{
 			IRECT rect = IRECT(horisontalControl->GetTargetRECT()->R - one_side_handle_min_size, 0, horisontalControl->GetTargetRECT()->R, horisontalControl->GetTargetRECT()->B);
-			horisontalControl->SetDrawArea(rect);
-			horisontalControl->SetTargetArea(rect);
+			horisontalControl->SetDrawRECT(rect);
+			horisontalControl->SetTargetRECT(rect);
 		}
 
 		if (verticalControl->GetTargetRECT()->H() < one_side_handle_min_size)
 		{
 			IRECT rect = IRECT(0, verticalControl->GetTargetRECT()->B - one_side_handle_min_size, verticalControl->GetTargetRECT()->R, verticalControl->GetTargetRECT()->B);
-			verticalControl->SetDrawArea(rect);
-			verticalControl->SetTargetArea(rect);
+			verticalControl->SetDrawRECT(rect);
+			verticalControl->SetTargetRECT(rect);
 		}
 	}
 
@@ -838,8 +838,8 @@ void IPlugGUIResize::OnMouseDown(int x, int y, IMouseMod * pMod)
 void IPlugGUIResize::ResizeBackground()
 {
 	// Resize background to plugin width/height
-	mGraphics->GetControl(0)->SetDrawArea(IRECT(0, 0, plugin_width, plugin_height));
-	mGraphics->GetControl(0)->SetTargetArea(IRECT(0, 0, plugin_width, plugin_height));
+	mGraphics->GetControl(0)->SetDrawRECT(IRECT(0, 0, plugin_width, plugin_height));
+	mGraphics->GetControl(0)->SetTargetRECT(IRECT(0, 0, plugin_width, plugin_height));
 }
 
 void IPlugGUIResize::OnMouseUp(int x, int y, IMouseMod * pMod)

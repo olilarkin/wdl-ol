@@ -1,5 +1,4 @@
 #include "IGraphics.h"
-
 #include "IPlugGUILiveEdit.h"
 
 #define DEFAULT_FPS 120
@@ -786,6 +785,8 @@ void IGraphics::PrepDraw()
 {
 	mDrawBitmap = new LICE_SysBitmap(Width(), Height());
 	mTmpBitmap = new LICE_MemBitmap();
+
+	liveEdit.StoreDefaults(this);
 }
 
 bool IGraphics::DrawBitmap(IBitmap* pIBitmap, IRECT* pDest, int srcX, int srcY, const IChannelBlend* pBlend)
@@ -1219,6 +1220,7 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 	}
 
 	liveEditingMod.L = pMod->L;
+	liveEditingMod.R = pMod->R;
 	liveEditingMod.A = pMod->A;
 	liveEditingMod.C = pMod->C;
 	liveEditingMod.S = pMod->S;
@@ -1280,6 +1282,7 @@ void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 {
 	liveMouseCapture = -1;
 	liveEditingMod.L = pMod->L;
+	liveEditingMod.R = pMod->R;
 	liveEditingMod.A = pMod->A;
 	liveEditingMod.C = pMod->C;
 	liveEditingMod.S = pMod->S;
@@ -1398,6 +1401,7 @@ void IGraphics::ReleaseMouseCapture()
 
 bool IGraphics::OnKeyDown(int x, int y, int key)
 {
+	if (liveEditing == true && key == 19) SetAllControlsDirty();
 	liveKeyDown = key;
 	int c = GetMouseControlIdx(x, y);
 	if (c > 0)
@@ -1474,7 +1478,7 @@ int IGraphics::liveGetControlIdx(int x, int y, bool mo)
 			allow = !pControl->IsGrayed();
 		}
 
-		if (!pControl->IsHidden() && allow && pControl->IsHit(x, y))
+		if (pControl->IsHit(x, y)) //(!pControl->IsHidden() && allow && pControl->IsHit(x, y))
 		{
 			return i;
 		}

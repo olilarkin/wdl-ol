@@ -19,8 +19,15 @@ appreciated but is not required.
 
 */
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <typeinfo>
 #include "IControl.h"
 #include "IGraphics.h"
+
+using namespace std;
 
 class IPlugGUILiveEdit
 {
@@ -33,12 +40,11 @@ public:
 		int* mMouseX, int* mMouseY, int width, int height, double guiScaleRatio)
 	{
 		// Moving controls --------------------------------------------------------------------
-		pGraphics->SetAllControlsDirty();
-
+	
 		if (pPlug->GetGUIResize() != NULL) liveScaledGridSize = int((double)*liveGridSize * guiScaleRatio);
 		else liveScaledGridSize = *liveGridSize;
 
-
+		
 		// Toogle live editing
 		if (*liveToogleEditing)
 		{
@@ -57,9 +63,29 @@ public:
 			}
 		}
 
+		// Toogle grid view
+		if (drawGridToogle)
+		{
+			if (*liveKeyDown == 21)
+			{
+				drawGridToogle = false;
+				*liveKeyDown = -1;
+			}
+		}
+		else
+		{
+			if (*liveKeyDown == 21)
+			{
+				drawGridToogle = true;
+				*liveKeyDown = -1;
+			}
+		}
+
 		// If mouse was clicked
 		if (*liveToogleEditing)
 		{
+			pGraphics->SetAllControlsDirty();
+
 			// Draw control rects
 			int controlSize = pControls->GetSize();
 
@@ -79,18 +105,34 @@ public:
 					IRECT drawRECT = *pControl->GetRECT();
 					WDL_String strHidden;
 					strHidden.Set("Hidden");
-					IText txtHidden(IPMIN(drawRECT.W() / 4, drawRECT.H()), &EDIT_COLOR);
+					IText txtHidden(IPMIN(drawRECT.W() / 4, drawRECT.H()), &EDIT_COLOR, defaultFont);
 					pGraphics->DrawIText(&txtHidden, strHidden.Get(), &drawRECT);
 
 					pGraphics->DrawRect(&EDIT_COLOR, &drawRECT);
 				}
 				else
-					pGraphics->DrawRect(&EDIT_COLOR, pControl->GetRECT());
+				{
+					IRECT drawRECT = *pControl->GetRECT();
+					//pGraphics->DrawRect(&EDIT_COLOR, pControl->GetRECT());
+
+					// T
+					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.T, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+					//B
+					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.B, drawRECT.R, drawRECT.B, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+					//L
+					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.L, drawRECT.B, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+					//R
+					LICE_DashedLine(pDrawBitmap, drawRECT.R, drawRECT.T, drawRECT.R, drawRECT.B, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+				}
 			}
 
 			WDL_String str;
 			str.SetFormatted(32, "x: %i, y: %i", *mMouseX, *mMouseY);
-			IText txt(20, &EDIT_COLOR);
+			IText txt(20, &EDIT_COLOR, defaultFont);
 			IRECT rect(width - 150, height - 20, width, height);
 			pGraphics->DrawIText(&txt, str.Get(), &rect);
 
@@ -128,7 +170,6 @@ public:
 				else SetCursor(LoadCursor(NULL, IDC_ARROW));
 			}
 
-			if (*liveMouseCapture == 0) liveEditingMod->L = false;
 
 			if (liveEditingMod->L)
 			{
@@ -536,8 +577,12 @@ public:
 						}
 					}
 
-					pControl->SetDrawArea(drawArea);
-					pControl->SetTargetArea(targetArea);
+					// Prevent moving background
+					if (liveControlNumber > 0)
+					{
+						pControl->SetDrawRECT(drawArea);
+						pControl->SetTargetRECT(targetArea);
+					}
 
 					liveSelectedRECT = drawArea;
 				}
@@ -548,31 +593,12 @@ public:
 
 		if (*liveToogleEditing)
 		{
-			if (liveScaledGridSize > 1)
-			{
-				// Vertical Lines grid
-				for (int i = 0; i < width; i += liveScaledGridSize)
-				{
-					LICE_Line(pDrawBitmap, i, 0, i, height,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.17f);
-				}
+			// Outline selected rect
+			if (liveControlNumber > 0) pGraphics->DrawRect(&EDIT_COLOR, pControls->Get(liveControlNumber)->GetRECT());
 
-				// Horisontal Lines grid
-				for (int i = 0; i < height; i += liveScaledGridSize)
-				{
-					LICE_Line(pDrawBitmap, 0, i, width, i,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.17f);
-				}
-			}
-			else
-			{
-				LICE_FillRect(pDrawBitmap, 0, 0, width, height,
-					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.11f);
-			}
-
+			if (drawGridToogle) DrawGrid(pDrawBitmap, width, height);
 
 			// Check if gui resize is active, if so scale out rect
-
 			IRECT printRECT;
 			if (pPlug->GetGUIResize() != NULL)
 			{
@@ -587,30 +613,27 @@ public:
 			}
 
 			// Print selected control
+			int textSize = 15;
 			WDL_String controlNumber;
-			controlNumber.SetFormatted(100, "Control Pos: %i", liveControlNumber);
-			IText txtControlNumber(17, &EDIT_COLOR);
-			txtControlNumber.mAlign = IText::kAlignNear;
-			IRECT rectControlNumber(4, 2, 150, 17);
-			pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
+			controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
+			IText txtControlNumber(textSize, &EDIT_COLOR, defaultFont, IText::kStyleNormal, IText::kAlignNear, 0, IText::kQualityClearType);
+			IRECT textRect;
+			if (liveControlNumber > 0) pGraphics->MeasureIText(&txtControlNumber, controlNumber.Get(), &textRect);
+			IRECT rectControlNumber(liveSelectedRECT.L, liveSelectedRECT.T - textSize, liveSelectedRECT.L + textRect.R, liveSelectedRECT.T);
 
-			WDL_String controlPositionL;
-			controlPositionL.SetFormatted(100, "L: %i, T: %i", printRECT.L, printRECT.T);
-			IText txtControlPositionL(17, &EDIT_COLOR);
-			txtControlPositionL.mAlign = IText::kAlignNear;
-			IRECT rectControlPositionL(4, 20, 150, 37);
-			pGraphics->DrawIText(&txtControlPositionL, controlPositionL.Get(), &rectControlPositionL);
+			if (rectControlNumber.T < 0)
+			{
+				rectControlNumber.T = liveSelectedRECT.B;
+				rectControlNumber.B = liveSelectedRECT.B + textSize;
+			}
 
-			WDL_String controlPositionR;
-			controlPositionR.SetFormatted(100, "R: %i, B: %i", printRECT.R, printRECT.B);
-			IText txtControlPositionR(17, &EDIT_COLOR);
-			txtControlPositionR.mAlign = IText::kAlignNear;
-			IRECT rectControlPositionR(4, 38, 150, 55);
-			pGraphics->DrawIText(&txtControlPositionR, controlPositionR.Get(), &rectControlPositionR);
+			if (liveControlNumber > 0) pGraphics->FillIRect(&controlTextBackgroundColor, &rectControlNumber);
+			if (liveControlNumber > 0) pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
+			
+			if (liveEditingMod->R) DoPopupMenu(pGraphics, *mMouseX, *mMouseY, guiScaleRatio);
 
-
-			// Write to file all controls IRECTs
-			BackupIRECTs(pPlug, pGraphics, "edited", guiScaleRatio);
+			// Write to file
+			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio);
 		}
 	}
 
@@ -759,8 +782,8 @@ public:
 			{
 				if (targetRECT.L >= 0 && targetRECT.T >= 0 && targetRECT.R >= 0 && targetRECT.B >= 0)
 				{
-					pControl->SetDrawArea(drawRECT);
-					pControl->SetTargetArea(targetRECT);
+					pControl->SetDrawRECT(drawRECT);
+					pControl->SetTargetRECT(targetRECT);
 				}
 			}
 		}
@@ -776,11 +799,181 @@ public:
 		return GetPrivateProfileInt(category, variable_name, -1, "C:/LiveOut.txt");
 	}
 
+	void WriteToTextFile(const char* data)
+	{
+		ofstream myfile;
+		myfile.open(".\\LiveEditLayout.h");
+		myfile << data;
+		myfile.close();
+	}
+
+	void CreateLayoutCode(IPlugBase* pPlug, IGraphics* pGraphics, double guiScaleRatio)
+	{
+		string code;
+
+		code = "// Do not edit. All of this is generated automatically \n"
+			"// Copyright Youlean 2016 \n \n"
+			"#include \"IGraphics.h\" \n \n"
+			"class LiveEditLayout \n"
+			"{ \n"
+			"public: \n"
+			"	LiveEditLayout() {} \n \n"
+			"	~LiveEditLayout() {} \n \n"
+			"	void SetControlPositions(IGraphics* pGraphics) \n"
+			"	{ \n";
+
+		// Write all controls positions
+		int controlSize = pGraphics->GetNControls();
+		if (pPlug->GetGUIResize() != NULL) controlSize -= 3;
+
+		for (int i = 1; i < controlSize; i++)
+		{
+			IControl* pControl = pGraphics->GetControl(i);
+			IRECT drawRECT = *pControl->GetRECT();
+			IRECT targetRECT = *pControl->GetTargetRECT();
+
+			if (pPlug->GetGUIResize() != NULL)
+			{
+				drawRECT.L = int((double)drawRECT.L * guiScaleRatio);
+				drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
+				drawRECT.R = int((double)drawRECT.R * guiScaleRatio);
+				drawRECT.B = int((double)drawRECT.B * guiScaleRatio);
+
+				targetRECT.L = int((double)targetRECT.L * guiScaleRatio);
+				targetRECT.T = int((double)targetRECT.T * guiScaleRatio);
+				targetRECT.R = int((double)targetRECT.R * guiScaleRatio);
+				targetRECT.B = int((double)targetRECT.B * guiScaleRatio);
+			}
+
+			WDL_String drawValue, targetValue, hiddenValue;
+
+			hiddenValue.SetFormatted(128, "		pGraphics->GetControl(%i)->Hide(", i);
+			if (pControl->IsHidden()) hiddenValue.Append("true");
+			else hiddenValue.Append("false");
+			hiddenValue.Append("); \n");
+			code.append(hiddenValue.Get());
+
+			drawValue.SetFormatted(128, "		pGraphics->GetControl(%i)->SetDrawRECT(IRECT(%i, %i, %i, %i)); \n", i, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B);
+			code.append(drawValue.Get());
+
+			targetValue.SetFormatted(128, "		pGraphics->GetControl(%i)->SetTargetRECT(IRECT(%i, %i, %i, %i)); \n", i, targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B);
+			code.append(targetValue.Get());
+
+			code.append("\n");
+		}
+
+		code.append("	} \n}; ");
+
+		WriteToTextFile(code.c_str());
+	}
+
+	void DrawGrid(LICE_IBitmap* pDrawBitmap, int width, int height)
+	{
+		if (liveScaledGridSize > 1)
+		{
+			// Vertical Lines grid
+			for (int i = 0; i < width; i += liveScaledGridSize)
+			{
+				LICE_Line(pDrawBitmap, i, 0, i, height,
+					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.17f);
+			}
+
+			// Horisontal Lines grid
+			for (int i = 0; i < height; i += liveScaledGridSize)
+			{
+				LICE_Line(pDrawBitmap, 0, i, width, i,
+					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.17f);
+			}
+		}
+		else
+		{
+			LICE_FillRect(pDrawBitmap, 0, 0, width, height,
+				LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.11f);
+		}
+	}
+
+	void DoPopupMenu(IGraphics* pGraphics, int x, int y, double guiScaleRatio)
+	{
+		IPopupMenu menu;
+		
+		// Item 0
+		menu.AddItem("Reset Position/Size");
+
+		// Item 1
+		if (pGraphics->GetControl(liveControlNumber)->IsHidden()) menu.AddItem("Show Control");
+		else menu.AddItem("Hide Control");
+
+		menu.AddSeparator();
+
+		// Item 3
+		if (drawGridToogle) menu.AddItem("Hide Grid");
+		else menu.AddItem("Show Grid");
+
+		if (pGraphics->CreateIPopupMenu(&menu, x, y))
+		{
+			int itemChosen = menu.GetChosenItemIdx();
+			
+			if (itemChosen == 0)
+			{
+				if (liveControlNumber > 0)
+				{
+					IRECT drawRECT;
+					IRECT targetRECT;
+
+					drawRECT.L = int((double)default_draw_rect[liveControlNumber].L * guiScaleRatio);
+					drawRECT.T = int((double)default_draw_rect[liveControlNumber].T * guiScaleRatio);
+					drawRECT.R = int((double)default_draw_rect[liveControlNumber].R * guiScaleRatio);
+					drawRECT.B = int((double)default_draw_rect[liveControlNumber].B * guiScaleRatio);
+
+					targetRECT.L = int((double)default_terget_rect[liveControlNumber].L * guiScaleRatio);
+					targetRECT.T = int((double)default_terget_rect[liveControlNumber].T * guiScaleRatio);
+					targetRECT.R = int((double)default_terget_rect[liveControlNumber].R * guiScaleRatio);
+					targetRECT.B = int((double)default_terget_rect[liveControlNumber].B * guiScaleRatio);
+
+					pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
+					pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
+				}
+			}
+
+			if (itemChosen == 1)
+			{
+				if (liveControlNumber > 0)
+				{
+					if (pGraphics->GetControl(liveControlNumber)->IsHidden()) pGraphics->GetControl(liveControlNumber)->Hide(false);
+					else pGraphics->GetControl(liveControlNumber)->Hide(true);
+				}
+			}
+
+			if (itemChosen == 3)
+			{
+				if (drawGridToogle) drawGridToogle = false;
+				else drawGridToogle = true;
+			}
+		}
+	}
+
+	void StoreDefaults(IGraphics* pGraphics)
+	{
+		int controlSize = pGraphics->GetNControls();
+
+		for (int i = 0; i < controlSize; i++)
+		{
+			IControl* pControl = pGraphics->GetControl(i);
+			IRECT drawRECT = *pControl->GetRECT();
+			IRECT targetRECT = *pControl->GetTargetRECT();
+
+			default_draw_rect.push_back(drawRECT);
+			default_terget_rect.push_back(targetRECT);
+			default_visibility.push_back(!pControl->IsHidden());
+		}
+	}
 
 private:
 	// Live editing stuff
 	char buf[512]; // temp buffer for writing integers to profile strings
-	IColor EDIT_COLOR = IColor(255, 0, 255, 0);
+	char* defaultFont = "Tahoma";
+	IColor EDIT_COLOR = IColor(255, 255, 255, 255);
+	IColor controlTextBackgroundColor = IColor(122, 0, 0, 0);
 	IRECT liveSelectedRECT = IRECT(0, 0, 0, 0);
 	IRECT liveSelectedTargetRECT = IRECT(0, 0, 0, 0);
 	IRECT liveClickedRECT = IRECT(0, 0, 0, 0);
@@ -793,4 +986,9 @@ private:
 	bool liveLastMouseDownL = false;
 	int liveMouseXLock = 0;
 	int liveMouseYLock = 0;
+	bool drawGridToogle = false;
+	vector <IRECT> default_draw_rect;
+	vector <IRECT> default_terget_rect;
+	vector <bool> default_visibility;
+	vector <bool> control_visibility;
 };

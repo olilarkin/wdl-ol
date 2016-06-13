@@ -2,7 +2,9 @@
 #include "IPlug_include_in_plug_src.h"
 #include "IControl.h"
 #include "resource.h"
+#include "LiveEditLayout.h"
 
+LiveEditLayout liveLayout;
 
 const int kNumPrograms = 2;
 
@@ -103,6 +105,9 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   // --------------------------------------------------------------------------------------------------------------------------
   
   AttachGraphics(pGraphics);
+
+  liveLayout.SetControlPositions(pGraphics);
+
   pGraphics->ShowControlBounds(true);
   pGraphics->LiveEditing(true, 18);
   
@@ -130,18 +135,18 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 
 	if (viewMode == miniView)
 	{
-		GetGUIResize()->HideControl(grayKnob);
-		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
-		GetGUIResize()->HideControl(customControl);
+		//GetGUIResize()->HideControl(grayKnob);
+		//GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
+		//GetGUIResize()->HideControl(customControl);
 	}
 
 	if (viewMode == hugeView)
 	{
-		GetGUIResize()->MoveControl(redKnob, windowWidth - 101.0, 0.0);
-		GetGUIResize()->MoveControl(grayKnob, windowWidth - 101.0, 150.0);
-		GetGUIResize()->MoveControl(customControl, windowWidth - 100.0, 0);
-		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
-		GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
+		//GetGUIResize()->MoveControl(redKnob, windowWidth - 101.0, 0.0);
+		//GetGUIResize()->MoveControl(grayKnob, windowWidth - 101.0, 150.0);
+		//GetGUIResize()->MoveControl(customControl, windowWidth - 100.0, 0);
+		//GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
+		//GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
 	}
 }
 

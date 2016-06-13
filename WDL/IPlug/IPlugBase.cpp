@@ -233,16 +233,13 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 {
   if (pGraphics)
   {
-	  // Load control positions from file if user was live editing the GUI
-	 // liveEdit1.LoadIRECTsFromFile(this, pGraphics, "edited");
-
+	  WDL_MutexLock lock(&mMutex);
 	  if (GetGUIResize() != NULL)
 	  {
 		  // Here we are attaching our GUI resize control.
 		  pGraphics->AttachControl(GetGUIResize()->AttachGUIResize());
 	  }
 
-    WDL_MutexLock lock(&mMutex);
     int i, n = mParams.GetSize();
     
     for (i = 0; i < n; ++i)
@@ -254,7 +251,7 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
     mGraphics = pGraphics;
 
 	// Load control positions from file if user was live editing the GUI
-	liveEdit1.LoadIRECTsFromFile(this, pGraphics, "edited");
+	//liveEdit1.LoadIRECTsFromFile(this, mGraphics, "edited");
   }
 }
 #endif
