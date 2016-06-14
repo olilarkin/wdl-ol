@@ -562,6 +562,45 @@ int IGraphics::AttachControl(IControl* pControl)
 	return mControls.GetSize() - 1;
 }
 
+void IGraphics::MoveControlLayers(int fromIndex, int toIndex)
+{
+	int controlSize = mControls.GetSize();
+	if (mPlug->GetGUIResize()) controlSize -= 3;
+
+	if (fromIndex > 0 && fromIndex < controlSize && toIndex > 0 && toIndex < controlSize)
+	{
+		IControl* pControl = mControls.Get(fromIndex);
+
+		mControls.Delete(fromIndex);
+		mControls.Insert(toIndex, pControl);
+	}
+}
+
+void IGraphics::SwitchControlLayers(int fromIndex, int toIndex)
+{
+	int controlSize = mControls.GetSize();
+	if (mPlug->GetGUIResize()) controlSize -= 3;
+
+	if (fromIndex > 0 && fromIndex < controlSize && toIndex > 0 && toIndex < controlSize)
+	{
+		IControl* pControl = mControls.Get(fromIndex);
+
+		mControls.Set(fromIndex, mControls.Get(toIndex));
+		mControls.Set(toIndex, pControl);
+	}
+}
+
+void IGraphics::ReplaceControl(int Index, IControl* pControl)
+{
+	int controlSize = mControls.GetSize();
+	if (mPlug->GetGUIResize()) controlSize -= 3;
+
+	if (Index > 0 && Index < controlSize)
+	{
+		mControls.Set(Index, pControl);
+	}
+}
+
 void IGraphics::AttachKeyCatcher(IControl* pControl)
 {
 	mKeyCatcher = pControl;
@@ -1165,7 +1204,7 @@ bool IGraphics::Draw(IRECT* pR)
 	if (mShowControlBounds && !liveEditing)
 	{
 		int controlSize = mControls.GetSize();
-		if (mPlug->GetGUIResize() != NULL) controlSize -= 3;
+		if (mPlug->GetGUIResize()) controlSize -= 3;
 
 		for (int j = 1; j < controlSize; j++)
 		{

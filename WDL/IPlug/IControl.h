@@ -1,6 +1,7 @@
 #ifndef _ICONTROL_
 #define _ICONTROL_
 
+#include <typeinfo>
 #include "IPlugBase.h"
 #include "IGraphics.h"
 
@@ -47,6 +48,9 @@ public:
   // This is used for GUI resize ----------------------------------------------------------------------------------------
   virtual void InitializeGUI(double guiScaleRatio) {}
   // --------------------------------------------------------------------------------------------------------------------
+
+  // This retrives derived class name
+  const char* GetDerivedClassName() const { return typeid(*this).name(); }
 
   // Ask the IGraphics object to open an edit box so the user can enter a value for this control.
   void PromptUserInput();

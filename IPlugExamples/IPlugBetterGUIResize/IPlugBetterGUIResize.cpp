@@ -95,7 +95,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   IRECT tmpRect3(20, 760, 800, 800);
   IText textProps3(24, &COLOR_WHITE, "Arial", IText::kStyleItalic, IText::kAlignNear, 0, IText::kQualityDefault);
   infoText = pGraphics->AttachControl(new ITextControl(this, tmpRect3, &textProps3, "This is IPlugGUIResize example by Youlean..."));
-  
+
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 0 + 200, 150 + 25, 30 + 200), "miniView", miniView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 50 + 200, 150 + 25, 80 + 200), "defaultView", defaultView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", hugeView));
@@ -103,7 +103,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   //pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
   pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 400, 600)));
   // --------------------------------------------------------------------------------------------------------------------------
-  
+
   AttachGraphics(pGraphics);
 
   liveLayout.SetControlPositions(pGraphics);
@@ -111,6 +111,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGraphics->ShowControlBounds(true);
   pGraphics->LiveEditing(true, 18);
   
+ 
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
 }

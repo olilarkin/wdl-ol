@@ -163,6 +163,10 @@ public:
 	// Returns the control index of this control (not the number of controls).
 	int AttachControl(IControl* pControl);
 
+	void MoveControlLayers(int fromIndex, int toIndex);
+	void SwitchControlLayers(int fromIndex, int toIndex);
+	void ReplaceControl(int Index, IControl * pControl);
+
 	IControl* GetControl(int idx) { return mControls.Get(idx); }
 	int GetNControls() { return mControls.GetSize(); }
 	void HideControl(int paramIdx, bool hide);

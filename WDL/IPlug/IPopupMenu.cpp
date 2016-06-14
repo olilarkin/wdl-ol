@@ -12,6 +12,65 @@ void IPopupMenuItem::SetChecked(bool state)
   }
 }
 
+void IPopupMenuItem::SetState(bool state, int itemFlags)
+{
+	if (itemFlags == 0)
+	{
+		if (state)
+		{
+			mFlags |= kNoFlags;
+		}
+	}
+
+	if (itemFlags == 1)
+	{
+		if (state)
+		{
+			mFlags |= kDisabled;
+		}
+		else
+		{
+			mFlags &= ~kDisabled;
+		}
+	}
+
+	if (itemFlags == 2)
+	{
+		if (state)
+		{
+			mFlags |= kTitle;
+		}
+		else
+		{
+			mFlags &= ~kTitle;
+		}
+	}
+
+	if (itemFlags == 3)
+	{
+		if (state)
+		{
+			mFlags |= kChecked;
+		}
+		else
+		{
+			mFlags &= ~kChecked;
+		}
+	}
+
+	if (itemFlags == 4)
+	{
+		if (state)
+		{
+			mFlags |= kSeparator;
+		}
+		else
+		{
+			mFlags &= ~kSeparator;
+		}
+	}
+}
+
 IPopupMenuItem* IPopupMenu::GetItem(int index)
 {
   int nItems = GetNItems();
@@ -107,4 +166,11 @@ bool IPopupMenu::IsItemChecked(int index)
   }
 
   return false;
+}
+
+void IPopupMenu::SetItemState(int index, IPopupMenuItem::Flags itemFlags, bool state)
+{
+	IPopupMenuItem* item = mMenuItems.Get(index);
+
+	item->SetState(state, itemFlags);
 }

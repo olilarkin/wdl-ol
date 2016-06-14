@@ -23,6 +23,7 @@ appreciated but is not required.
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <typeinfo>
 #include "IControl.h"
 #include "IGraphics.h"
@@ -41,7 +42,7 @@ public:
 	{
 		// Moving controls --------------------------------------------------------------------
 	
-		if (pPlug->GetGUIResize() != NULL) liveScaledGridSize = int((double)*liveGridSize * guiScaleRatio);
+		if (pPlug->GetGUIResize()) liveScaledGridSize = int((double)*liveGridSize * guiScaleRatio);
 		else liveScaledGridSize = *liveGridSize;
 
 		
@@ -89,7 +90,7 @@ public:
 			// Draw control rects
 			int controlSize = pControls->GetSize();
 
-			if (pPlug->GetGUIResize() != NULL)
+			if (pPlug->GetGUIResize())
 			{
 				controlSize -= 3;
 				if (*liveMouseCapture > controlSize) *liveMouseCapture = -1;
@@ -170,6 +171,26 @@ public:
 				else SetCursor(LoadCursor(NULL, IDC_ARROW));
 			}
 
+			if (liveEditingMod->R)
+			{
+				IControl* pControl = pControls->Get(*liveMouseCapture);
+
+				liveSelectedRECT = *pControl->GetRECT();
+				liveSelectedTargetRECT = *pControl->GetTargetRECT();
+				liveControlNumber = *liveMouseCapture;
+
+				// Find where mouse was clicked
+				if (*liveMouseCapture != lastliveMouseCapture)
+				{
+					liveClickedX = *mMouseX;
+					liveClickedY = *mMouseY;
+					liveClickedRECT = liveSelectedRECT;
+					liveClickedTargetRECT = liveSelectedTargetRECT;
+
+					IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
+					liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
+				}
+			}
 
 			if (liveEditingMod->L)
 			{
@@ -600,7 +621,7 @@ public:
 
 			// Check if gui resize is active, if so scale out rect
 			IRECT printRECT;
-			if (pPlug->GetGUIResize() != NULL)
+			if (pPlug->GetGUIResize())
 			{
 				printRECT.L = int((double)liveSelectedRECT.L * guiScaleRatio);
 				printRECT.T = int((double)liveSelectedRECT.T * guiScaleRatio);
@@ -630,7 +651,7 @@ public:
 			if (liveControlNumber > 0) pGraphics->FillIRect(&controlTextBackgroundColor, &rectControlNumber);
 			if (liveControlNumber > 0) pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
 			
-			if (liveEditingMod->R) DoPopupMenu(pGraphics, *mMouseX, *mMouseY, guiScaleRatio);
+			if (liveEditingMod->R) DoPopupMenu(pPlug, pGraphics, *mMouseX, *mMouseY, guiScaleRatio);
 
 			// Write to file
 			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio);
@@ -640,7 +661,7 @@ public:
 	void BackupIRECTs(IPlugBase* pPlug, IGraphics* pGraphics, const char* category, double guiScaleRatio)
 	{
 		int controlSize = pGraphics->GetNControls();
-		if (pPlug->GetGUIResize() != NULL) controlSize -= 3;
+		if (pPlug->GetGUIResize()) controlSize -= 3;
 		
 		for (int i = 1; i < controlSize; i++)
 		{
@@ -648,7 +669,7 @@ public:
 			IRECT drawRECT = *pControl->GetRECT();
 			IRECT targetRECT = *pControl->GetTargetRECT();
 
-			if (pPlug->GetGUIResize() != NULL)
+			if (pPlug->GetGUIResize())
 			{
 				drawRECT.L = int((double)drawRECT.L * guiScaleRatio);
 				drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
@@ -723,7 +744,7 @@ public:
 
 	{
 		int controlSize = pGraphics->GetNControls();
-		if (pPlug->GetGUIResize() != NULL) controlSize -= 3;
+		if (pPlug->GetGUIResize()) controlSize -= 3;
 
 		for (int i = 1; i < controlSize; i++)
 		{
@@ -811,8 +832,10 @@ public:
 	{
 		string code;
 
-		code = "// Do not edit. All of this is generated automatically \n"
+		code = 
+			"// Do not edit. All of this is generated automatically \n"
 			"// Copyright Youlean 2016 \n \n"
+            "#include <vector>\n"
 			"#include \"IGraphics.h\" \n \n"
 			"class LiveEditLayout \n"
 			"{ \n"
@@ -820,19 +843,21 @@ public:
 			"	LiveEditLayout() {} \n \n"
 			"	~LiveEditLayout() {} \n \n"
 			"	void SetControlPositions(IGraphics* pGraphics) \n"
-			"	{ \n";
+			"	{ \n"
+			;
 
+		
 		// Write all controls positions
-		int controlSize = pGraphics->GetNControls();
-		if (pPlug->GetGUIResize() != NULL) controlSize -= 3;
+		int controlSize = default_layers.size();
+		if (pPlug->GetGUIResize()) controlSize -= 3;
 
 		for (int i = 1; i < controlSize; i++)
 		{
-			IControl* pControl = pGraphics->GetControl(i);
+			IControl* pControl = default_layers[i];
 			IRECT drawRECT = *pControl->GetRECT();
 			IRECT targetRECT = *pControl->GetTargetRECT();
 
-			if (pPlug->GetGUIResize() != NULL)
+			if (pPlug->GetGUIResize())
 			{
 				drawRECT.L = int((double)drawRECT.L * guiScaleRatio);
 				drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
@@ -847,6 +872,11 @@ public:
 
 			WDL_String drawValue, targetValue, hiddenValue;
 
+			// Get derived class name
+			code.append("        // ");
+			code.append(pControl->GetDerivedClassName());
+			code.append("\n");
+			
 			hiddenValue.SetFormatted(128, "		pGraphics->GetControl(%i)->Hide(", i);
 			if (pControl->IsHidden()) hiddenValue.Append("true");
 			else hiddenValue.Append("false");
@@ -861,9 +891,39 @@ public:
 
 			code.append("\n");
 		}
+		
+		// Reordering control layers
+		code.append
+		(
+			"	    // --------------------------------------------------------------------\n"
+			"\n"
+			"	    // Reordering control layers\n"
+			"		std::vector <IControl*> pControl;\n"
+			"		for (int i = 0; i < pGraphics->GetNControls(); i++) \n"
+			"			pControl.push_back(pGraphics->GetControl(i));\n"
+			"\n"
+		);
 
-		code.append("	} \n}; ");
+		WDL_String layoutMove;
 
+		// Backup current control layers
+		for (int i = 0; i < current_layers.size(); i++)
+		{
+			current_layers[i] = pGraphics->GetControl(i);
+		}
+
+		for (int i = 0; i < controlSize; i++)
+		{
+			IControl* pControl = default_layers[i];
+			layoutMove.SetFormatted(128, "		pGraphics->ReplaceControl(%i,pControl[%i]); \n", FindPointerPosition(pControl, current_layers), i);
+			code.append(layoutMove.Get());
+		}
+		
+
+		code.append("	}\n");
+
+		// End
+		code.append("}; ");
 		WriteToTextFile(code.c_str());
 	}
 
@@ -892,22 +952,57 @@ public:
 		}
 	}
 
-	void DoPopupMenu(IGraphics* pGraphics, int x, int y, double guiScaleRatio)
+	void DoPopupMenu(IPlugBase* pPlug, IGraphics* pGraphics, int x, int y, double guiScaleRatio)
 	{
 		IPopupMenu menu;
 		
 		// Item 0
-		menu.AddItem("Reset Position/Size");
+		menu.AddItem("Reset Control Position");
+		if (liveControlNumber <= 0) menu.SetItemState(0, IPopupMenuItem::kDisabled, true);
 
 		// Item 1
+		menu.AddItem("Reset Control Size");
+		if (liveControlNumber <= 0) menu.SetItemState(1, IPopupMenuItem::kDisabled, true);
+
+		// Item 2
 		if (pGraphics->GetControl(liveControlNumber)->IsHidden()) menu.AddItem("Show Control");
 		else menu.AddItem("Hide Control");
-
-		menu.AddSeparator();
+		if (liveControlNumber <= 0) menu.SetItemState(2, IPopupMenuItem::kDisabled, true);
 
 		// Item 3
+		menu.AddSeparator();
+
+		// Item 4
+		menu.AddItem("Bring to Front");
+		if (liveControlNumber <= 0) menu.SetItemState(4, IPopupMenuItem::kDisabled, true);
+
+		// Item 5
+		menu.AddItem("Send to Back");
+		if (liveControlNumber <= 0) menu.SetItemState(5, IPopupMenuItem::kDisabled, true);
+
+		// Item 6
+		menu.AddSeparator();
+		
+		// Item 7
+		menu.AddItem("Bring Forward");
+		if (liveControlNumber <= 0) menu.SetItemState(7, IPopupMenuItem::kDisabled, true);
+
+		// Item 8
+		menu.AddItem("Send Backward");
+		if (liveControlNumber <= 0) menu.SetItemState(8, IPopupMenuItem::kDisabled, true);
+
+		// Item 9
+		menu.AddSeparator();
+
+		// Item 10
 		if (drawGridToogle) menu.AddItem("Hide Grid");
 		else menu.AddItem("Show Grid");
+
+		// Item 11
+		menu.AddSeparator();
+
+		// Item 12
+		menu.AddItem("Clear Edits (require recompile)");
 
 		if (pGraphics->CreateIPopupMenu(&menu, x, y))
 		{
@@ -922,13 +1017,16 @@ public:
 
 					drawRECT.L = int((double)default_draw_rect[liveControlNumber].L * guiScaleRatio);
 					drawRECT.T = int((double)default_draw_rect[liveControlNumber].T * guiScaleRatio);
-					drawRECT.R = int((double)default_draw_rect[liveControlNumber].R * guiScaleRatio);
-					drawRECT.B = int((double)default_draw_rect[liveControlNumber].B * guiScaleRatio);
+					drawRECT.R = drawRECT.L + liveSelectedRECT.W();
+					drawRECT.B = drawRECT.T + liveSelectedRECT.H();
 
 					targetRECT.L = int((double)default_terget_rect[liveControlNumber].L * guiScaleRatio);
 					targetRECT.T = int((double)default_terget_rect[liveControlNumber].T * guiScaleRatio);
-					targetRECT.R = int((double)default_terget_rect[liveControlNumber].R * guiScaleRatio);
-					targetRECT.B = int((double)default_terget_rect[liveControlNumber].B * guiScaleRatio);
+					targetRECT.R = targetRECT.L + liveSelectedTargetRECT.W();
+					targetRECT.B = targetRECT.T + liveSelectedTargetRECT.H();
+
+					liveSelectedRECT = drawRECT;
+					liveSelectedTargetRECT = targetRECT;
 
 					pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
 					pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
@@ -939,24 +1037,67 @@ public:
 			{
 				if (liveControlNumber > 0)
 				{
+					IRECT drawRECT;
+					IRECT targetRECT;
+
+					drawRECT.L = liveSelectedRECT.L;
+					drawRECT.T = liveSelectedRECT.T;
+					drawRECT.R = drawRECT.L + int((double)default_draw_rect[liveControlNumber].W() * guiScaleRatio);
+					drawRECT.B = drawRECT.T + int((double)default_draw_rect[liveControlNumber].H() * guiScaleRatio);
+
+					targetRECT.L = liveSelectedTargetRECT.L;
+					targetRECT.T = liveSelectedTargetRECT.T;
+					targetRECT.R = targetRECT.L + int((double)default_terget_rect[liveControlNumber].W() * guiScaleRatio);
+					targetRECT.B = targetRECT.T +int((double)default_terget_rect[liveControlNumber].H() * guiScaleRatio);
+
+					liveSelectedRECT = drawRECT;
+					liveSelectedTargetRECT = targetRECT;
+
+					pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
+					pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
+				}
+			}
+
+			if (itemChosen == 2)
+			{
+				if (liveControlNumber > 0)
+				{
 					if (pGraphics->GetControl(liveControlNumber)->IsHidden()) pGraphics->GetControl(liveControlNumber)->Hide(false);
 					else pGraphics->GetControl(liveControlNumber)->Hide(true);
 				}
 			}
 
-			if (itemChosen == 3)
+			if (itemChosen == 4)
+			{
+				if (liveControlNumber > 0)
+				{
+					int controlSize = pGraphics->GetNControls();
+					if (pPlug->GetGUIResize()) controlSize -= 3;
+
+					control_move_from.push_back(liveControlNumber);
+					control_move_to.push_back(controlSize - 1);
+
+					pGraphics->MoveControlLayers(control_move_from.back(), control_move_to.back());
+				}
+			}
+
+			if (itemChosen == 10)
 			{
 				if (drawGridToogle) drawGridToogle = false;
 				else drawGridToogle = true;
+			}
+
+			if (itemChosen == 12)
+			{
+				string clear = "// Cleared";
+				WriteToTextFile(clear.c_str());
 			}
 		}
 	}
 
 	void StoreDefaults(IGraphics* pGraphics)
 	{
-		int controlSize = pGraphics->GetNControls();
-
-		for (int i = 0; i < controlSize; i++)
+		for (int i = 0; i < pGraphics->GetNControls(); i++)
 		{
 			IControl* pControl = pGraphics->GetControl(i);
 			IRECT drawRECT = *pControl->GetRECT();
@@ -965,7 +1106,50 @@ public:
 			default_draw_rect.push_back(drawRECT);
 			default_terget_rect.push_back(targetRECT);
 			default_visibility.push_back(!pControl->IsHidden());
+			default_layers.push_back(pControl);
+			current_layers.push_back(pControl);
 		}
+	}
+
+	void UndoMovingControlLayers(IGraphics* pGraphics)
+	{
+		for (int i = control_move_to.size() - 1; i > 0; i--)
+		{
+			pGraphics->MoveControlLayers(control_move_to[i], control_move_from[i]);
+		}
+	}
+
+	void DoMovingControlLayers(IGraphics* pGraphics)
+	{
+		for (int i = 0; i < control_move_to.size(); i++)
+		{
+			pGraphics->MoveControlLayers(control_move_to[i], control_move_from[i]);
+		}
+	}
+
+	void GetMouseOverControl(IPlugBase* pPlug, IGraphics* pGraphics, int mouseX, int mouseY)
+	{
+		int controlSize = pGraphics->GetNControls();
+		if (pPlug->GetGUIResize()) controlSize -= 3;
+
+		for (int i = controlSize; i >= 0; i--)
+		{
+			IControl* pControl = pGraphics->GetControl(i);
+			pControl->IsHit(mouseX, mouseY);
+
+			mouseOverControl = i;
+			return;
+		}
+		mouseOverControl = -1;
+	}
+
+	int FindPointerPosition(IControl* pControl, vector <IControl*> vControl)
+	{
+		for (int i = 0; i < vControl.size(); i++)
+		{
+			if (pControl == vControl[i]) return i;
+		}
+		return -1;
 	}
 
 private:
@@ -987,8 +1171,13 @@ private:
 	int liveMouseXLock = 0;
 	int liveMouseYLock = 0;
 	bool drawGridToogle = false;
+	int mouseOverControl = -1;
 	vector <IRECT> default_draw_rect;
 	vector <IRECT> default_terget_rect;
 	vector <bool> default_visibility;
+	vector <IControl*> default_layers;
 	vector <bool> control_visibility;
+	vector <int> control_move_from;
+	vector <int> control_move_to;
+	vector <IControl*> current_layers;
 };
