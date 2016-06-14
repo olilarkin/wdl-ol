@@ -1238,7 +1238,7 @@ bool IGraphics::Draw(IRECT* pR)
 	{
 		//liveEdit.LoadIRECTsFromFile(mPlug, this, "edited");
 		liveEdit.EditGUI(mPlug, this, &mControls, mDrawBitmap, &liveEditingMod, &liveGridSize, &liveSnap, &liveKeyDown,
-			&liveToogleEditing, &liveMouseCapture, &mMouseX, &mMouseY, Width(), Height(), guiScaleRatio);
+			&liveToogleEditing, &liveMouseCapture, &liveMouseDragging, &mMouseX, &mMouseY, Width(), Height(), guiScaleRatio);
 	}
 
 	return DrawScreen(pR);
@@ -1379,6 +1379,7 @@ void IGraphics::OnMouseOut()
 
 void IGraphics::OnMouseDrag(int x, int y, IMouseMod* pMod)
 {
+	liveMouseDragging = true;
 	liveEditingMod.A = pMod->A;
 	liveEditingMod.C = pMod->C;
 	liveEditingMod.S = pMod->S;

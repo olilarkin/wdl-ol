@@ -311,6 +311,7 @@ private:
 	int liveKeyDown = -1;
 	bool liveToogleEditing = false;
 	int liveMouseCapture = -1;
+	bool liveMouseDragging = false;
 };
 
 

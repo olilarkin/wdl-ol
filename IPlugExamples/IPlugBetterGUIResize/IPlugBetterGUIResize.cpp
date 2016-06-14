@@ -110,8 +110,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   pGraphics->ShowControlBounds(true);
   pGraphics->LiveEditing(true, 18);
-  
- 
+
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
 }

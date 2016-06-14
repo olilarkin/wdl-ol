@@ -38,14 +38,14 @@ public:
 
 	void EditGUI(IPlugBase* pPlug, IGraphics* pGraphics, WDL_PtrList<IControl>* pControls, LICE_IBitmap* pDrawBitmap, 
 		IMouseMod* liveEditingMod, int* liveGridSize, int* liveSnap, int* liveKeyDown, bool* liveToogleEditing, int* liveMouseCapture,
-		int* mMouseX, int* mMouseY, int width, int height, double guiScaleRatio)
+		bool* liveMouseDragging, int* mMouseX, int* mMouseY, int width, int height, double guiScaleRatio)
 	{
 		// Moving controls --------------------------------------------------------------------
 	
 		if (pPlug->GetGUIResize()) liveScaledGridSize = int((double)*liveGridSize * guiScaleRatio);
 		else liveScaledGridSize = *liveGridSize;
-
 		
+
 		// Toogle live editing
 		if (*liveToogleEditing)
 		{
@@ -64,23 +64,6 @@ public:
 			}
 		}
 
-		// Toogle grid view
-		if (drawGridToogle)
-		{
-			if (*liveKeyDown == 21)
-			{
-				drawGridToogle = false;
-				*liveKeyDown = -1;
-			}
-		}
-		else
-		{
-			if (*liveKeyDown == 21)
-			{
-				drawGridToogle = true;
-				*liveKeyDown = -1;
-			}
-		}
 
 		// If mouse was clicked
 		if (*liveToogleEditing)
@@ -100,35 +83,21 @@ public:
 			{
 				IControl* pControl = pControls->Get(j);
 
-				// If control is hidden cross it with lines
-				if (pControl->IsHidden())
-				{
-					IRECT drawRECT = *pControl->GetRECT();
-					WDL_String strHidden;
-					strHidden.Set("Hidden");
-					IText txtHidden(IPMIN(drawRECT.W() / 4, drawRECT.H()), &EDIT_COLOR, defaultFont);
-					pGraphics->DrawIText(&txtHidden, strHidden.Get(), &drawRECT);
+				IRECT drawRECT = *pControl->GetRECT();
 
-					pGraphics->DrawRect(&EDIT_COLOR, &drawRECT);
-				}
-				else
-				{
-					IRECT drawRECT = *pControl->GetRECT();
-					//pGraphics->DrawRect(&EDIT_COLOR, pControl->GetRECT());
+				// T
+				LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.T, 2, 2,
+					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+				//B
+				LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.B, drawRECT.R, drawRECT.B, 2, 2,
+					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+				//L
+				LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.L, drawRECT.B, 2, 2,
+					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+				//R
+				LICE_DashedLine(pDrawBitmap, drawRECT.R, drawRECT.T, drawRECT.R, drawRECT.B, 2, 2,
+					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
 
-					// T
-					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.T, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-					//B
-					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.B, drawRECT.R, drawRECT.B, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-					//L
-					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.L, drawRECT.B, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-					//R
-					LICE_DashedLine(pDrawBitmap, drawRECT.R, drawRECT.T, drawRECT.R, drawRECT.B, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-				}
 			}
 
 			WDL_String str;
@@ -138,7 +107,7 @@ public:
 			pGraphics->DrawIText(&txt, str.Get(), &rect);
 
 			// Draw resizing handles
-			int liveHandleSize = 8;
+			int liveHandleSize = int(8.0 * guiScaleRatio);
 
 			for (int j = 1; j < controlSize; j++)
 			{
@@ -164,7 +133,7 @@ public:
 				}
 			}
 
-			if (!liveEditingMod->S)
+			if (!*liveMouseDragging)
 			{
 				// Change cursor when over handle
 				if (overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
@@ -213,14 +182,13 @@ public:
 				}
 
 
+				// Change cursor when clicked on handle
+				if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+				else SetCursor(LoadCursor(NULL, IDC_ARROW));
+
 				// Prevent editing
-				if (!liveEditingMod->S)
+				if (*liveMouseDragging || liveEditingMod->C)
 				{
-					// Change cursor when clicked on handle
-					if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
-					else SetCursor(LoadCursor(NULL, IDC_ARROW));
-
-
 					IRECT drawArea;
 					if (!liveClickedOnHandle)
 					{
@@ -254,7 +222,7 @@ public:
 					}
 
 					// Snap to grid
-					if (!liveEditingMod->A && !liveEditingMod->S)
+					if (!liveEditingMod->A)
 					{
 						if (!liveClickedOnHandle)
 						{
@@ -609,6 +577,7 @@ public:
 				}
 			}
 
+			*liveMouseDragging = false;
 			lastliveMouseCapture = *liveMouseCapture;
 		}
 
@@ -636,7 +605,13 @@ public:
 			// Print selected control
 			int textSize = 15;
 			WDL_String controlNumber;
-			controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
+
+			// Different outputs if control is hidden
+			if (liveControlNumber > 0 && !pGraphics->GetControl(liveControlNumber)->IsHidden())
+				controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
+			if (liveControlNumber > 0 && pGraphics->GetControl(liveControlNumber)->IsHidden())
+				controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i) (HIDDEN)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
+
 			IText txtControlNumber(textSize, &EDIT_COLOR, defaultFont, IText::kStyleNormal, IText::kAlignNear, 0, IText::kQualityClearType);
 			IRECT textRect;
 			if (liveControlNumber > 0) pGraphics->MeasureIText(&txtControlNumber, controlNumber.Get(), &textRect);
@@ -908,9 +883,7 @@ public:
 
 		// Backup current control layers
 		for (int i = 0; i < current_layers.size(); i++)
-		{
 			current_layers[i] = pGraphics->GetControl(i);
-		}
 
 		for (int i = 0; i < controlSize; i++)
 		{
@@ -1002,12 +975,13 @@ public:
 		menu.AddSeparator();
 
 		// Item 12
-		menu.AddItem("Clear Edits (require recompile)");
+		menu.AddItem("Clear All Edits");
 
 		if (pGraphics->CreateIPopupMenu(&menu, x, y))
 		{
 			int itemChosen = menu.GetChosenItemIdx();
 			
+			// Reset Control Position
 			if (itemChosen == 0)
 			{
 				if (liveControlNumber > 0)
@@ -1033,11 +1007,10 @@ public:
 				}
 			}
 
+			// Reset Control Size
 			if (itemChosen == 1)
 			{
-				if (liveControlNumber > 0)
-				{
-					IRECT drawRECT;
+				IRECT drawRECT;
 					IRECT targetRECT;
 
 					drawRECT.L = liveSelectedRECT.L;
@@ -1055,41 +1028,111 @@ public:
 
 					pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
 					pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
-				}
 			}
 
+			// Show/Hide Control
 			if (itemChosen == 2)
 			{
-				if (liveControlNumber > 0)
-				{
 					if (pGraphics->GetControl(liveControlNumber)->IsHidden()) pGraphics->GetControl(liveControlNumber)->Hide(false);
 					else pGraphics->GetControl(liveControlNumber)->Hide(true);
-				}
 			}
 
+			// Bring to Front
 			if (itemChosen == 4)
 			{
-				if (liveControlNumber > 0)
-				{
 					int controlSize = pGraphics->GetNControls();
 					if (pPlug->GetGUIResize()) controlSize -= 3;
 
 					control_move_from.push_back(liveControlNumber);
 					control_move_to.push_back(controlSize - 1);
+					liveControlNumber = control_move_to.back();
 
 					pGraphics->MoveControlLayers(control_move_from.back(), control_move_to.back());
-				}
 			}
 
+			// Send to Back
+			if (itemChosen == 5)
+			{
+					int controlSize = pGraphics->GetNControls();
+					if (pPlug->GetGUIResize()) controlSize -= 3;
+
+					control_move_from.push_back(liveControlNumber);
+					control_move_to.push_back(1);
+					liveControlNumber = control_move_to.back();
+
+					pGraphics->MoveControlLayers(control_move_from.back(), control_move_to.back());
+			}
+
+			// Bring Forward
+			if (itemChosen == 7)
+			{
+					int controlSize = pGraphics->GetNControls();
+					if (pPlug->GetGUIResize()) controlSize -= 3;
+
+					if (liveControlNumber + 1 < controlSize)
+					{
+						control_move_from.push_back(liveControlNumber);
+						control_move_to.push_back(liveControlNumber + 1);
+						liveControlNumber = control_move_to.back();
+
+						pGraphics->SwitchControlLayers(control_move_from.back(), control_move_to.back());
+					}
+			}
+
+			// Send Backward
+			if (itemChosen == 8)
+			{
+					int controlSize = pGraphics->GetNControls();
+					if (pPlug->GetGUIResize()) controlSize -= 3;
+
+					if (liveControlNumber - 1 > 0)
+					{
+						control_move_from.push_back(liveControlNumber);
+						control_move_to.push_back(liveControlNumber - 1);
+						liveControlNumber = control_move_to.back();
+
+						pGraphics->SwitchControlLayers(control_move_from.back(), control_move_to.back());
+					}
+			}
+
+			// Show/Hide Grid
 			if (itemChosen == 10)
 			{
 				if (drawGridToogle) drawGridToogle = false;
 				else drawGridToogle = true;
 			}
 
+			// Clear Edits
 			if (itemChosen == 12)
 			{
-				string clear = "// Cleared";
+				for (int i = 0; i < pGraphics->GetNControls(); i++)
+				{
+					pGraphics->ReplaceControl(i, default_layers[i]);
+					IControl* pControl = pGraphics->GetControl(i);
+					pControl->SetDrawRECT(default_draw_rect[i]);
+					pControl->SetTargetRECT(default_terget_rect[i]);
+					pControl->Hide(!default_is_hidden[i]);
+				}
+
+				liveControlNumber = -1;
+				liveClickedRECT = IRECT(0, 0, 0, 0);
+				liveClickedTargetRECT = IRECT(0, 0, 0, 0);
+				
+				string clear =
+					"// Do not edit. All of this is generated automatically \n"
+					"// Copyright Youlean 2016 \n \n"
+					"#include <vector>\n"
+					"#include \"IGraphics.h\" \n \n"
+					"class LiveEditLayout \n"
+					"{ \n"
+					"public: \n"
+					"	LiveEditLayout() {} \n \n"
+					"	~LiveEditLayout() {} \n \n"
+					"	void SetControlPositions(IGraphics* pGraphics) \n"
+					"	{} \n"
+					"};"
+					;
+
 				WriteToTextFile(clear.c_str());
 			}
 		}
@@ -1105,7 +1148,7 @@ public:
 
 			default_draw_rect.push_back(drawRECT);
 			default_terget_rect.push_back(targetRECT);
-			default_visibility.push_back(!pControl->IsHidden());
+			default_is_hidden.push_back(!pControl->IsHidden());
 			default_layers.push_back(pControl);
 			current_layers.push_back(pControl);
 		}
@@ -1174,7 +1217,7 @@ private:
 	int mouseOverControl = -1;
 	vector <IRECT> default_draw_rect;
 	vector <IRECT> default_terget_rect;
-	vector <bool> default_visibility;
+	vector <bool> default_is_hidden;
 	vector <IControl*> default_layers;
 	vector <bool> control_visibility;
 	vector <int> control_move_from;
