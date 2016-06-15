@@ -164,7 +164,7 @@ public:
 	int AttachControl(IControl* pControl);
 
 	void MoveControlLayers(int fromIndex, int toIndex);
-	void SwitchControlLayers(int fromIndex, int toIndex);
+	void SwapControlLayers(int fromIndex, int toIndex);
 	void ReplaceControl(int Index, IControl * pControl);
 
 	IControl* GetControl(int idx) { return mControls.Get(idx); }
@@ -301,6 +301,7 @@ private:
 	IControl* mKeyCatcher;
 	unsigned bitmapOversample = 1;
 	double guiScaleRatio = 1.0;
+	int viewMode = 0;
 
 	// Live editing stuff
 	int liveGetControlIdx(int x, int y, bool mo = false);

@@ -22,8 +22,6 @@
 
 const double DEFAULT_SAMPLE_RATE = 44100.0;
 
-IPlugGUILiveEdit liveEdit1;
-
 template <class SRC, class DEST>
 void CastCopy(DEST* pDest, SRC* pSrc, int n)
 {
@@ -151,6 +149,8 @@ IPlugBase::IPlugBase(int nParams,
     pOutChannel->mFDest = 0;
     mOutChannels.Add(pOutChannel);
   }
+
+  mGUILiveEdit = new IPlugGUILiveEdit;
 }
 
 IPlugBase::~IPlugBase()
@@ -171,6 +171,8 @@ IPlugBase::~IPlugBase()
   {
     DELETE_NULL(mDelay);
   }
+
+  if (mGUILiveEdit) delete mGUILiveEdit;
 }
 
 int IPlugBase::GetHostVersion(bool decimal)
@@ -251,7 +253,7 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
     mGraphics = pGraphics;
 
 	// Load control positions from file if user was live editing the GUI
-	//liveEdit1.LoadIRECTsFromFile(this, mGraphics, "edited");
+	GetGUILiveEdit()->StoreDefaults(pGraphics);
   }
 }
 #endif
@@ -262,6 +264,13 @@ void IPlugBase::ResizeAtGUIOpen(IGraphics * pGraphics)
 	{
 		GetGUIResize()->ResizeAtGUIOpen();
 	}
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+
+IPlugGUILiveEdit * IPlugBase::GetGUILiveEdit() 
+{ 
+	return mGUILiveEdit; 
 }
 
 // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.

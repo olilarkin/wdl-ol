@@ -107,8 +107,10 @@ struct viewContainer
 
 struct layoutContainer
 {
+	vector <IControl*> org_pointer;
 	vector <DRECT> org_draw_area;
 	vector <DRECT> org_target_area;
+	vector <int> org_is_hidden;
 };
 
 typedef enum _resizeFlag { drawAndTargetArea, drawAreaOnly, targetAreaOnly } resizeFlag;
@@ -136,6 +138,7 @@ public:
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
+	
 	// These can be called from your custom controls -----------------------------------------------------------------------------------------------
 	void UseHandleForGUIScaling(bool statement = false);
 
@@ -175,6 +178,7 @@ public:
 	bool Draw(IGraphics* pGraphics);
 	void RescaleBitmapsAtLoad();
 	IPlugGUIResize *AttachGUIResize();
+	void LiveEditSetLayout(int viewMode, IControl * pControl, IRECT drawRECT, IRECT targetRECT, bool isHidden);
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -229,6 +233,42 @@ private:
 	IRECT DRECT_to_IRECT(DRECT * dRECT);
 	IRECT ResizeIRECT(DRECT * old_IRECT, double width_ratio, double height_ratio);
 
+	DRECT* GetLayoutContainerDrawRECT(int viewMode, IControl* pControl)
+	{
+		int position = FindLayoutPointerPosition(viewMode, pControl);
+		return &layout_container[viewMode].org_draw_area[position];
+	}
+
+	DRECT* GetLayoutContainerTargetRECT(int viewMode, IControl* pControl)
+	{
+		int position = FindLayoutPointerPosition(viewMode, pControl);
+		return &layout_container[viewMode].org_target_area[position];
+	}
+
+	int* GetLayoutContainerIsHidden(int viewMode, IControl* pControl)
+	{
+		int position = FindLayoutPointerPosition(viewMode, pControl);
+		return &layout_container[viewMode].org_is_hidden[position];
+	}
+
+	void SetLayoutContainerAt(int viewMode, IControl* pControl, DRECT drawIn, DRECT targetIn, int isHiddenIn)
+	{
+		int position = FindLayoutPointerPosition(viewMode, pControl);
+
+		layout_container[viewMode].org_draw_area[position] = drawIn;
+		layout_container[viewMode].org_target_area[position] = targetIn;
+		layout_container[viewMode].org_is_hidden[position] = isHiddenIn;
+	}
+
+	int FindLayoutPointerPosition(int viewMode, IControl* pControl)
+	{
+		for (int i = 0; i < layout_container[0].org_pointer.size(); i++)
+		{
+			if (pControl == layout_container[viewMode].org_pointer[i]) return i;
+		}
+		return -1;
+	}
+
 	void SetIntToFile(const char *name, int x);
 	int GetIntFromFile(const char *name);
 	void SetDoubleToFile(const char *name, double x);
@@ -277,7 +317,7 @@ private:
 	int one_side_handle_size = 0, one_side_handle_min_size = 0;
 	bool using_one_size_resize = false;
 
-	int view_mode;
+	int view_mode = 0;
 	int default_gui_width, default_gui_height;
 	int plugin_width, plugin_height; // This is current plugin instance width
 	int min_control_size, control_size;

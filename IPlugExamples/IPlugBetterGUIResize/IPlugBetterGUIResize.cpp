@@ -107,6 +107,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   AttachGraphics(pGraphics);
 
   liveLayout.SetControlPositions(pGraphics);
+  liveLayout.SetGUIResizeLayout(pGraphics, GetGUIResize());
 
   pGraphics->ShowControlBounds(true);
   pGraphics->LiveEditing(true, 18);

@@ -1,3 +1,6 @@
+#ifndef _IPLUGGUILIVEEDIT_
+#define _IPLUGGUILIVEEDIT_
+
 /*
 Youlean - IPlugGUILiveEdit - live GUI editing class
 
@@ -27,6 +30,7 @@ appreciated but is not required.
 #include <typeinfo>
 #include "IControl.h"
 #include "IGraphics.h"
+#include "IPlugGUIResize.h"
 
 using namespace std;
 
@@ -45,6 +49,7 @@ public:
 		if (pPlug->GetGUIResize()) liveScaledGridSize = int((double)*liveGridSize * guiScaleRatio);
 		else liveScaledGridSize = *liveGridSize;
 		
+		if (pPlug->GetGUIResize()) viewMode = pPlug->GetGUIResize()->GetViewMode();
 
 		// Toogle live editing
 		if (*liveToogleEditing)
@@ -629,7 +634,7 @@ public:
 			if (liveEditingMod->R) DoPopupMenu(pPlug, pGraphics, *mMouseX, *mMouseY, guiScaleRatio);
 
 			// Write to file
-			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio);
+			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, viewMode);
 		}
 	}
 
@@ -798,12 +803,12 @@ public:
 	void WriteToTextFile(const char* data)
 	{
 		ofstream myfile;
-		myfile.open(".\\LiveEditLayout.h");
+		myfile.open("LiveEditLayout.h");
 		myfile << data;
 		myfile.close();
 	}
 
-	void CreateLayoutCode(IPlugBase* pPlug, IGraphics* pGraphics, double guiScaleRatio)
+	void CreateLayoutCode(IPlugBase* pPlug, IGraphics* pGraphics, double guiScaleRatio, int viewMode)
 	{
 		string code;
 
@@ -811,7 +816,8 @@ public:
 			"// Do not edit. All of this is generated automatically \n"
 			"// Copyright Youlean 2016 \n \n"
             "#include <vector>\n"
-			"#include \"IGraphics.h\" \n \n"
+			"#include \"IGraphics.h\" \n"
+			"#include \"IPlugGUIResize.h\" \n\n"
 			"class LiveEditLayout \n"
 			"{ \n"
 			"public: \n"
@@ -819,6 +825,11 @@ public:
 			"	~LiveEditLayout() {} \n \n"
 			"	void SetControlPositions(IGraphics* pGraphics) \n"
 			"	{ \n"
+			"	    // Backup original control pointers\n"
+			"		for (int i = 0; i < pGraphics->GetNControls(); i++) \n"
+			"			originalPointers.push_back(pGraphics->GetControl(i));\n"
+			"\n"
+			"	    // --------------------------------------------------------------------\n\n"
 			;
 
 		
@@ -866,17 +877,12 @@ public:
 
 			code.append("\n");
 		}
-		
+
 		// Reordering control layers
 		code.append
 		(
-			"	    // --------------------------------------------------------------------\n"
-			"\n"
+			"	    // --------------------------------------------------------------------\n\n"
 			"	    // Reordering control layers\n"
-			"		std::vector <IControl*> pControl;\n"
-			"		for (int i = 0; i < pGraphics->GetNControls(); i++) \n"
-			"			pControl.push_back(pGraphics->GetControl(i));\n"
-			"\n"
 		);
 
 		WDL_String layoutMove;
@@ -888,14 +894,95 @@ public:
 		for (int i = 0; i < controlSize; i++)
 		{
 			IControl* pControl = default_layers[i];
-			layoutMove.SetFormatted(128, "		pGraphics->ReplaceControl(%i,pControl[%i]); \n", FindPointerPosition(pControl, current_layers), i);
+			layoutMove.SetFormatted(128, "		pGraphics->ReplaceControl(%i, originalPointers[%i]); \n", FindPointerPosition(pControl, current_layers), i);
 			code.append(layoutMove.Get());
 		}
 		
 
-		code.append("	}\n");
+		code.append("	}\n\n");
 
+		// If GUI resize is enabled
+		code.append
+		(
+			"	void SetGUIResizeLayout(IGraphics* pGraphics, IPlugGUIResize* pGUIResize)\n"
+			"	{\n"
+		);
+
+
+		// Set GUI Resize code -----------------------------------------------------------------------------------------------------------
+		if (pPlug->GetGUIResize())
+		{
+			code_view_mode.resize(IPMAX(viewMode + 1, code_view_mode.size()));
+
+			code.append
+			(
+				"		IControl* pControl;\n"
+			);
+
+			code_view_mode[viewMode].clear();
+			WDL_String getC, viewCode;
+			for (int i = 0; i < controlSize; i++)
+			{
+				IControl* pControl = default_layers[i];
+				IRECT drawRECT = *pControl->GetRECT();
+				IRECT targetRECT = *pControl->GetTargetRECT();
+
+				if (pPlug->GetGUIResize())
+				{
+					drawRECT.L = int((double)drawRECT.L * guiScaleRatio);
+					drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
+					drawRECT.R = int((double)drawRECT.R * guiScaleRatio);
+					drawRECT.B = int((double)drawRECT.B * guiScaleRatio);
+
+					targetRECT.L = int((double)targetRECT.L * guiScaleRatio);
+					targetRECT.T = int((double)targetRECT.T * guiScaleRatio);
+					targetRECT.R = int((double)targetRECT.R * guiScaleRatio);
+					targetRECT.B = int((double)targetRECT.B * guiScaleRatio);
+				}
+
+				getC.SetFormatted(128, "		pControl = pGraphics->GetControl(%i); \n", FindPointerPosition(pControl, current_layers));
+
+				viewCode.SetFormatted(128, "		pGUIResize->LiveEditSetLayout(%i, pControl, IRECT(%i, %i, %i, %i), IRECT(%i, %i, %i, %i)",
+					viewMode, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B, targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B);
+				if (pControl->IsHidden()) viewCode.Append(", true);\n");
+				else  viewCode.Append(", false);\n");
+
+				code_view_mode[viewMode].append(getC.Get());
+				code_view_mode[viewMode].append(viewCode.Get());
+
+				// Update current view mode
+				IControl* tmpControl = pGraphics->GetControl(FindPointerPosition(pControl, current_layers));
+				pPlug->GetGUIResize()->LiveEditSetLayout(
+					viewMode, 
+					tmpControl, 
+					IRECT(drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B), 
+					IRECT(targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B), 
+					pControl->IsHidden());
+			}
+
+			// Append all view code code
+			for (int i = 0; i < code_view_mode.size(); i++)
+			{
+				code.append("\n");
+				WDL_String mode;
+				mode.SetFormatted(128, "		// View Mode: (%i) ------------------------------------------------------------------------------------------------\n", i);
+				code.append(mode.Get());
+				code.append("\n");
+				code.append(code_view_mode[i]);
+				code.append("\n");
+			}
+		}
+
+
+		code.append("    }\n\n");
 		// End
+		code.append
+		(
+			"private:\n"
+			"	std::vector <IControl*> originalPointers;\n"
+
+		);
+
 		code.append("}; ");
 		WriteToTextFile(code.c_str());
 	}
@@ -1075,7 +1162,7 @@ public:
 						control_move_to.push_back(liveControlNumber + 1);
 						liveControlNumber = control_move_to.back();
 
-						pGraphics->SwitchControlLayers(control_move_from.back(), control_move_to.back());
+						pGraphics->SwapControlLayers(control_move_from.back(), control_move_to.back());
 					}
 			}
 
@@ -1091,7 +1178,7 @@ public:
 						control_move_to.push_back(liveControlNumber - 1);
 						liveControlNumber = control_move_to.back();
 
-						pGraphics->SwitchControlLayers(control_move_from.back(), control_move_to.back());
+						pGraphics->SwapControlLayers(control_move_from.back(), control_move_to.back());
 					}
 			}
 
@@ -1118,22 +1205,8 @@ public:
 				liveClickedRECT = IRECT(0, 0, 0, 0);
 				liveClickedTargetRECT = IRECT(0, 0, 0, 0);
 				
-				string clear =
-					"// Do not edit. All of this is generated automatically \n"
-					"// Copyright Youlean 2016 \n \n"
-					"#include <vector>\n"
-					"#include \"IGraphics.h\" \n \n"
-					"class LiveEditLayout \n"
-					"{ \n"
-					"public: \n"
-					"	LiveEditLayout() {} \n \n"
-					"	~LiveEditLayout() {} \n \n"
-					"	void SetControlPositions(IGraphics* pGraphics) \n"
-					"	{} \n"
-					"};"
-					;
-
-				WriteToTextFile(clear.c_str());
+				// Write to file
+				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, viewMode);
 			}
 		}
 	}
@@ -1223,4 +1296,7 @@ private:
 	vector <int> control_move_from;
 	vector <int> control_move_to;
 	vector <IControl*> current_layers;
+	vector <string> code_view_mode;
+	int viewMode = 0;
 };
+#endif

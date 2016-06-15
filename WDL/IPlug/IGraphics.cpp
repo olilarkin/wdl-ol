@@ -13,7 +13,6 @@
 #define CONTROL_BOUNDS_COLOR COLOR_GREEN
 #endif
 
-IPlugGUILiveEdit liveEdit;
 
 class BitmapStorage
 {
@@ -576,7 +575,7 @@ void IGraphics::MoveControlLayers(int fromIndex, int toIndex)
 	}
 }
 
-void IGraphics::SwitchControlLayers(int fromIndex, int toIndex)
+void IGraphics::SwapControlLayers(int fromIndex, int toIndex)
 {
 	int controlSize = mControls.GetSize();
 	if (mPlug->GetGUIResize()) controlSize -= 3;
@@ -824,8 +823,6 @@ void IGraphics::PrepDraw()
 {
 	mDrawBitmap = new LICE_SysBitmap(Width(), Height());
 	mTmpBitmap = new LICE_MemBitmap();
-
-	liveEdit.StoreDefaults(this);
 }
 
 bool IGraphics::DrawBitmap(IBitmap* pIBitmap, IRECT* pDest, int srcX, int srcY, const IChannelBlend* pBlend)
@@ -1236,8 +1233,7 @@ bool IGraphics::Draw(IRECT* pR)
 	
 	if (liveEditing)
 	{
-		//liveEdit.LoadIRECTsFromFile(mPlug, this, "edited");
-		liveEdit.EditGUI(mPlug, this, &mControls, mDrawBitmap, &liveEditingMod, &liveGridSize, &liveSnap, &liveKeyDown,
+		mPlug->GetGUILiveEdit()->EditGUI(mPlug, this, &mControls, mDrawBitmap, &liveEditingMod, &liveGridSize, &liveSnap, &liveKeyDown,
 			&liveToogleEditing, &liveMouseCapture, &liveMouseDragging, &mMouseX, &mMouseY, Width(), Height(), guiScaleRatio);
 	}
 
@@ -1258,10 +1254,10 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 		liveMouseCapture = l;
 	}
 
-	liveEditingMod.L = pMod->L;
-	liveEditingMod.R = pMod->R;
 	liveEditingMod.A = pMod->A;
 	liveEditingMod.C = pMod->C;
+	liveEditingMod.L = pMod->L;
+	liveEditingMod.R = pMod->R;
 	liveEditingMod.S = pMod->S;
 
 	ReleaseMouseCapture();
@@ -1320,10 +1316,10 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 {
 	liveMouseCapture = -1;
-	liveEditingMod.L = pMod->L;
-	liveEditingMod.R = pMod->R;
 	liveEditingMod.A = pMod->A;
 	liveEditingMod.C = pMod->C;
+	liveEditingMod.L = pMod->L;
+	liveEditingMod.R = pMod->R;
 	liveEditingMod.S = pMod->S;
 
 	int c = GetMouseControlIdx(x, y);
