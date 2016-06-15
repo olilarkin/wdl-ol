@@ -3,6 +3,7 @@
 #include "IPlugGUIResize.h"
 #include "IPlugGUIResize.h"
 #include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
 
 // Helpers -------------------------------------------------------------------------------------------------------------
 bool IPlugGUIResize::double_equals(double a, double b, double epsilon)
@@ -560,7 +561,12 @@ double IPlugGUIResize::GetGUIScaleRatio()
 
 int IPlugGUIResize::GetViewMode()
 {
-	return view_mode;
+	return current_view_mode;
+}
+
+int IPlugGUIResize::GetViewModeSize()
+{
+	return view_container.view_mode.size();
 }
 
 void IPlugGUIResize::ResizeControlRects()

@@ -162,6 +162,7 @@ public:
 	
 	double GetGUIScaleRatio();
 	int GetViewMode();
+	int GetViewModeSize();
 	
 	// You can override this to use in your custom resizing control
 	virtual void DrawBackgroundAtFastResizing(IGraphics* pGraphics, IRECT *pRECT);
@@ -317,7 +318,6 @@ private:
 	int one_side_handle_size = 0, one_side_handle_min_size = 0;
 	bool using_one_size_resize = false;
 
-	int view_mode = 0;
 	int default_gui_width, default_gui_height;
 	int plugin_width, plugin_height; // This is current plugin instance width
 	int min_control_size, control_size;

@@ -48,8 +48,19 @@ public:
 	
 		if (pPlug->GetGUIResize()) liveScaledGridSize = int((double)*liveGridSize * guiScaleRatio);
 		else liveScaledGridSize = *liveGridSize;
-		
-		if (pPlug->GetGUIResize()) viewMode = pPlug->GetGUIResize()->GetViewMode();
+
+		if (pPlug->GetGUIResize())
+		{
+			currentViewMode = pPlug->GetGUIResize()->GetViewMode();
+			viewModeSize = pPlug->GetGUIResize()->GetViewModeSize();
+			code_view_mode.resize(viewModeSize);
+		}
+
+		if (!retrieveOldLayoutChanges)
+		{
+			RetrieveOldLayoutChanges();
+			retrieveOldLayoutChanges = true;
+		}
 
 		// Toogle live editing
 		if (*liveToogleEditing)
@@ -634,7 +645,7 @@ public:
 			if (liveEditingMod->R) DoPopupMenu(pPlug, pGraphics, *mMouseX, *mMouseY, guiScaleRatio);
 
 			// Write to file
-			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, viewMode);
+			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode);
 		}
 	}
 
@@ -804,8 +815,43 @@ public:
 	{
 		ofstream myfile;
 		myfile.open("LiveEditLayout.h");
-		myfile << data;
-		myfile.close();
+		if (myfile.is_open())
+		{
+			myfile << data;
+			myfile.close();
+		}
+	}
+
+	void RetrieveOldLayoutChanges()
+	{
+		string oldCode;
+		string line;
+		ifstream myfile("LiveEditLayout.h");
+		if (myfile.is_open())
+		{
+			while (getline(myfile, line))
+			{
+				oldCode.append(line);
+				oldCode.append("\n");
+			}
+			myfile.close();
+		}
+
+		for (int i = 0; i < viewModeSize; i++)
+		{
+			WDL_String findStart, findEnd;
+			findStart.SetFormatted(128, "		// View Mode: (%i)", i);
+			findEnd.SetFormatted(128, "		// End (%i)", i);
+
+			unsigned start_index = oldCode.find(findStart.Get());
+			unsigned next_start_index = oldCode.find("		pControl", start_index);
+			unsigned end_index = oldCode.find(findEnd.Get());
+			
+			if (oldCode.npos > next_start_index && oldCode.npos > end_index)
+			{
+				code_view_mode[i] = oldCode.substr(next_start_index, end_index - next_start_index);
+			}
+		}
 	}
 
 	void CreateLayoutCode(IPlugBase* pPlug, IGraphics* pGraphics, double guiScaleRatio, int viewMode)
@@ -912,8 +958,6 @@ public:
 		// Set GUI Resize code -----------------------------------------------------------------------------------------------------------
 		if (pPlug->GetGUIResize())
 		{
-			code_view_mode.resize(IPMAX(viewMode + 1, code_view_mode.size()));
-
 			code.append
 			(
 				"		IControl* pControl;\n"
@@ -967,8 +1011,10 @@ public:
 				WDL_String mode;
 				mode.SetFormatted(128, "		// View Mode: (%i) ------------------------------------------------------------------------------------------------\n", i);
 				code.append(mode.Get());
-				code.append("\n");
 				code.append(code_view_mode[i]);
+				WDL_String endMode;
+				endMode.SetFormatted(128, "		// End (%i) -------------------------------------------------------------------------------------------------------\n", i);
+				code.append(endMode.Get());
 				code.append("\n");
 			}
 		}
@@ -1206,7 +1252,7 @@ public:
 				liveClickedTargetRECT = IRECT(0, 0, 0, 0);
 				
 				// Write to file
-				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, viewMode);
+				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode);
 			}
 		}
 	}
@@ -1297,6 +1343,8 @@ private:
 	vector <int> control_move_to;
 	vector <IControl*> current_layers;
 	vector <string> code_view_mode;
-	int viewMode = 0;
+	int currentViewMode = 0;
+	int viewModeSize = 1;
+	bool retrieveOldLayoutChanges = false;
 };
 #endif
