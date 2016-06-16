@@ -2,6 +2,9 @@
 #include "IPlug_include_in_plug_src.h"
 #include "IControl.h"
 #include "resource.h"
+#include "LiveEditLayout.h"
+
+LiveEditLayout liveLayout;
 
 const int kNumPrograms = 2;
 
@@ -42,12 +45,12 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   AttachGUIResize(new IPlugGUIResize(this, pGraphics, true, 16, 16));
 
   // Enable resizing only one side control
-  GetGUIResize()->UseOneSideResizing(5, 5, horisontalAndVerticalResizing);
+  GetGUIResize()->UseOneSideResizing(5, 5, justHorisontalResizing);
 
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
   //GetGUIResize()->SmoothResizedBitmaps();
-  //GetGUIResize()->DisableFastBitmapResizing();
+  GetGUIResize()->DisableFastBitmapResizing();
 
   // Adding a new view. Default view will always be 0.
   GetGUIResize()->AddNewView(miniView, 200, 400);
@@ -92,17 +95,23 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   IRECT tmpRect3(20, 760, 800, 800);
   IText textProps3(24, &COLOR_WHITE, "Arial", IText::kStyleItalic, IText::kAlignNear, 0, IText::kQualityDefault);
   infoText = pGraphics->AttachControl(new ITextControl(this, tmpRect3, &textProps3, "This is IPlugGUIResize example by Youlean..."));
-  
+
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 0 + 200, 150 + 25, 30 + 200), "miniView", miniView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 50 + 200, 150 + 25, 80 + 200), "defaultView", defaultView));
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", hugeView));
 
-  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 400, 550)));
+  //pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
+  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 400, 600)));
   // --------------------------------------------------------------------------------------------------------------------------
-  
+
   AttachGraphics(pGraphics);
+
+  liveLayout.SetControlPositions(pGraphics);
+  liveLayout.SetGUIResizeLayout(pGraphics, GetGUIResize());
+
   pGraphics->ShowControlBounds(true);
-  
+  pGraphics->LiveEditing(true, 18);
+
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
 }
@@ -119,26 +128,26 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because layout is separate for every view
 	if (viewMode == defaultView)
 	{
-		GetGUIResize()->MoveControl(grayKnob, 50.0, 450.0);
-		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
-		GetGUIResize()->MoveControl(customControl, 600, 0);
-		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
+		//GetGUIResize()->MoveControl(*grayKnob, 50.0, 450.0);
+		//GetGUIResize()->MoveControl(*redKnob, 50.0, 50.0);
+		//GetGUIResize()->MoveControl(*customControl, 600, 0);
+		//GetGUIResize()->MoveControlRightEdge(*customControl, windowWidth);
 	}
 
 	if (viewMode == miniView)
 	{
-		GetGUIResize()->HideControl(grayKnob);
-		GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
-		GetGUIResize()->HideControl(customControl);
+		//GetGUIResize()->HideControl(*grayKnob);
+		//GetGUIResize()->MoveControl(*redKnob, 50.0, 50.0);
+		//GetGUIResize()->HideControl(*customControl);
 	}
 
 	if (viewMode == hugeView)
 	{
-		GetGUIResize()->MoveControl(redKnob, windowWidth - 101.0, 0.0);
-		GetGUIResize()->MoveControl(grayKnob, windowWidth - 101.0, 150.0);
-		GetGUIResize()->MoveControl(customControl, windowWidth - 100.0, 0);
-		GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
-		GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
+		//GetGUIResize()->MoveControl(*redKnob, windowWidth - 101.0, 0.0);
+		//GetGUIResize()->MoveControl(*grayKnob, windowWidth - 101.0, 150.0);
+		//GetGUIResize()->MoveControl(*customControl, windowWidth - 100.0, 0);
+		//GetGUIResize()->MoveControlRightEdge(*customControl, windowWidth);
+		//GetGUIResize()->MoveControlBottomEdge(*customControl, windowHeight);
 	}
 }
 

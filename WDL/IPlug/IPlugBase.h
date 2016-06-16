@@ -22,6 +22,7 @@
 
 class IGraphics;
 class IPlugGUIResize;
+class IPlugGUILiveEdit;
 class IPlugBase
 {
 public:
@@ -110,6 +111,7 @@ public:
   void ResizeAtGUIOpen(IGraphics* pGraphics);
   IPlugGUIResize* GetGUIResize() { return mGUIResize; }
   // ---------------------------------------------------------------------------------------------------------------------------
+  IPlugGUILiveEdit* GetGUILiveEdit();
 
   const char* GetEffectName() { return mEffectName; }
   int GetEffectVersion(bool decimal);   // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
@@ -341,6 +343,7 @@ protected:
 private:
   IGraphics* mGraphics;
   IPlugGUIResize* mGUIResize = NULL;
+  IPlugGUILiveEdit* mGUILiveEdit = NULL;
   WDL_PtrList<IParam> mParams;
   WDL_PtrList<IPreset> mPresets;
   WDL_TypedBuf<double*> mInData, mOutData;

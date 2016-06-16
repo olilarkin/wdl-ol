@@ -3,6 +3,7 @@
 #include "IGraphics.h"
 #include "IControl.h"
 #include "IPlugGUIResize.h"
+#include "IPlugGUILiveEdit.h"
 #endif
 #include <math.h>
 #include <stdio.h>
@@ -148,6 +149,8 @@ IPlugBase::IPlugBase(int nParams,
     pOutChannel->mFDest = 0;
     mOutChannels.Add(pOutChannel);
   }
+
+  mGUILiveEdit = new IPlugGUILiveEdit;
 }
 
 IPlugBase::~IPlugBase()
@@ -168,6 +171,8 @@ IPlugBase::~IPlugBase()
   {
     DELETE_NULL(mDelay);
   }
+
+  if (mGUILiveEdit) delete mGUILiveEdit;
 }
 
 int IPlugBase::GetHostVersion(bool decimal)
@@ -230,13 +235,13 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 {
   if (pGraphics)
   {
-	  if (GetGUIResize() != NULL)
+	  WDL_MutexLock lock(&mMutex);
+	  if (GetGUIResize())
 	  {
 		  // Here we are attaching our GUI resize control.
 		  pGraphics->AttachControl(GetGUIResize()->AttachGUIResize());
 	  }
 
-    WDL_MutexLock lock(&mMutex);
     int i, n = mParams.GetSize();
     
     for (i = 0; i < n; ++i)
@@ -246,16 +251,26 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
     
     pGraphics->PrepDraw();
     mGraphics = pGraphics;
+
+	// Load control positions from file if user was live editing the GUI
+	GetGUILiveEdit()->StoreDefaults(pGraphics);
   }
 }
 #endif
 
 void IPlugBase::ResizeAtGUIOpen(IGraphics * pGraphics)
 {
-	if (GetGUIResize() != NULL)
+	if (GetGUIResize())
 	{
 		GetGUIResize()->ResizeAtGUIOpen();
 	}
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+
+IPlugGUILiveEdit * IPlugBase::GetGUILiveEdit() 
+{ 
+	return mGUILiveEdit; 
 }
 
 // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.

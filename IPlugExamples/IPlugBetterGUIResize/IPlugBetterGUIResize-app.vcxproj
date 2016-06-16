@@ -279,6 +279,8 @@
     <ClInclude Include="app_wrapper\app_main.h" />
     <ClInclude Include="app_wrapper\app_resource.h" />
     <ClInclude Include="IPlugBetterGUIResize.h" />
+    <ClInclude Include="LiveEditLayout.h" />
+    <ClInclude Include="LiveEditLayoutPrototype.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

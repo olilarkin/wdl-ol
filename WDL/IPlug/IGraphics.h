@@ -161,7 +161,11 @@ public:
 	void AttachKeyCatcher(IControl* pControl);
 
 	// Returns the control index of this control (not the number of controls).
-	int AttachControl(IControl* pControl);
+	int* AttachControl(IControl* pControl);
+
+	void MoveControlLayers(int fromIndex, int toIndex);
+	void SwapControlLayers(int fromIndex, int toIndex);
+	void ReplaceControl(int Index, IControl * pControl);
 
 	IControl* GetControl(int idx) { return mControls.Get(idx); }
 	int GetNControls() { return mControls.GetSize(); }
@@ -297,27 +301,18 @@ private:
 	IControl* mKeyCatcher;
 	unsigned bitmapOversample = 1;
 	double guiScaleRatio = 1.0;
+	int viewMode = 0;
 
 	// Live editing stuff
 	int liveGetControlIdx(int x, int y, bool mo = false);
-	IRECT liveSelectedRECT = IRECT(0, 0, 0, 0);
-	IRECT liveSelectedTargetRECT = IRECT(0, 0, 0, 0);
-	IRECT liveClickedRECT = IRECT(0, 0, 0, 0);
-	IRECT liveClickedTargetRECT = IRECT(0, 0, 0, 0);
-	int liveControlNumber = -1;
-	int lastLiveMouseCapture = -1;
-	int liveClickedX = 0, liveClickedY = 0;
 	bool liveEditing = false;
 	IMouseMod liveEditingMod;
-	int liveScaledGridSize = 1, liveGridSize = 1;
+	int liveGridSize = 1;
 	int liveSnap = 0;
-	bool liveClickedOnHandle = false;
 	int liveKeyDown = -1;
 	bool liveToogleEditing = false;
-	bool liveLastMouseDownL = false;
 	int liveMouseCapture = -1;
-	int liveMouseXLock = 0;
-	int liveMouseYLock = 0;
+	bool liveMouseDragging = false;
 };
 
 

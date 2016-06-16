@@ -57,6 +57,8 @@ public:
 
   void SetChecked(bool state);
 
+  void SetState(bool state, int itemFlags);
+
 protected:
   WDL_String mText;
   IPopupMenu* mSubmenu;
@@ -99,6 +101,8 @@ public:
   void CheckItemAlone(int index);
 
   bool IsItemChecked(int index);
+
+  void SetItemState(int index, IPopupMenuItem::Flags itemFlags, bool state);
 
 private:
   int mPrefix; // 0 = no prefix, 1 = numbers no leading zeros, 2 = 1 lz, 3 = 2lz

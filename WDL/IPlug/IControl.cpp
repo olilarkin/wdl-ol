@@ -626,7 +626,7 @@ bool IKnobLineControl::Draw(IGraphics* pGraphics)
   float scaledInnerRadius = mInnerRadius;
   float scaledOuterRadius = mOuterRadius;
 
-  if (mPlug->GetGUIResize() != NULL)
+  if (mPlug->GetGUIResize())
   {
 	  scaledInnerRadius = scaledInnerRadius * (float)mGUIScaleRatio;
 	  scaledOuterRadius = scaledOuterRadius * (float)mGUIScaleRatio;

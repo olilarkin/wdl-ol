@@ -2,7 +2,6 @@
 #define __IPLUGBETTERGUIRESIZE__
 
 #include "IPlug_include_in_plug_hdr.h"
-#include "IPlugAnimation.h"
 #include <time.h>
 
 class IPlugBetterGUIResize : public IPlug
@@ -20,7 +19,7 @@ private:
   IGraphics* pGraphics;
 
   // Get control numbers. Do this to make gui layout easier
-  int background, redKnob, grayKnob, infoText, customControl;
+  int *background, *redKnob, *grayKnob, *infoText, *customControl;
 };
 
 // This is custom GUI resize control that allowes you to customize graphics
@@ -110,7 +109,7 @@ public:
 
 };
 
-class handleSelector : public IControl, IPlugAnimation
+class handleSelector : public IControl
 {
 public:
 	handleSelector(IPlugBase* pPlug, IRECT pR)
@@ -144,12 +143,20 @@ public:
 			pGraphics->DrawIText(&mText, scaling.Get(), &mRECT);
 		}
 
-				
-		double animatePosition = Animation("animatePosition", button, false, 0, mRECT.W() - 50, 60, 60, animationFlag::_BezierSwiftMove, animationFlag::_BezierSwiftMove);
-		double animateHeight = 0;// = Animation("animateHeight", button, false, 0, 50, 10, 10, animationFlag::_BackEaseOut, animationFlag::_BackEaseIn);
+		//GetAnimation()->DrawAnimationCurve_DEBUG(pGraphics, animationFlag::_BounceEaseOut);
 
-		pGraphics->FillIRect(&COLOR_BLACK, &IRECT(mRECT.L + (int)animatePosition, mRECT.T + 50, mRECT.L + 50 + (int)animatePosition, mRECT.B - 50 + (int)animateHeight), &mBlend);
+		//double animatePosition = GetAnimation()->Animation("animatePosition", button, false, 0, mRECT.W() - 50, 100, 100, animationFlag::_BounceEaseOut, animationFlag::_BounceEaseOut);
+		//double animateHeight = 0;// = Animation("animateHeight", button, false, 0, 50, 30, 60, animationFlag::_BackEaseOut, animationFlag::_BackEaseIn);
 
+		//pGraphics->FillIRect(&COLOR_BLACK, &IRECT(mRECT.L + (int)animatePosition, mRECT.T + 50, mRECT.L + 50 + (int)animatePosition, mRECT.B - 50 + (int)animateHeight), &mBlend);
+
+		// Print selected control
+		WDL_String controlNumber;
+		controlNumber.SetFormatted(100, "Redraws: %i", redrawTest);
+		IText txtControlNumber(17, &COLOR_WHITE);
+		txtControlNumber.mAlign = IText::kAlignNear;
+		//pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &mRECT);
+		redrawTest++;
 		return true;
 	}
 
@@ -165,10 +172,7 @@ public:
 		SetDirty();
 	}
 
-	bool IsDirty()
-	{ 
-		return mDirty || AnimationRequestDirty();
-	}
+	//bool IsDirty() {  return true; }
 
 
 private:
@@ -176,5 +180,6 @@ private:
 	WDL_String resize;
 	IPlugGUIResize *GUIResize;
 	bool button = false;
+	int redrawTest = 0;
 };
 #endif
