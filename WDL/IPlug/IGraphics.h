@@ -161,7 +161,7 @@ public:
 	void AttachKeyCatcher(IControl* pControl);
 
 	// Returns the control index of this control (not the number of controls).
-	int AttachControl(IControl* pControl);
+	int* AttachControl(IControl* pControl);
 
 	void MoveControlLayers(int fromIndex, int toIndex);
 	void SwapControlLayers(int fromIndex, int toIndex);
@@ -272,6 +272,8 @@ public:
 
 protected:
 	WDL_PtrList<IControl> mControls;
+	WDL_PtrList<IControl> defaultControls;
+	WDL_PtrList<int> mControlIndexes;
 	IPlugBase* mPlug;
 	IRECT mDrawRECT;
 	bool mCursorHidden;

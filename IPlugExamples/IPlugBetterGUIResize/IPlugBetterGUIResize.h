@@ -19,7 +19,7 @@ private:
   IGraphics* pGraphics;
 
   // Get control numbers. Do this to make gui layout easier
-  int background, redKnob, grayKnob, infoText, customControl;
+  int *background, *redKnob, *grayKnob, *infoText, *customControl;
 };
 
 // This is custom GUI resize control that allowes you to customize graphics

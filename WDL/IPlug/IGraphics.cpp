@@ -256,7 +256,9 @@ IGraphics::~IGraphics()
 	if (mKeyCatcher)
 		DELETE_NULL(mKeyCatcher);
 
+	defaultControls.Empty(true);
 	mControls.Empty(true);
+	mControlIndexes.Empty(true);
 	DELETE_NULL(mDrawBitmap);
 	DELETE_NULL(mTmpBitmap);
 }
@@ -546,19 +548,31 @@ void IGraphics::AttachBackground(int ID, const char* name)
 	IBitmap *bg = LoadPointerToBitmap(ID, name);
 
 	IControl* pBG = new IBitmapControl(mPlug, 0, 0, -1, bg, IChannelBlend::kBlendClobber);
+	defaultControls.Insert(0, pBG);
 	mControls.Insert(0, pBG);
+	int* index = new int;
+	*index = 0;
+	mControlIndexes.Insert(0, index);
 }
 
 void IGraphics::AttachPanelBackground(const IColor *pColor)
 {
 	IControl* pBG = new IPanelControl(mPlug, IRECT(0, 0, mWidth, mHeight), pColor);
+	defaultControls.Insert(0, pBG);
 	mControls.Insert(0, pBG);
+	int* index = new int;
+	*index = mControls.GetSize() - 1;
+	mControlIndexes.Insert(0, index);
 }
 
-int IGraphics::AttachControl(IControl* pControl)
+int* IGraphics::AttachControl(IControl* pControl)
 {
+	defaultControls.Add(pControl);
 	mControls.Add(pControl);
-	return mControls.GetSize() - 1;
+	int* index = new int;
+	*index = 0;
+	mControlIndexes.Add(index);
+	return index;
 }
 
 void IGraphics::MoveControlLayers(int fromIndex, int toIndex)
@@ -572,6 +586,11 @@ void IGraphics::MoveControlLayers(int fromIndex, int toIndex)
 
 		mControls.Delete(fromIndex);
 		mControls.Insert(toIndex, pControl);
+
+		int* tmpInt = mControlIndexes.Get(fromIndex);
+
+		mControlIndexes.Delete(fromIndex);
+		mControlIndexes.Insert(toIndex, tmpInt);
 	}
 }
 
@@ -586,7 +605,21 @@ void IGraphics::SwapControlLayers(int fromIndex, int toIndex)
 
 		mControls.Set(fromIndex, mControls.Get(toIndex));
 		mControls.Set(toIndex, pControl);
+
+		int* tmpInt = mControlIndexes.Get(fromIndex);
+
+		mControlIndexes.Set(fromIndex, mControlIndexes.Get(toIndex));
+		mControlIndexes.Set(toIndex, tmpInt);
 	}
+}
+
+int FindPointerPosition(IControl* pControl, WDL_PtrList<IControl> vControl)
+{
+	for (int i = 0; i < vControl.GetSize(); i++)
+	{
+		if (pControl == vControl.Get(i)) return i;
+	}
+	return -1;
 }
 
 void IGraphics::ReplaceControl(int Index, IControl* pControl)
@@ -597,6 +630,10 @@ void IGraphics::ReplaceControl(int Index, IControl* pControl)
 	if (Index > 0 && Index < controlSize)
 	{
 		mControls.Set(Index, pControl);
+
+		int controlPos = FindPointerPosition(pControl, defaultControls);
+		int* setIndex = mControlIndexes.Get(Index);
+		*setIndex = controlPos;
 	}
 }
 

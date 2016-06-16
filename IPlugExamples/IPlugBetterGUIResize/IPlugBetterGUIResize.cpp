@@ -128,26 +128,26 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because layout is separate for every view
 	if (viewMode == defaultView)
 	{
-		//GetGUIResize()->MoveControl(grayKnob, 50.0, 450.0);
-		//GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
-		//GetGUIResize()->MoveControl(customControl, 600, 0);
-		//GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
+		//GetGUIResize()->MoveControl(*grayKnob, 50.0, 450.0);
+		//GetGUIResize()->MoveControl(*redKnob, 50.0, 50.0);
+		//GetGUIResize()->MoveControl(*customControl, 600, 0);
+		//GetGUIResize()->MoveControlRightEdge(*customControl, windowWidth);
 	}
 
 	if (viewMode == miniView)
 	{
-		//GetGUIResize()->HideControl(grayKnob);
-		//GetGUIResize()->MoveControl(redKnob, 50.0, 50.0);
-		//GetGUIResize()->HideControl(customControl);
+		//GetGUIResize()->HideControl(*grayKnob);
+		//GetGUIResize()->MoveControl(*redKnob, 50.0, 50.0);
+		//GetGUIResize()->HideControl(*customControl);
 	}
 
 	if (viewMode == hugeView)
 	{
-		//GetGUIResize()->MoveControl(redKnob, windowWidth - 101.0, 0.0);
-		//GetGUIResize()->MoveControl(grayKnob, windowWidth - 101.0, 150.0);
-		//GetGUIResize()->MoveControl(customControl, windowWidth - 100.0, 0);
-		//GetGUIResize()->MoveControlRightEdge(customControl, windowWidth);
-		//GetGUIResize()->MoveControlBottomEdge(customControl, windowHeight);
+		//GetGUIResize()->MoveControl(*redKnob, windowWidth - 101.0, 0.0);
+		//GetGUIResize()->MoveControl(*grayKnob, windowWidth - 101.0, 150.0);
+		//GetGUIResize()->MoveControl(*customControl, windowWidth - 100.0, 0);
+		//GetGUIResize()->MoveControlRightEdge(*customControl, windowWidth);
+		//GetGUIResize()->MoveControlBottomEdge(*customControl, windowHeight);
 	}
 }
 
