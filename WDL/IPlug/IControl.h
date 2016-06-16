@@ -4,6 +4,7 @@
 #include <typeinfo>
 #include "IPlugBase.h"
 #include "IGraphics.h"
+#include "IPlugAnimation.h"
 
 // A control is anything on the GUI, it could be a static bitmap, or
 // something that moves or changes.  The control could manipulate
@@ -48,6 +49,9 @@ public:
   // This is used for GUI resize ----------------------------------------------------------------------------------------
   virtual void InitializeGUI(double guiScaleRatio) {}
   // --------------------------------------------------------------------------------------------------------------------
+
+  // Get animation object. 
+  IPlugAnimation* GetAnimation() { return &mAnimation; }
 
   // This retrives derived class name
   const char* GetDerivedClassName() const { return typeid(*this).name(); }
@@ -150,6 +154,8 @@ protected:
   IControl* mValDisplayControl;
   IControl* mNameDisplayControl;
   WDL_String mTooltip;
+	private:
+		IPlugAnimation mAnimation;
 };
 
 enum EDirection { kVertical, kHorizontal };
