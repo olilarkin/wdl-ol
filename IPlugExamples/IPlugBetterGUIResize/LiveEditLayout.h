@@ -22,48 +22,48 @@ public:
 
         // class IBitmapControl
 		pGraphics->GetControl(1)->Hide(false); 
-		pGraphics->GetControl(1)->SetDrawRECT(IRECT(0, 0, 800, 800)); 
-		pGraphics->GetControl(1)->SetTargetRECT(IRECT(0, 0, 800, 800)); 
+		pGraphics->GetControl(1)->SetDrawRECT(IRECT(0, 0, 635, 635)); 
+		pGraphics->GetControl(1)->SetTargetRECT(IRECT(0, 0, 635, 635)); 
 
         // class CustomControl
 		pGraphics->GetControl(2)->Hide(false); 
-		pGraphics->GetControl(2)->SetDrawRECT(IRECT(625, 0, 800, 800)); 
-		pGraphics->GetControl(2)->SetTargetRECT(IRECT(625, 0, 800, 800)); 
+		pGraphics->GetControl(2)->SetDrawRECT(IRECT(496, 0, 635, 635)); 
+		pGraphics->GetControl(2)->SetTargetRECT(IRECT(496, 0, 635, 635)); 
 
         // class IKnobMultiControl
 		pGraphics->GetControl(3)->Hide(false); 
-		pGraphics->GetControl(3)->SetDrawRECT(IRECT(50, 50, 150, 150)); 
-		pGraphics->GetControl(3)->SetTargetRECT(IRECT(50, 50, 150, 150)); 
+		pGraphics->GetControl(3)->SetDrawRECT(IRECT(40, 40, 119, 119)); 
+		pGraphics->GetControl(3)->SetTargetRECT(IRECT(40, 40, 119, 119)); 
 
         // class IKnobMultiControl
 		pGraphics->GetControl(4)->Hide(false); 
-		pGraphics->GetControl(4)->SetDrawRECT(IRECT(600, 200, 700, 300)); 
-		pGraphics->GetControl(4)->SetTargetRECT(IRECT(600, 200, 700, 300)); 
+		pGraphics->GetControl(4)->SetDrawRECT(IRECT(39, 357, 118, 437)); 
+		pGraphics->GetControl(4)->SetTargetRECT(IRECT(39, 357, 118, 437)); 
 
         // class ITextControl
 		pGraphics->GetControl(5)->Hide(false); 
-		pGraphics->GetControl(5)->SetDrawRECT(IRECT(20, 760, 800, 800)); 
-		pGraphics->GetControl(5)->SetTargetRECT(IRECT(20, 760, 800, 800)); 
+		pGraphics->GetControl(5)->SetDrawRECT(IRECT(16, 604, 635, 635)); 
+		pGraphics->GetControl(5)->SetTargetRECT(IRECT(16, 604, 635, 635)); 
 
         // class viewSelector
 		pGraphics->GetControl(6)->Hide(false); 
-		pGraphics->GetControl(6)->SetDrawRECT(IRECT(18, 162, 168, 192)); 
-		pGraphics->GetControl(6)->SetTargetRECT(IRECT(18, 162, 168, 192)); 
+		pGraphics->GetControl(6)->SetDrawRECT(IRECT(19, 158, 139, 182)); 
+		pGraphics->GetControl(6)->SetTargetRECT(IRECT(19, 158, 139, 182)); 
 
         // class viewSelector
 		pGraphics->GetControl(7)->Hide(false); 
-		pGraphics->GetControl(7)->SetDrawRECT(IRECT(25, 250, 175, 280)); 
-		pGraphics->GetControl(7)->SetTargetRECT(IRECT(25, 250, 175, 280)); 
+		pGraphics->GetControl(7)->SetDrawRECT(IRECT(19, 198, 139, 222)); 
+		pGraphics->GetControl(7)->SetTargetRECT(IRECT(19, 198, 139, 222)); 
 
         // class viewSelector
 		pGraphics->GetControl(8)->Hide(false); 
-		pGraphics->GetControl(8)->SetDrawRECT(IRECT(25, 300, 175, 330)); 
-		pGraphics->GetControl(8)->SetTargetRECT(IRECT(25, 300, 175, 330)); 
+		pGraphics->GetControl(8)->SetDrawRECT(IRECT(19, 239, 139, 262)); 
+		pGraphics->GetControl(8)->SetTargetRECT(IRECT(19, 239, 139, 262)); 
 
         // class handleSelector
-		pGraphics->GetControl(9)->Hide(true); 
-		pGraphics->GetControl(9)->SetDrawRECT(IRECT(12, 350, 400, 600)); 
-		pGraphics->GetControl(9)->SetTargetRECT(IRECT(12, 350, 400, 600)); 
+		pGraphics->GetControl(9)->Hide(false); 
+		pGraphics->GetControl(9)->SetDrawRECT(IRECT(156, 128, 465, 327)); 
+		pGraphics->GetControl(9)->SetTargetRECT(IRECT(156, 128, 465, 327)); 
 
 	    // --------------------------------------------------------------------
 
@@ -86,73 +86,33 @@ public:
 
 		// View Mode: (0) ------------------------------------------------------------------------------------------------
 		pControl = pGraphics->GetControl(0); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(0, 0, 800, 800), IRECT(0, 0, 800, 800), false);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(0, 0, 799, 799), IRECT(0, 0, 799, 799), false);
 		pControl = pGraphics->GetControl(1); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(0, 0, 800, 800), IRECT(0, 0, 800, 800), false);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(0, 0, 799, 799), IRECT(0, 0, 799, 799), false);
 		pControl = pGraphics->GetControl(2); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(625, 0, 800, 800), IRECT(625, 0, 800, 800), true);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(625, 0, 799, 799), IRECT(625, 0, 799, 799), false);
 		pControl = pGraphics->GetControl(3); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(50, 50, 150, 150), IRECT(50, 50, 150, 150), false);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(51, 51, 150, 150), IRECT(51, 51, 150, 150), false);
 		pControl = pGraphics->GetControl(4); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(180, 54, 280, 154), IRECT(180, 54, 280, 154), false);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(49, 450, 149, 551), IRECT(49, 450, 149, 551), false);
 		pControl = pGraphics->GetControl(5); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(20, 760, 800, 800), IRECT(20, 760, 800, 800), false);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(20, 760, 799, 799), IRECT(20, 760, 799, 799), false);
 		pControl = pGraphics->GetControl(6); 
 		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(25, 200, 175, 230), IRECT(25, 200, 175, 230), false);
 		pControl = pGraphics->GetControl(7); 
 		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(25, 250, 175, 280), IRECT(25, 250, 175, 280), false);
 		pControl = pGraphics->GetControl(8); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(25, 300, 175, 330), IRECT(25, 300, 175, 330), false);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(25, 301, 175, 330), IRECT(25, 301, 175, 330), false);
 		pControl = pGraphics->GetControl(9); 
-		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(12, 350, 400, 600), IRECT(12, 350, 400, 600), false);
+		pGUIResize->LiveEditSetLayout(0, pControl, IRECT(197, 162, 585, 412), IRECT(197, 162, 585, 412), false);
 		// End (0) -------------------------------------------------------------------------------------------------------
 
 
 		// View Mode: (1) ------------------------------------------------------------------------------------------------
-		pControl = pGraphics->GetControl(0); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(0, 0, 200, 400), IRECT(0, 0, 200, 400), false);
-		pControl = pGraphics->GetControl(1); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(0, 0, 800, 800), IRECT(0, 0, 800, 800), false);
-		pControl = pGraphics->GetControl(2); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(625, 0, 800, 800), IRECT(625, 0, 800, 800), false);
-		pControl = pGraphics->GetControl(3); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(50, 50, 150, 150), IRECT(50, 50, 150, 150), false);
-		pControl = pGraphics->GetControl(4); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(600, 200, 700, 300), IRECT(600, 200, 700, 300), false);
-		pControl = pGraphics->GetControl(5); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(20, 760, 800, 800), IRECT(20, 760, 800, 800), false);
-		pControl = pGraphics->GetControl(6); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(18, 162, 168, 192), IRECT(18, 162, 168, 192), false);
-		pControl = pGraphics->GetControl(7); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(25, 250, 175, 280), IRECT(25, 250, 175, 280), false);
-		pControl = pGraphics->GetControl(8); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(25, 300, 175, 330), IRECT(25, 300, 175, 330), false);
-		pControl = pGraphics->GetControl(9); 
-		pGUIResize->LiveEditSetLayout(1, pControl, IRECT(12, 350, 400, 600), IRECT(12, 350, 400, 600), true);
 		// End (1) -------------------------------------------------------------------------------------------------------
 
 
 		// View Mode: (2) ------------------------------------------------------------------------------------------------
-		pControl = pGraphics->GetControl(0); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(0, 0, 1000, 800), IRECT(0, 0, 1000, 800), false);
-		pControl = pGraphics->GetControl(1); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(0, 0, 800, 800), IRECT(0, 0, 800, 800), false);
-		pControl = pGraphics->GetControl(2); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(625, 0, 800, 800), IRECT(625, 0, 800, 800), false);
-		pControl = pGraphics->GetControl(3); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(50, 50, 150, 150), IRECT(50, 50, 150, 150), false);
-		pControl = pGraphics->GetControl(4); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(198, 234, 298, 334), IRECT(198, 234, 298, 334), false);
-		pControl = pGraphics->GetControl(5); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(20, 760, 800, 800), IRECT(20, 760, 800, 800), true);
-		pControl = pGraphics->GetControl(6); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(25, 200, 175, 230), IRECT(25, 200, 175, 230), false);
-		pControl = pGraphics->GetControl(7); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(25, 250, 175, 280), IRECT(25, 250, 175, 280), false);
-		pControl = pGraphics->GetControl(8); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(25, 300, 175, 330), IRECT(25, 300, 175, 330), false);
-		pControl = pGraphics->GetControl(9); 
-		pGUIResize->LiveEditSetLayout(2, pControl, IRECT(12, 350, 400, 600), IRECT(12, 350, 400, 600), false);
 		// End (2) -------------------------------------------------------------------------------------------------------
 
     }

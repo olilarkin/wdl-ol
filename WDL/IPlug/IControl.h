@@ -52,6 +52,9 @@ public:
   // This retrives derived class name
   const char* GetDerivedClassName() const { return typeid(*this).name(); }
 
+  void UpdateLayerPositionValue(int position) { mLayerPosition = position; }
+  int* GetLayerPosition() { return &mLayerPosition; }
+
   // Ask the IGraphics object to open an edit box so the user can enter a value for this control.
   void PromptUserInput();
   void PromptUserInput(IRECT* pTextRect);
@@ -138,6 +141,7 @@ protected:
   IPlugBase* mPlug;
   IRECT mRECT, mTargetRECT;
   int mParamIdx;
+  int mLayerPosition = 0;
   
   WDL_TypedBuf<AuxParam> mAuxParams;
   double mValue, mDefaultValue, mClampLo, mClampHi;

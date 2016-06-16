@@ -272,8 +272,6 @@ public:
 
 protected:
 	WDL_PtrList<IControl> mControls;
-	WDL_PtrList<IControl> defaultControls;
-	WDL_PtrList<int> mControlIndexes;
 	IPlugBase* mPlug;
 	IRECT mDrawRECT;
 	bool mCursorHidden;

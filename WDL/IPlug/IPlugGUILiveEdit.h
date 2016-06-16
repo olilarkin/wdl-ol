@@ -612,6 +612,7 @@ public:
 				printRECT.T = int((double)liveSelectedRECT.T * guiScaleRatio);
 				printRECT.R = int((double)liveSelectedRECT.R * guiScaleRatio);
 				printRECT.B = int((double)liveSelectedRECT.B * guiScaleRatio);
+
 			}
 			else
 			{
@@ -645,7 +646,7 @@ public:
 			if (liveEditingMod->R) DoPopupMenu(pPlug, pGraphics, *mMouseX, *mMouseY, guiScaleRatio);
 
 			// Write to file
-			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode);
+			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode, false);
 		}
 	}
 
@@ -854,7 +855,7 @@ public:
 		}
 	}
 
-	void CreateLayoutCode(IPlugBase* pPlug, IGraphics* pGraphics, double guiScaleRatio, int viewMode)
+	void CreateLayoutCode(IPlugBase* pPlug, IGraphics* pGraphics, double guiScaleRatio, int viewMode, bool reset)
 	{
 		string code;
 
@@ -895,7 +896,7 @@ public:
 				drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
 				drawRECT.R = int((double)drawRECT.R * guiScaleRatio);
 				drawRECT.B = int((double)drawRECT.B * guiScaleRatio);
-
+				
 				targetRECT.L = int((double)targetRECT.L * guiScaleRatio);
 				targetRECT.T = int((double)targetRECT.T * guiScaleRatio);
 				targetRECT.R = int((double)targetRECT.R * guiScaleRatio);
@@ -971,19 +972,23 @@ public:
 				IRECT drawRECT = *pControl->GetRECT();
 				IRECT targetRECT = *pControl->GetTargetRECT();
 
-				if (pPlug->GetGUIResize())
+				if (pPlug->GetGUIResize() && !reset)
 				{
-					drawRECT.L = int((double)drawRECT.L * guiScaleRatio);
-					drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
-					drawRECT.R = int((double)drawRECT.R * guiScaleRatio);
-					drawRECT.B = int((double)drawRECT.B * guiScaleRatio);
+					drawRECT.L = int(((double)drawRECT.L + 0.4999) * (1.0 / guiScaleRatio));
+					drawRECT.T = int(((double)drawRECT.T + 0.4999) * (1.0 / guiScaleRatio));
+					drawRECT.R = int(((double)drawRECT.R + 0.4999) * (1.0 / guiScaleRatio));
+					drawRECT.B = int(((double)drawRECT.B + 0.4999) * (1.0 / guiScaleRatio));
 
-					targetRECT.L = int((double)targetRECT.L * guiScaleRatio);
-					targetRECT.T = int((double)targetRECT.T * guiScaleRatio);
-					targetRECT.R = int((double)targetRECT.R * guiScaleRatio);
-					targetRECT.B = int((double)targetRECT.B * guiScaleRatio);
+					targetRECT.L = int(((double)targetRECT.L + 0.4999) * (1.0 / guiScaleRatio));
+					targetRECT.T = int(((double)targetRECT.T + 0.4999) * (1.0 / guiScaleRatio));
+					targetRECT.R = int(((double)targetRECT.R + 0.4999) * (1.0 / guiScaleRatio));
+					targetRECT.B = int(((double)targetRECT.B + 0.4999) * (1.0 / guiScaleRatio));
 				}
-
+				else
+				{
+					drawRECT.L = drawRECT.L;
+				}
+				
 				getC.SetFormatted(128, "		pControl = pGraphics->GetControl(%i); \n", FindPointerPosition(pControl, current_layers));
 
 				viewCode.SetFormatted(128, "		pGUIResize->LiveEditSetLayout(%i, pControl, IRECT(%i, %i, %i, %i), IRECT(%i, %i, %i, %i)",
@@ -996,6 +1001,11 @@ public:
 
 				// Update current view mode
 				IControl* tmpControl = pGraphics->GetControl(FindPointerPosition(pControl, current_layers));
+				if (pPlug->GetGUIResize() && reset)
+				{
+					drawRECT = *pControl->GetRECT();
+					targetRECT = *pControl->GetTargetRECT();
+				}
 				pPlug->GetGUIResize()->LiveEditSetLayout(
 					viewMode, 
 					tmpControl, 
@@ -1108,7 +1118,7 @@ public:
 		menu.AddSeparator();
 
 		// Item 12
-		menu.AddItem("Clear All Edits");
+		menu.AddItem("Reset to Default");
 
 		if (pGraphics->CreateIPopupMenu(&menu, x, y))
 		{
@@ -1242,8 +1252,25 @@ public:
 				{
 					pGraphics->ReplaceControl(i, default_layers[i]);
 					IControl* pControl = pGraphics->GetControl(i);
-					pControl->SetDrawRECT(default_draw_rect[i]);
-					pControl->SetTargetRECT(default_terget_rect[i]);
+
+					IRECT drawRECT = default_draw_rect[i];
+					IRECT targetRECT = default_terget_rect[i];
+
+					if (pPlug->GetGUIResize())
+					{
+						drawRECT.L = int(((double)drawRECT.L + 0.4999) * guiScaleRatio);
+						drawRECT.T = int(((double)drawRECT.T + 0.4999) * guiScaleRatio);
+						drawRECT.R = int(((double)drawRECT.R + 0.4999) * guiScaleRatio);
+						drawRECT.B = int(((double)drawRECT.B + 0.4999) * guiScaleRatio);
+
+						targetRECT.L = int(((double)targetRECT.L + 0.4999) * guiScaleRatio);
+						targetRECT.T = int(((double)targetRECT.T + 0.4999) * guiScaleRatio);
+						targetRECT.R = int(((double)targetRECT.R + 0.4999) * guiScaleRatio);
+						targetRECT.B = int(((double)targetRECT.B + 0.4999) * guiScaleRatio);
+					}
+
+					pControl->SetDrawRECT(drawRECT);
+					pControl->SetTargetRECT(targetRECT);
 					pControl->Hide(!default_is_hidden[i]);
 				}
 
@@ -1252,7 +1279,7 @@ public:
 				liveClickedTargetRECT = IRECT(0, 0, 0, 0);
 				
 				// Write to file
-				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode);
+				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode, true);
 			}
 		}
 	}
@@ -1312,6 +1339,14 @@ public:
 			if (pControl == vControl[i]) return i;
 		}
 		return -1;
+	}
+
+	void RoundIRECT(IRECT* pRECT)
+	{
+		pRECT->L = int((double)pRECT->L + 0.49999);
+		pRECT->T = int((double)pRECT->T + 0.49999);
+		pRECT->R = int((double)pRECT->R + 0.49999);
+		pRECT->B = int((double)pRECT->B + 0.49999);
 	}
 
 private:

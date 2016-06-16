@@ -50,7 +50,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
   //GetGUIResize()->SmoothResizedBitmaps();
-  //GetGUIResize()->DisableFastBitmapResizing();
+  GetGUIResize()->DisableFastBitmapResizing();
 
   // Adding a new view. Default view will always be 0.
   GetGUIResize()->AddNewView(miniView, 200, 400);
@@ -128,7 +128,7 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because layout is separate for every view
 	if (viewMode == defaultView)
 	{
-		//GetGUIResize()->MoveControl(*grayKnob, 50.0, 450.0);
+		GetGUIResize()->MoveControl(*grayKnob, 50.0, 450.0);
 		//GetGUIResize()->MoveControl(*redKnob, 50.0, 50.0);
 		//GetGUIResize()->MoveControl(*customControl, 600, 0);
 		//GetGUIResize()->MoveControlRightEdge(*customControl, windowWidth);

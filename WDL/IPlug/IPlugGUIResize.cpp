@@ -23,7 +23,7 @@ IRECT IPlugGUIResize::DRECT_to_IRECT(DRECT *dRECT)
 
 IRECT IPlugGUIResize::ResizeIRECT(DRECT *old_IRECT, double width_ratio, double height_ratio)
 {
-	return IRECT((int)(old_IRECT->L * width_ratio), (int)(old_IRECT->T * height_ratio), (int)(old_IRECT->R * width_ratio), (int)(old_IRECT->B * height_ratio));
+	return IRECT((int)((old_IRECT->L + 0.4999)* width_ratio), (int)((old_IRECT->T + 0.4999) * height_ratio), (int)((old_IRECT->R + 0.4999)* width_ratio), (int)((old_IRECT->B + 0.4999) * height_ratio));
 }
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -180,29 +180,26 @@ void IPlugGUIResize::DrawHandle(IGraphics * pGraphics, IRECT * pRECT)
 IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 {
 	// Check if we need to attach horisontal and vertical handles
-	int verticalControl = mGraphics->AttachControl(new VerticalResizing(mPlug, mGraphics, one_side_handle_size));
-	int horisontalControl = mGraphics->AttachControl(new HorisontalResizing(mPlug, mGraphics, one_side_handle_size));
+	int* verticalControl = mGraphics->AttachControl(new VerticalResizing(mPlug, mGraphics, one_side_handle_size));
+	int* horisontalControl = mGraphics->AttachControl(new HorisontalResizing(mPlug, mGraphics, one_side_handle_size));
 
 	if (using_one_size_resize)
 	{
 		// Hide control that is not yet enabled
 		if (one_side_flag == justHorisontalResizing)
 		{
-			HideControl(verticalControl);
+			HideControl(*verticalControl);
 		}
 		else if (one_side_flag == justVerticalResizing)
 		{
-			HideControl(horisontalControl);
+			HideControl(*horisontalControl);
 		}
 	}
 	else
 	{
-		HideControl(verticalControl);
-		HideControl(horisontalControl);
+		HideControl(*verticalControl);
+		HideControl(*horisontalControl);
 	}
-
-	HideControl(verticalControl);
-	HideControl(horisontalControl);
 
 	// Add control sizes to a global container. This is to fix the problem of bitmap resizing on load
 	if (global_layout_container.size() == 0)
@@ -872,8 +869,8 @@ void IPlugGUIResize::OnMouseDown(int x, int y, IMouseMod * pMod)
 void IPlugGUIResize::ResizeBackground()
 {
 	// Resize background to plugin width/height
-	mGraphics->GetControl(0)->SetDrawRECT(IRECT(0, 0, plugin_width, plugin_height));
-	mGraphics->GetControl(0)->SetTargetRECT(IRECT(0, 0, plugin_width, plugin_height));
+	mGraphics->GetControl(0)->SetDrawRECT(IRECT(0, 0, (int)((window_width_normalized + 0.4999) * gui_scale_ratio), (int)((window_height_normalized + 0.4999) * gui_scale_ratio)));
+	mGraphics->GetControl(0)->SetTargetRECT(IRECT(0, 0, (int)((window_width_normalized + 0.4999) * gui_scale_ratio), (int)((window_height_normalized + 0.4999) * gui_scale_ratio)));
 }
 
 void IPlugGUIResize::OnMouseUp(int x, int y, IMouseMod * pMod)
@@ -942,7 +939,7 @@ HorisontalResizing::HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, i
 
 bool HorisontalResizing::Draw(IGraphics * pGraphics)
 {
-	pGraphics->FillIRect(&COLOR_RED, &mRECT);
+	//pGraphics->FillIRect(&COLOR_RED, &mRECT);
 	return true;
 }
 
@@ -985,7 +982,7 @@ VerticalResizing::VerticalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int h
 
 bool VerticalResizing::Draw(IGraphics * pGraphics)
 {
-	pGraphics->FillIRect(&COLOR_GREEN, &mRECT);
+	//pGraphics->FillIRect(&COLOR_GREEN, &mRECT);
 	return true;
 }
 
