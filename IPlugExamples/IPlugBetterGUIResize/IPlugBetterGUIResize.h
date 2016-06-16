@@ -155,7 +155,7 @@ public:
 		controlNumber.SetFormatted(100, "Redraws: %i", redrawTest);
 		IText txtControlNumber(17, &COLOR_WHITE);
 		txtControlNumber.mAlign = IText::kAlignNear;
-		pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &mRECT);
+		//pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &mRECT);
 		redrawTest++;
 		return true;
 	}

@@ -128,7 +128,7 @@ void IPlugBetterGUIResize::SetGUILayout(int viewMode, double windowWidth, double
 	// need to show it in defaultView because layout is separate for every view
 	if (viewMode == defaultView)
 	{
-		GetGUIResize()->MoveControl(*grayKnob, 50.0, 450.0);
+		//GetGUIResize()->MoveControl(*grayKnob, 50.0, 450.0);
 		//GetGUIResize()->MoveControl(*redKnob, 50.0, 50.0);
 		//GetGUIResize()->MoveControl(*customControl, 600, 0);
 		//GetGUIResize()->MoveControlRightEdge(*customControl, windowWidth);
