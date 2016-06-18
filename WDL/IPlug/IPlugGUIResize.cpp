@@ -1,4 +1,5 @@
 #include "IPlugGUIResize.h"
+#include "IPlugGUIResize.h"
 
 // Helpers -------------------------------------------------------------------------------------------------------------
 bool IPlugGUIResize::double_equals(double a, double b, double epsilon)
@@ -207,6 +208,7 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 			IControl* pControl = mGraphics->GetControl(i);
 
 			global_layout_container[0].org_pointer.push_back(pControl);
+			global_layout_container[0].moved_pointer.push_back(pControl);
 			global_layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&*pControl->GetRECT()));
 			global_layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&*pControl->GetTargetRECT()));
 			global_layout_container[0].org_is_hidden.push_back((int)pControl->IsHidden());
@@ -214,6 +216,7 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 
 		// Add IPlugGUIResize control size
 		global_layout_container[0].org_pointer.push_back(this);
+		global_layout_container[0].moved_pointer.push_back(this);
 		global_layout_container[0].org_draw_area.push_back(IRECT_to_DRECT(&gui_resize_area));
 		global_layout_container[0].org_target_area.push_back(IRECT_to_DRECT(&gui_resize_area));
 		global_layout_container[0].org_is_hidden.push_back(0);
@@ -245,13 +248,16 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 	return this;
 }
 
-void IPlugGUIResize::LiveEditSetLayout(int viewMode, IControl* pControl, IRECT drawRECT, IRECT targetRECT, bool isHidden)
+void IPlugGUIResize::LiveEditSetLayout(int viewMode, int moveToIndex, int moveFromIndex, IRECT drawRECT, IRECT targetRECT, bool isHidden)
 {
 	DRECT drawDRECT, targetDRECT;
 	drawDRECT = IRECT_to_DRECT(&drawRECT);
 	targetDRECT = IRECT_to_DRECT(&targetRECT);
 
-	SetLayoutContainerAt(viewMode, pControl, drawDRECT, targetDRECT, isHidden);
+	layout_container[viewMode].moved_pointer[moveToIndex] = layout_container[viewMode].org_pointer[moveFromIndex];
+	layout_container[viewMode].org_draw_area[moveToIndex] = drawDRECT;
+	layout_container[viewMode].org_target_area[moveToIndex] = targetDRECT;
+	layout_container[viewMode].org_is_hidden[moveToIndex] = isHidden;
 }
 
 void IPlugGUIResize::UseHandleForGUIScaling(bool statement)
@@ -671,6 +677,7 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 	plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 	plugin_height = (int)(window_height_normalized * gui_scale_ratio);
 
+	RearrangeLayers();
 	MoveHandle();
 	ResizeBackground();
 	ResizeControlRects();
@@ -718,6 +725,7 @@ void IPlugGUIResize::ResizeGraphics()
 	plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 	plugin_height = (int)(window_height_normalized * gui_scale_ratio);
 
+	RearrangeLayers();
 	MoveHandle();
 	ResizeBackground();
 	ResizeControlRects();

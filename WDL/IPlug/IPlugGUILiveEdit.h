@@ -79,7 +79,26 @@ public:
 				*liveKeyDown = -1;
 			}
 		}
+		
+		// Hide control if it is deleted
+		if (deleted_control_default_index.size())
+		{
+			int controlSize = pControls->GetSize();
 
+			if (pPlug->GetGUIResize())
+			{
+				controlSize -= 3;
+			}
+
+			for (int j = 1; j < controlSize; j++)
+			{
+				IControl* pControl = pControls->Get(j);
+
+				if (IsControlDeleted(pControl))
+					pControl->Hide(true);
+			}
+
+		}
 
 		// If mouse was clicked
 		if (*liveToogleEditing)
@@ -101,19 +120,22 @@ public:
 
 				IRECT drawRECT = *pControl->GetRECT();
 
-				// T
-				LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.T, 2, 2,
-					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-				//B
-				LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.B, drawRECT.R, drawRECT.B, 2, 2,
-					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-				//L
-				LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.L, drawRECT.B, 2, 2,
-					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-				//R
-				LICE_DashedLine(pDrawBitmap, drawRECT.R, drawRECT.T, drawRECT.R, drawRECT.B, 2, 2,
-					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-
+				// Dont outline deleted control
+				if (!IsControlDeleted(pControl))
+				{
+					// T
+					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.T, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+					//B
+					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.B, drawRECT.R, drawRECT.B, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+					//L
+					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.L, drawRECT.B, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+					//R
+					LICE_DashedLine(pDrawBitmap, drawRECT.R, drawRECT.T, drawRECT.R, drawRECT.B, 2, 2,
+						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+				}
 			}
 
 			WDL_String str;
@@ -129,9 +151,12 @@ public:
 			{
 				IControl* pControl = pControls->Get(j);
 
-				IRECT drawRECT = *pControl->GetRECT();
-				IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
-				pGraphics->FillTriangle(&EDIT_COLOR, handle.L, handle.B, handle.R, handle.B, handle.R, handle.T, 0);
+				if (!IsControlDeleted(pControl))
+				{
+					IRECT drawRECT = *pControl->GetRECT();
+					IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
+					pGraphics->FillTriangle(&EDIT_COLOR, handle.L, handle.B, handle.R, handle.B, handle.R, handle.T, 0);
+				}
 			}
 
 			bool overControlHandle = false;
@@ -140,12 +165,15 @@ public:
 			{
 				IControl* pControl = pControls->Get(j);
 
-				IRECT drawRECT = *pControl->GetRECT();
-				IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
-
-				if (drawRECT.Contains(*mMouseX, *mMouseY))
+				if (!IsControlDeleted(pControl))
 				{
-					overControlHandle = handle.Contains(*mMouseX, *mMouseY);
+					IRECT drawRECT = *pControl->GetRECT();
+					IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
+
+					if (drawRECT.Contains(*mMouseX, *mMouseY))
+					{
+						overControlHandle = handle.Contains(*mMouseX, *mMouseY);
+					}
 				}
 			}
 
@@ -156,7 +184,8 @@ public:
 				else SetCursor(LoadCursor(NULL, IDC_ARROW));
 			}
 
-			if (liveEditingMod->R)
+
+			if (liveEditingMod->R && !IsControlDeleted(pControls->Get(*liveMouseCapture)))
 			{
 				IControl* pControl = pControls->Get(*liveMouseCapture);
 
@@ -177,7 +206,7 @@ public:
 				}
 			}
 
-			if (liveEditingMod->L)
+			if (liveEditingMod->L && !IsControlDeleted(pControls->Get(*liveMouseCapture)))
 			{
 				IControl* pControl = pControls->Get(*liveMouseCapture);
 
@@ -812,7 +841,35 @@ public:
 		return GetPrivateProfileInt(category, variable_name, -1, "C:/LiveOut.txt");
 	}
 
-	void WriteToTextFile(const char* data)
+	void WriteToTextFile(const char* data, const char* filePath)
+	{
+		ofstream myfile;
+		myfile.open(filePath);
+		if (myfile.is_open())
+		{
+			myfile << data;
+			myfile.close();
+		}
+	}
+
+	string ReadTextFile(const char* filePath)
+	{
+		string output;
+		string line;
+		ifstream myfile(filePath);
+		if (myfile.is_open())
+		{
+			while (getline(myfile, line))
+			{
+				output.append(line);
+				output.append("\n");
+			}
+			myfile.close();
+		}
+		return output;
+	}
+
+	void WriteLayoutToTextFile(const char* data)
 	{
 		ofstream myfile;
 		myfile.open("LiveEditLayout.h");
@@ -845,7 +902,7 @@ public:
 			findEnd.SetFormatted(128, "		// End (%i)", i);
 
 			unsigned start_index = oldCode.find(findStart.Get());
-			unsigned next_start_index = oldCode.find("		pControl", start_index);
+			unsigned next_start_index = oldCode.find("        // class", start_index);
 			unsigned end_index = oldCode.find(findEnd.Get());
 			
 			if (oldCode.npos > next_start_index && oldCode.npos > end_index)
@@ -872,11 +929,6 @@ public:
 			"	~LiveEditLayout() {} \n \n"
 			"	void SetControlPositions(IGraphics* pGraphics) \n"
 			"	{ \n"
-			"	    // Backup original control pointers\n"
-			"		for (int i = 0; i < pGraphics->GetNControls(); i++) \n"
-			"			originalPointers.push_back(pGraphics->GetControl(i));\n"
-			"\n"
-			"	    // --------------------------------------------------------------------\n\n"
 			;
 
 		
@@ -884,67 +936,68 @@ public:
 		int controlSize = default_layers.size();
 		if (pPlug->GetGUIResize()) controlSize -= 3;
 
-		for (int i = 1; i < controlSize; i++)
+		if (!pPlug->GetGUIResize())
 		{
-			IControl* pControl = default_layers[i];
-			IRECT drawRECT = *pControl->GetRECT();
-			IRECT targetRECT = *pControl->GetTargetRECT();
+			code.append
+			(
+				"	    // Backup original control pointers\n"
+				"		for (int i = 0; i < pGraphics->GetNControls(); i++) \n"
+				"			originalPointers.push_back(pGraphics->GetControl(i));\n"
+				"\n"
+				"	    // --------------------------------------------------------------------\n\n"
+			);
 
-			if (pPlug->GetGUIResize())
+			for (int i = 1; i < controlSize; i++)
 			{
-				drawRECT.L = int((double)drawRECT.L * guiScaleRatio);
-				drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
-				drawRECT.R = int((double)drawRECT.R * guiScaleRatio);
-				drawRECT.B = int((double)drawRECT.B * guiScaleRatio);
-				
-				targetRECT.L = int((double)targetRECT.L * guiScaleRatio);
-				targetRECT.T = int((double)targetRECT.T * guiScaleRatio);
-				targetRECT.R = int((double)targetRECT.R * guiScaleRatio);
-				targetRECT.B = int((double)targetRECT.B * guiScaleRatio);
+				IControl* pControl = default_layers[i];
+				IRECT drawRECT = *pControl->GetRECT();
+				IRECT targetRECT = *pControl->GetTargetRECT();
+
+				WDL_String drawValue, targetValue, hiddenValue;
+
+				// Get derived class name
+				WDL_String derivedName;
+				derivedName.SetFormatted(128, "        // %s %i\n", pControl->GetDerivedClassName(), i);
+				code.append(derivedName.Get());
+
+				hiddenValue.SetFormatted(128, "		pGraphics->GetControl(%i)->Hide(", i);
+				if (pControl->IsHidden()) hiddenValue.Append("true");
+				else hiddenValue.Append("false");
+				hiddenValue.Append("); \n");
+				code.append(hiddenValue.Get());
+
+				drawValue.SetFormatted(128, "		pGraphics->GetControl(%i)->SetDrawRECT(IRECT(%i, %i, %i, %i)); \n", i, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B);
+				code.append(drawValue.Get());
+
+				targetValue.SetFormatted(128, "		pGraphics->GetControl(%i)->SetTargetRECT(IRECT(%i, %i, %i, %i)); \n", i, targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B);
+				code.append(targetValue.Get());
+
+				code.append("\n");
 			}
 
-			WDL_String drawValue, targetValue, hiddenValue;
 
-			// Get derived class name
-			code.append("        // ");
-			code.append(pControl->GetDerivedClassName());
-			code.append("\n");
-			
-			hiddenValue.SetFormatted(128, "		pGraphics->GetControl(%i)->Hide(", i);
-			if (pControl->IsHidden()) hiddenValue.Append("true");
-			else hiddenValue.Append("false");
-			hiddenValue.Append("); \n");
-			code.append(hiddenValue.Get());
-
-			drawValue.SetFormatted(128, "		pGraphics->GetControl(%i)->SetDrawRECT(IRECT(%i, %i, %i, %i)); \n", i, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B);
-			code.append(drawValue.Get());
-
-			targetValue.SetFormatted(128, "		pGraphics->GetControl(%i)->SetTargetRECT(IRECT(%i, %i, %i, %i)); \n", i, targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B);
-			code.append(targetValue.Get());
-
-			code.append("\n");
+			// Reordering control layers
+			code.append
+			(
+				"	    // --------------------------------------------------------------------\n\n"
+				"	    // Reordering control layers\n"
+			);
 		}
+			WDL_String layoutMove;
 
-		// Reordering control layers
-		code.append
-		(
-			"	    // --------------------------------------------------------------------\n\n"
-			"	    // Reordering control layers\n"
-		);
+			// Backup current control layers
+			for (int i = 0; i < current_layers.size(); i++)
+				current_layers[i] = pGraphics->GetControl(i);
 
-		WDL_String layoutMove;
-
-		// Backup current control layers
-		for (int i = 0; i < current_layers.size(); i++)
-			current_layers[i] = pGraphics->GetControl(i);
-
-		for (int i = 0; i < controlSize; i++)
-		{
-			IControl* pControl = default_layers[i];
-			layoutMove.SetFormatted(128, "		pGraphics->ReplaceControl(%i, originalPointers[%i]); \n", FindPointerPosition(pControl, current_layers), i);
-			code.append(layoutMove.Get());
-		}
-		
+			if (!pPlug->GetGUIResize())
+			{
+				for (int i = 0; i < controlSize; i++)
+				{
+					IControl* pControl = default_layers[i];
+					layoutMove.SetFormatted(128, "		pGraphics->ReplaceControl(%i, originalPointers[%i]); \n", FindPointerPosition(pControl, current_layers), i);
+					code.append(layoutMove.Get());
+				}
+			}
 
 		code.append("	}\n\n");
 
@@ -959,16 +1012,50 @@ public:
 		// Set GUI Resize code -----------------------------------------------------------------------------------------------------------
 		if (pPlug->GetGUIResize())
 		{
-			code.append
-			(
-				"		IControl* pControl;\n"
-			);
-
 			code_view_mode[viewMode].clear();
-			WDL_String getC, viewCode;
+			WDL_String viewCode;
+			int deletedFix = 0;
 			for (int i = 0; i < controlSize; i++)
 			{
+				bool skipWiting = false;
+
 				IControl* pControl = default_layers[i];
+				int drawPointerPosition = FindPointerPosition(pControl, current_layers);
+
+				// Check if some control is needed to be deleted
+				if (deleted_control_default_index.size() > 0)
+				{
+					bool find = false;
+					for (int j = 0; j < deleted_control_default_index.size(); j++)
+					{
+						if (deleted_control_default_index[j] == i)
+						{
+							find = true;
+							break;
+						}
+					}
+
+					int subtractPos = 0;
+					for (int j = 0; j < deleted_control_default_index.size(); j++)
+					{
+						if (deleted_control_default_index[j] <= drawPointerPosition)
+						{
+							subtractPos++;
+						}
+					}
+
+					drawPointerPosition -= subtractPos;
+
+					// If index is the same as deleted control, skip this 
+					if (find)
+					{
+						deletedFix++;
+						skipWiting = true;
+					}
+					else
+						skipWiting = false;
+				}
+
 				IRECT drawRECT = *pControl->GetRECT();
 				IRECT targetRECT = *pControl->GetTargetRECT();
 
@@ -988,16 +1075,21 @@ public:
 				{
 					drawRECT.L = drawRECT.L;
 				}
-				
-				getC.SetFormatted(128, "		pControl = pGraphics->GetControl(%i); \n", FindPointerPosition(pControl, current_layers));
 
-				viewCode.SetFormatted(128, "		pGUIResize->LiveEditSetLayout(%i, pControl, IRECT(%i, %i, %i, %i), IRECT(%i, %i, %i, %i)",
-					viewMode, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B, targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B);
-				if (pControl->IsHidden()) viewCode.Append(", true);\n");
-				else  viewCode.Append(", false);\n");
+				// Prevent writing if this is deleted control
+				if (!skipWiting)
+				{
+					WDL_String derivedName;
+					derivedName.SetFormatted(128, "        // %s %i\n", pControl->GetDerivedClassName(), i - deletedFix);
 
-				code_view_mode[viewMode].append(getC.Get());
-				code_view_mode[viewMode].append(viewCode.Get());
+					viewCode.SetFormatted(128, "		pGUIResize->LiveEditSetLayout(%i, %i, %i, IRECT(%i, %i, %i, %i), IRECT(%i, %i, %i, %i)",
+						viewMode, i - deletedFix, drawPointerPosition, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B, targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B);
+					if (pControl->IsHidden()) viewCode.Append(", true);\n");
+					else  viewCode.Append(", false);\n");
+
+					code_view_mode[viewMode].append(derivedName.Get());
+					code_view_mode[viewMode].append(viewCode.Get());
+				}
 
 				// Update current view mode
 				IControl* tmpControl = pGraphics->GetControl(FindPointerPosition(pControl, current_layers));
@@ -1008,7 +1100,8 @@ public:
 				}
 				pPlug->GetGUIResize()->LiveEditSetLayout(
 					viewMode, 
-					tmpControl, 
+					i,
+					FindPointerPosition(pControl, current_layers),
 					IRECT(drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.B), 
 					IRECT(targetRECT.L, targetRECT.T, targetRECT.R, targetRECT.B), 
 					pControl->IsHidden());
@@ -1040,7 +1133,7 @@ public:
 		);
 
 		code.append("}; ");
-		WriteToTextFile(code.c_str());
+		WriteLayoutToTextFile(code.c_str());
 	}
 
 	void DrawGrid(LICE_IBitmap* pDrawBitmap, int width, int height)
@@ -1118,6 +1211,15 @@ public:
 		menu.AddSeparator();
 
 		// Item 12
+		menu.AddItem("Add Control");
+
+		// Item 13
+		menu.AddItem("Remove Control");
+
+		// Item 14
+		menu.AddSeparator();
+
+		// Item 15
 		menu.AddItem("Reset to Default");
 
 		if (pGraphics->CreateIPopupMenu(&menu, x, y))
@@ -1127,8 +1229,6 @@ public:
 			// Reset Control Position
 			if (itemChosen == 0)
 			{
-				if (liveControlNumber > 0)
-				{
 					IRECT drawRECT;
 					IRECT targetRECT;
 
@@ -1147,7 +1247,6 @@ public:
 
 					pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
 					pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
-				}
 			}
 
 			// Reset Control Size
@@ -1245,8 +1344,73 @@ public:
 				else drawGridToogle = true;
 			}
 
-			// Clear Edits
+			// Add Control
 			if (itemChosen == 12)
+			{
+			}
+
+			// Remove Control
+			if (itemChosen == 13)
+			{
+				IControl* pControl = pGraphics->GetControl(liveControlNumber);
+				int position = FindPointerPosition(pControl, default_layers);
+
+				WDL_String warningText, number;
+				warningText.Set("You need to delete this controls from plugin constructor ");
+
+				if (deleted_control_default_index.size() > 0)
+				{
+					warningText.Append("( ");
+					for (int i = 0; i < deleted_control_default_index.size(); i++)
+					{
+						number.SetFormatted(32, "%i, ", deleted_control_default_index[i]);
+						warningText.Append(number.Get());
+					}
+					warningText.Append("). ");
+				}
+				else warningText.Append("( ). ");
+
+				warningText.Append("\n");
+				warningText.Append("If you confirm this dialog, you need also to delete control number ");
+				number.SetFormatted(32, "(%i)!", position);
+				warningText.Append(number.Get());
+				warningText.Append("\n");
+				warningText.Append("Otherwise your GUI layout will be messed up after next recompile...");
+
+				int dialog = pGraphics->ShowMessageBox(warningText.Get(), "Warning!!!", MB_OKCANCEL);
+
+				if (dialog == IDOK)
+				{
+					// We are not actually removing controls, but we are hidding it and removing from the code
+					deleted_control_default_index.push_back(position);
+
+					if (pPlug->GetGUIResize())
+					{
+						int currentViewMode = pPlug->GetGUIResize()->GetViewMode();
+						int viewSize = pPlug->GetGUIResize()->GetViewModeSize();
+
+						for (int i = 0; i < viewSize; i++)
+						{
+							if (i == currentViewMode) continue;
+
+							pPlug->GetGUIResize()->SelectViewMode(i);
+							pPlug->GetGUIResize()->RearrangeLayers();
+							pPlug->GetGUIResize()->ResizeControlRects();
+
+							// Write to file
+							CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, i, false);
+						}
+
+						pPlug->GetGUIResize()->SelectViewMode(currentViewMode);
+						pPlug->GetGUIResize()->RearrangeLayers();
+						pPlug->GetGUIResize()->ResizeControlRects();
+					}
+				}
+
+			}
+
+			// Clear Edits
+			if (itemChosen == 15)
 			{
 				for (int i = 0; i < pGraphics->GetNControls(); i++)
 				{
@@ -1349,6 +1513,56 @@ public:
 		pRECT->B = int((double)pRECT->B + 0.49999);
 	}
 
+	unsigned FindNumberOf(string* in, const char* find)
+	{
+		unsigned tmpIndex = 0;
+		unsigned count = 0;
+		while (true)
+		{
+			unsigned tmp = in->find(find, tmpIndex + 1);
+
+			if (in->npos > tmp)
+			{
+				count++;
+				tmpIndex = tmp;
+			}
+			else break;
+
+		}
+		return count;
+	}
+
+	unsigned FindIndexOfOccurrence(string* in, const char* find, unsigned occurrence)
+	{
+		unsigned tmpIndex = 0;
+		unsigned count = 0;
+		while (true)
+		{
+			unsigned tmp = in->find(find, tmpIndex + 1);
+
+			if (in->npos > tmp)
+			{
+				count++;
+				tmpIndex = tmp;
+
+				if (count == occurrence) break;
+			}
+			else break;
+
+		}
+		return tmpIndex;
+	}
+
+	bool IsControlDeleted(IControl* pControl)
+	{
+		int position = FindPointerPosition(pControl, default_layers);
+
+		for (int i = 0; i < deleted_control_default_index.size(); i++)
+			if (deleted_control_default_index[i] == position) return true;
+
+		return false;
+	}
+
 private:
 	// Live editing stuff
 	char buf[512]; // temp buffer for writing integers to profile strings
@@ -1378,6 +1592,7 @@ private:
 	vector <int> control_move_to;
 	vector <IControl*> current_layers;
 	vector <string> code_view_mode;
+	vector <int> deleted_control_default_index;
 	int currentViewMode = 0;
 	int viewModeSize = 1;
 	bool retrieveOldLayoutChanges = false;

@@ -623,6 +623,12 @@ void IGraphics::ReplaceControl(int Index, IControl* pControl)
 	}
 }
 
+void IGraphics::RemoveControl(int Index)
+{
+		mControls.Delete(Index);
+		UpdateLayerPosition(&mControls);
+}
+
 void IGraphics::AttachKeyCatcher(IControl* pControl)
 {
 	mKeyCatcher = pControl;

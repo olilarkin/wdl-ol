@@ -108,6 +108,7 @@ struct viewContainer
 struct layoutContainer
 {
 	vector <IControl*> org_pointer;
+	vector <IControl*> moved_pointer;
 	vector <DRECT> org_draw_area;
 	vector <DRECT> org_target_area;
 	vector <int> org_is_hidden;
@@ -179,7 +180,21 @@ public:
 	bool Draw(IGraphics* pGraphics);
 	void RescaleBitmapsAtLoad();
 	IPlugGUIResize *AttachGUIResize();
-	void LiveEditSetLayout(int viewMode, IControl * pControl, IRECT drawRECT, IRECT targetRECT, bool isHidden);
+	void LiveEditSetLayout(int viewMode, int moveToIndex, int moveFromIndex, IRECT drawRECT, IRECT targetRECT, bool isHidden);
+	void LiveRemoveLayer(IControl* pControl)
+	{
+		// This will remove control for every view
+		for (int i = 0; i < GetViewModeSize(); i++)
+		{
+			int position = FindLayoutPointerPosition(i, pControl);
+
+			layout_container[i].moved_pointer.erase(layout_container[i].moved_pointer.begin() + position);
+			layout_container[i].org_pointer.erase(layout_container[i].org_pointer.begin() + position);
+			layout_container[i].org_draw_area.erase(layout_container[i].org_draw_area.begin() + position);
+			layout_container[i].org_target_area.erase(layout_container[i].org_target_area.begin() + position);
+			layout_container[i].org_is_hidden.erase(layout_container[i].org_is_hidden.begin() + position);
+		}
+	}
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -270,6 +285,16 @@ private:
 		return -1;
 	}
 
+	void RearrangeLayers()
+	{
+		for (int i = 1; i < mGraphics->GetNControls(); i++)
+		{
+			int position = FindLayoutPointerPosition(viewMode, layout_container[current_view_mode].moved_pointer[i]);
+
+			mGraphics->ReplaceControl(position, layout_container[current_view_mode].org_pointer[i]);
+		}
+	}
+
 	void SetIntToFile(const char *name, int x);
 	int GetIntFromFile(const char *name);
 	void SetDoubleToFile(const char *name, double x);
@@ -334,6 +359,8 @@ private:
 	WDL_String settings_ini_path;
 	char buf[128]; // temp buffer for writing integers to profile strings
 	resizeOneSide one_side_flag;
+
+	friend class IPlugGUILiveEdit;
 };
 
 

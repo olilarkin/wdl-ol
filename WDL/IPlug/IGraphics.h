@@ -166,6 +166,7 @@ public:
 	void MoveControlLayers(int fromIndex, int toIndex);
 	void SwapControlLayers(int fromIndex, int toIndex);
 	void ReplaceControl(int Index, IControl * pControl);
+	void RemoveControl(int Index);
 
 	IControl* GetControl(int idx) { return mControls.Get(idx); }
 	int GetNControls() { return mControls.GetSize(); }
