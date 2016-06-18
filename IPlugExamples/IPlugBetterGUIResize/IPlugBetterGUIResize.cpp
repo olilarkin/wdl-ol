@@ -101,7 +101,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   pGraphics->AttachControl(new viewSelector(this, IRECT(25, 100 + 200, 150 + 25, 130 + 200), "hugeView", hugeView));
 
   //pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 188, 380)));
-  pGraphics->AttachControl(new handleSelector(this, IRECT(12, 350, 400, 600)));
+  pGraphics->AttachControl(new handleSelector(this, IRECT(15, 350, 160 + 25, 180 + 200)));
   // --------------------------------------------------------------------------------------------------------------------------
 
   AttachGraphics(pGraphics);
@@ -110,7 +110,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   liveLayout.SetGUIResizeLayout(pGraphics, GetGUIResize());
 
   pGraphics->ShowControlBounds(true);
-  pGraphics->LiveEditing(true, 18);
+  pGraphics->LiveEditing(true, 4);
 
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);

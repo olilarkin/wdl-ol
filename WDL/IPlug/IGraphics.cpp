@@ -1521,6 +1521,10 @@ int IGraphics::liveGetControlIdx(int x, int y, bool mo)
 				// The BG is a control and will catch everything, so assume the programmer
 				// attached the controls from back to front, and return the frontmost match.
 	int i = mControls.GetSize() - 1;
+
+	// Exclude gui resize controls
+	if (mPlug->GetGUIResize()) i -= 3;
+
 	IControl** ppControl = mControls.GetList() + i;
 	for (/* */; i >= 0; --i, --ppControl)
 	{

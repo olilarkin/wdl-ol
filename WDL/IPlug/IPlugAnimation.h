@@ -107,7 +107,7 @@ public:
 
 	~IPlugAnimation() {}
 
-	double Animation(const char* uniqueAnimationName, bool state, bool disableAnimation, double start, double end, int startToEndFrames, int endToStartFrames, 
+	double Animation(const char* uniqueAnimationName, bool state, double start, double end, int startToEndFrames, int endToStartFrames, 
 		animationFlag startToEnd = _LinearInterpolation, animationFlag endToStart = _LinearInterpolation);
 		
 	void DrawAnimationCurve_DEBUG(IGraphics* pGraphics, animationFlag flag, int size = 300, int x = 0, int y = 0);
@@ -115,10 +115,36 @@ public:
 	void SetCustomBezier(double X1, double Y1, double X2, double Y2);
 
 	void UsingSmoothStep();
+
+	void DisableAnimation(const char* animationName)
+	{
+		int position = ReturnAnimationPosition(animationName);
+
+		if (position != -1)
+			animation_is_disabled[position] = true;
+	}
+
+	void EnableAnimation(const char* animationName)
+	{
+		int position = ReturnAnimationPosition(animationName);
+
+		if (position != -1)
+			animation_is_disabled[position] = false;
+	}
 	
 	bool AnimationRequestDirty();
 
 private:
+
+	int ReturnAnimationPosition(const char* animationName)
+	{
+		string uniqueName = animationName;
+		// Find animation
+		for (int i = 0; i < animation_unique_name.size(); i++)
+			if (animation_unique_name[i] == uniqueName) return i;
+
+		return -1;
+	}
 
 	double LinearInterpolate(double y1, double y2, double mu);
 
@@ -209,6 +235,7 @@ private:
 	vector <double> animation_last_pos;
 	vector <int> animation_start_to_end_frames;
 	vector <int> animation_end_to_start_frames;
+	vector <bool> animation_is_disabled;
 
 	double x1 = 0.0, y1 = 0.0, x2 = 1.0, y2 = 1.0;
 	bool smooth_step = false;

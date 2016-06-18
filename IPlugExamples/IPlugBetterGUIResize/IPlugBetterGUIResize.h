@@ -134,6 +134,14 @@ public:
 	{
 		pGraphics->FillIRect(&COLOR_BLUE, &mRECT, &mBlend);
 
+		//GetAnimation()->DrawAnimationCurve_DEBUG(pGraphics, animationFlag::_BounceEaseOut);
+
+		double animateWidth = GetAnimation()->Animation("animatePosition", button, 0, mRECT.W(), 60, 60, animationFlag::_QuinticEaseInOut, animationFlag::_QuarticEaseInOut);
+		double animateHeight = mRECT.H();// = GetAnimation()->Animation("animateHeight", button, 0, mRECT.H(), 10, 10, animationFlag::_CubicEaseIn, animationFlag::_CubicEaseIn);
+
+		pGraphics->FillIRect(&COLOR_BLACK, &IRECT(mRECT.L, mRECT.T, mRECT.L + (int)animateWidth, mRECT.T + (int)animateHeight), &mBlend);
+
+
 		if (!button)
 		{
 			pGraphics->DrawIText(&mText, resize.Get(), &mRECT);
@@ -142,13 +150,6 @@ public:
 		{
 			pGraphics->DrawIText(&mText, scaling.Get(), &mRECT);
 		}
-
-		//GetAnimation()->DrawAnimationCurve_DEBUG(pGraphics, animationFlag::_BounceEaseOut);
-
-		//double animatePosition = GetAnimation()->Animation("animatePosition", button, false, 0, mRECT.W() - 50, 100, 100, animationFlag::_BounceEaseOut, animationFlag::_BounceEaseOut);
-		//double animateHeight = 0;// = Animation("animateHeight", button, false, 0, 50, 30, 60, animationFlag::_BackEaseOut, animationFlag::_BackEaseIn);
-
-		//pGraphics->FillIRect(&COLOR_BLACK, &IRECT(mRECT.L + (int)animatePosition, mRECT.T + 50, mRECT.L + 50 + (int)animatePosition, mRECT.B - 50 + (int)animateHeight), &mBlend);
 
 		// Print selected control
 		WDL_String controlNumber;

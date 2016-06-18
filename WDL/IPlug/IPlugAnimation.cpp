@@ -1,24 +1,14 @@
 #include "IPlugAnimation.h"
 #include "IGraphics.h"
 
-double IPlugAnimation::Animation(const char * uniqueAnimationName, bool state, bool disableAnimation, double start, double end, int startToEndFrames, int endToStartFrames, animationFlag startToEnd, animationFlag endToStart)
+double IPlugAnimation::Animation(const char * uniqueAnimationName, bool state, double start, double end, int startToEndFrames, int endToStartFrames, animationFlag startToEnd, animationFlag endToStart)
 {
-	int position = -1;
-	string uniqueName = uniqueAnimationName;
-	// Check if animation is already initiated
-	for (int i = 0; i < animation_unique_name.size(); i++)
-	{
-		if (animation_unique_name[i] == uniqueName)
-		{
-			position = i;
-			break;
-		}
-	}
+	int position = ReturnAnimationPosition(uniqueAnimationName);
 
 	// If not found, create new animation
 	if (position == -1)
 	{
-		animation_unique_name.push_back(uniqueName);
+		animation_unique_name.push_back(uniqueAnimationName);
 		animation_frame.push_back(0);
 		animation_start.push_back(start);
 		animation_end.push_back(end);
@@ -28,12 +18,13 @@ double IPlugAnimation::Animation(const char * uniqueAnimationName, bool state, b
 		animation_end_to_start_frames.push_back(endToStartFrames);
 		animation_redraw.push_back(false);
 		animation_last_state.push_back(state);
+		animation_is_disabled.push_back(false);
 
 		position = animation_unique_name.size() - 1;
 	}
 
 	// Disables animations
-	if (disableAnimation)
+	if (animation_is_disabled[position])
 	{
 		if (state) animation_frame[position] = startToEndFrames;
 		else animation_frame[position] = 0;
