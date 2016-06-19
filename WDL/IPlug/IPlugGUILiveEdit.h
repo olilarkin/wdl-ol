@@ -79,26 +79,6 @@ public:
 				*liveKeyDown = -1;
 			}
 		}
-		
-		// Hide control if it is deleted
-		if (deleted_control_default_index.size())
-		{
-			int controlSize = pControls->GetSize();
-
-			if (pPlug->GetGUIResize())
-			{
-				controlSize -= 3;
-			}
-
-			for (int j = 1; j < controlSize; j++)
-			{
-				IControl* pControl = pControls->Get(j);
-
-				if (IsControlDeleted(pControl))
-					pControl->Hide(true);
-			}
-
-		}
 
 		// If mouse was clicked
 		if (*liveToogleEditing)
@@ -679,168 +659,6 @@ public:
 		}
 	}
 
-	void BackupIRECTs(IPlugBase* pPlug, IGraphics* pGraphics, const char* category, double guiScaleRatio)
-	{
-		int controlSize = pGraphics->GetNControls();
-		if (pPlug->GetGUIResize()) controlSize -= 3;
-		
-		for (int i = 1; i < controlSize; i++)
-		{
-			IControl* pControl = pGraphics->GetControl(i);
-			IRECT drawRECT = *pControl->GetRECT();
-			IRECT targetRECT = *pControl->GetTargetRECT();
-
-			if (pPlug->GetGUIResize())
-			{
-				drawRECT.L = int((double)drawRECT.L * guiScaleRatio);
-				drawRECT.T = int((double)drawRECT.T * guiScaleRatio);
-				drawRECT.R = int((double)drawRECT.R * guiScaleRatio);
-				drawRECT.B = int((double)drawRECT.B * guiScaleRatio);
-
-				targetRECT.L = int((double)targetRECT.L * guiScaleRatio);
-				targetRECT.T = int((double)targetRECT.T * guiScaleRatio);
-				targetRECT.R = int((double)targetRECT.R * guiScaleRatio);
-				targetRECT.B = int((double)targetRECT.B * guiScaleRatio);
-			}
-
-			WDL_String IRECT_Position;
-			WDL_String IRECT_Name;
-			IRECT_Name.SetFormatted(128, "IRECT%i", i);
-			
-			// Set L
-			WDL_String IRECT_NameDL;
-			IRECT_NameDL.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDL.Append("_drawL");
-			IRECT_Position.SetFormatted(128, "%i", drawRECT.L);
-			SetIntToFile(category, IRECT_NameDL.Get(), IRECT_Position.Get());
-
-			WDL_String IRECT_NameTL;
-			IRECT_NameTL.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTL.Append("_targetL");
-			IRECT_Position.SetFormatted(128, "%i", targetRECT.L);
-			SetIntToFile(category, IRECT_NameTL.Get(), IRECT_Position.Get());
-
-			// Set T
-			WDL_String IRECT_NameDT;
-			IRECT_NameDT.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDT.Append("_drawT");
-			IRECT_Position.SetFormatted(128, "%i", drawRECT.T);
-			SetIntToFile(category, IRECT_NameDT.Get(), IRECT_Position.Get());
-
-			WDL_String IRECT_NameTT;
-			IRECT_NameTT.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTT.Append("_targetT");
-			IRECT_Position.SetFormatted(128, "%i", targetRECT.T);
-			SetIntToFile(category, IRECT_NameTT.Get(), IRECT_Position.Get());
-
-			// Set R
-			WDL_String IRECT_NameDR;
-			IRECT_NameDR.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDR.Append("_drawR");
-			IRECT_Position.SetFormatted(128, "%i", drawRECT.R);
-			SetIntToFile(category, IRECT_NameDR.Get(), IRECT_Position.Get());
-
-			WDL_String IRECT_NameTR;
-			IRECT_NameTR.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTR.Append("_targetR");
-			IRECT_Position.SetFormatted(128, "%i", targetRECT.R);
-			SetIntToFile(category, IRECT_NameTR.Get(), IRECT_Position.Get());
-
-			// Set B
-			WDL_String IRECT_NameDB;
-			IRECT_NameDB.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDB.Append("_drawB");
-			IRECT_Position.SetFormatted(128, "%i", drawRECT.B);
-			SetIntToFile(category, IRECT_NameDB.Get(), IRECT_Position.Get());
-
-			WDL_String IRECT_NameTB;
-			IRECT_NameTB.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTB.Append("_targetB");
-			IRECT_Position.SetFormatted(128, "%i", targetRECT.B);
-			SetIntToFile(category, IRECT_NameTB.Get(), IRECT_Position.Get());
-		}
-	}
-
-	void LoadIRECTsFromFile(IPlugBase* pPlug, IGraphics* pGraphics, const char* category)
-
-	{
-		int controlSize = pGraphics->GetNControls();
-		if (pPlug->GetGUIResize()) controlSize -= 3;
-
-		for (int i = 1; i < controlSize; i++)
-		{
-			IControl* pControl = pGraphics->GetControl(i);
-			IRECT drawRECT;
-			IRECT targetRECT;
-
-			WDL_String IRECT_Name;
-			IRECT_Name.SetFormatted(128, "IRECT%i", i);
-
-			// Set L
-			WDL_String IRECT_NameDL;
-			IRECT_NameDL.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDL.Append("_drawL");
-			drawRECT.L = GetIntFromFile(category, IRECT_NameDL.Get());
-
-			WDL_String IRECT_NameTL;
-			IRECT_NameTL.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTL.Append("_targetL");
-			targetRECT.L = GetIntFromFile(category, IRECT_NameTL.Get());
-
-			// Set T
-			WDL_String IRECT_NameDT;
-			IRECT_NameDT.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDT.Append("_drawT");
-			drawRECT.T = GetIntFromFile(category, IRECT_NameDT.Get());
-
-			WDL_String IRECT_NameTT;
-			IRECT_NameTT.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTT.Append("_targetT");
-			targetRECT.T = GetIntFromFile(category, IRECT_NameTT.Get());
-
-			// Set R
-			WDL_String IRECT_NameDR;
-			IRECT_NameDR.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDR.Append("_drawR");
-			drawRECT.R = GetIntFromFile(category, IRECT_NameDR.Get());
-
-			WDL_String IRECT_NameTR;
-			IRECT_NameTR.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTR.Append("_targetR");
-			targetRECT.R = GetIntFromFile(category, IRECT_NameTR.Get());
-
-			// Set B
-			WDL_String IRECT_NameDB;
-			IRECT_NameDB.Set(IRECT_Name.Get(), 128);
-			IRECT_NameDB.Append("_drawB");
-			drawRECT.B = GetIntFromFile(category, IRECT_NameDB.Get());
-
-			WDL_String IRECT_NameTB;
-			IRECT_NameTB.Set(IRECT_Name.Get(), 128);
-			IRECT_NameTB.Append("_targetB");
-			targetRECT.B = GetIntFromFile(category, IRECT_NameTB.Get());
-
-			if (drawRECT.L >= 0 && drawRECT.T >= 0 && drawRECT.R >= 0 && drawRECT.B >= 0)
-			{
-				if (targetRECT.L >= 0 && targetRECT.T >= 0 && targetRECT.R >= 0 && targetRECT.B >= 0)
-				{
-					pControl->SetDrawRECT(drawRECT);
-					pControl->SetTargetRECT(targetRECT);
-				}
-			}
-		}
-	}
-
-	void SetIntToFile(const char * category, const char * variable_name, const char * variable_value)
-	{
-		WritePrivateProfileString(category, variable_name, variable_value, "C:/LiveOut.txt");
-	}
-
-	int GetIntFromFile(const char * category, const char * variable_name)
-	{
-		return GetPrivateProfileInt(category, variable_name, -1, "C:/LiveOut.txt");
-	}
-
 	void WriteToTextFile(const char* data, const char* filePath)
 	{
 		ofstream myfile;
@@ -1211,15 +1029,12 @@ public:
 		menu.AddSeparator();
 
 		// Item 12
-		menu.AddItem("Add Control");
-
-		// Item 13
 		menu.AddItem("Remove Control");
 
-		// Item 14
+		// Item 13
 		menu.AddSeparator();
 
-		// Item 15
+		// Item 14
 		menu.AddItem("Reset to Default");
 
 		if (pGraphics->CreateIPopupMenu(&menu, x, y))
@@ -1344,13 +1159,8 @@ public:
 				else drawGridToogle = true;
 			}
 
-			// Add Control
-			if (itemChosen == 12)
-			{
-			}
-
 			// Remove Control
-			if (itemChosen == 13)
+			if (itemChosen == 12)
 			{
 				IControl* pControl = pGraphics->GetControl(liveControlNumber);
 				int position = FindPointerPosition(pControl, default_layers);
@@ -1397,6 +1207,13 @@ public:
 							pPlug->GetGUIResize()->RearrangeLayers();
 							pPlug->GetGUIResize()->ResizeControlRects();
 
+							// Hide removed control
+							for (int j = 1; j < pGraphics->GetNControls(); j++)
+							{
+								IControl* tmp = pGraphics->GetControl(j);
+								if (tmp == pControl) pControl->Hide(true);
+							}
+							
 							// Write to file
 							CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, i, false);
 						}
@@ -1404,13 +1221,18 @@ public:
 						pPlug->GetGUIResize()->SelectViewMode(currentViewMode);
 						pPlug->GetGUIResize()->RearrangeLayers();
 						pPlug->GetGUIResize()->ResizeControlRects();
+						pControl->Hide(true);
 					}
+
+					liveControlNumber = -1;
+					liveClickedRECT = IRECT(0, 0, 0, 0);
+					liveClickedTargetRECT = IRECT(0, 0, 0, 0);
 				}
 
 			}
 
 			// Clear Edits
-			if (itemChosen == 15)
+			if (itemChosen == 14)
 			{
 				for (int i = 0; i < pGraphics->GetNControls(); i++)
 				{
@@ -1565,7 +1387,6 @@ public:
 
 private:
 	// Live editing stuff
-	char buf[512]; // temp buffer for writing integers to profile strings
 	char* defaultFont = "Tahoma";
 	IColor EDIT_COLOR = IColor(255, 255, 255, 255);
 	IColor controlTextBackgroundColor = IColor(122, 0, 0, 0);
