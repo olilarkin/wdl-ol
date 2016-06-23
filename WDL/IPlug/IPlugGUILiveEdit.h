@@ -1490,7 +1490,7 @@ public:
 	{
 		if (deleted_control_default_index.size() > 0)
 		{
-			int textSize = 18;
+			int textSize = 15;
 			IText txt(textSize, &EDIT_COLOR, defaultFont);
 			txt.mAlign = IText::kAlignNear;
 
@@ -1502,6 +1502,7 @@ public:
 			WDL_String intro;
 			intro.Set(" Delete this controls: ");
 			pGraphics->MeasureIText(&txt, intro.Get(), &introRect);
+			pGraphics->FillIRect(&controlTextBackgroundColor, &introRect);
 			pGraphics->DrawIText(&txt, intro.Get(), &introRect);
 
 			rect.R = introRect.R;
@@ -1530,7 +1531,7 @@ public:
 					rect.T += tmpH;
 					rect.B += tmpH;
 				}
-
+				pGraphics->FillIRect(&controlTextBackgroundColor, &rect);
 				pGraphics->DrawIText(&txt, text.Get(), &rect);
 			}
 		}
@@ -1620,20 +1621,24 @@ public:
 			IControl* tmp = default_layers[j];
 
 			bool a, b, c, d, e;
-			a = undo_viewMode[viewMode].undo_stack.back().pointers[j] == undo_current_stack[viewMode].pointers[j];
-			b = undo_viewMode[viewMode].undo_stack.back().draw_rect[j] == undo_current_stack[viewMode].draw_rect[j];
-			c = undo_viewMode[viewMode].undo_stack.back().target_rect[j] == undo_current_stack[viewMode].target_rect[j];
-			d = undo_viewMode[viewMode].undo_stack.back().is_hidden[j] == undo_current_stack[viewMode].is_hidden[j];
-			e = undo_viewMode[viewMode].undo_stack.back().deleted_controls.size() == undo_current_stack[viewMode].deleted_controls.size();
 
-			if (!a || !b || !c || !d || !e)
+			if (undo_viewMode[viewMode].undo_stack.size() > 0)
 			{
-				skipIfSame = false;
-				break;
+				a = undo_viewMode[viewMode].undo_stack.back().pointers[j] == undo_current_stack[viewMode].pointers[j];
+				b = undo_viewMode[viewMode].undo_stack.back().draw_rect[j] == undo_current_stack[viewMode].draw_rect[j];
+				c = undo_viewMode[viewMode].undo_stack.back().target_rect[j] == undo_current_stack[viewMode].target_rect[j];
+				d = undo_viewMode[viewMode].undo_stack.back().is_hidden[j] == undo_current_stack[viewMode].is_hidden[j];
+				e = undo_viewMode[viewMode].undo_stack.back().deleted_controls.size() == undo_current_stack[viewMode].deleted_controls.size();
+
+				if (!a || !b || !c || !d || !e)
+				{
+					skipIfSame = false;
+					break;
+				}
 			}
 		}
 
-		if (skipIfSame)
+		if (skipIfSame && undo_viewMode[viewMode].undo_stack.size() > 0)
 		{
 			undo_viewMode[viewMode].undo_stack.pop_back();
 			undo_viewMode[viewMode].undo_pos--;
