@@ -1549,32 +1549,40 @@ public:
 		}
 		
 		// Resize to fit viewSIze
-		undo_viewMode.resize(viewSize);
-		
-			// Add new undo to stack
-			int undoPos = ++undo_viewMode[viewMode].undo_pos;
+		if (undo_viewMode.size() != viewSize)
+		{
+			undo_viewMode.resize(viewSize);
 
-			// Resize containers
-			undo_viewMode[viewMode].undo_stack.resize(undoPos + 1);
-			undo_viewMode[viewMode].undo_stack[undoPos].pointers.resize(pGraphics->GetNControls());
-			undo_viewMode[viewMode].undo_stack[undoPos].draw_rect.resize(pGraphics->GetNControls());
-			undo_viewMode[viewMode].undo_stack[undoPos].target_rect.resize(pGraphics->GetNControls());
-			undo_viewMode[viewMode].undo_stack[undoPos].is_hidden.resize(pGraphics->GetNControls());
-
-			// Add values to the container
-			for (int j = 0; j < pGraphics->GetNControls(); j++)
+			for (int j = 0; j < viewSize; j++)
 			{
-				IControl* pControl = pGraphics->GetControl(j);
-				IControl* tmp = default_layers[j];
-
-				undo_viewMode[viewMode].undo_stack[undoPos].pointers[j] = pControl;
-				undo_viewMode[viewMode].undo_stack[undoPos].draw_rect[j] = *tmp->GetRECT();
-				undo_viewMode[viewMode].undo_stack[undoPos].target_rect[j] = *tmp->GetTargetRECT();
-				undo_viewMode[viewMode].undo_stack[undoPos].is_hidden[j] = tmp->IsHidden();
+				undo_viewMode[j].undo_pos = -1;
 			}
+		}
 
-			// Add deleted controls
-			undo_viewMode[viewMode].undo_stack[undoPos].deleted_controls = deleted_control_default_index;	
+		// Add new undo to stack
+		int undoPos = ++undo_viewMode[viewMode].undo_pos;
+
+		// Resize containers
+		undo_viewMode[viewMode].undo_stack.resize(undoPos + 1);
+		undo_viewMode[viewMode].undo_stack[undoPos].pointers.resize(pGraphics->GetNControls());
+		undo_viewMode[viewMode].undo_stack[undoPos].draw_rect.resize(pGraphics->GetNControls());
+		undo_viewMode[viewMode].undo_stack[undoPos].target_rect.resize(pGraphics->GetNControls());
+		undo_viewMode[viewMode].undo_stack[undoPos].is_hidden.resize(pGraphics->GetNControls());
+
+		// Add values to the container
+		for (int j = 0; j < pGraphics->GetNControls(); j++)
+		{
+			IControl* pControl = pGraphics->GetControl(j);
+			IControl* tmp = default_layers[j];
+
+			undo_viewMode[viewMode].undo_stack[undoPos].pointers[j] = pControl;
+			undo_viewMode[viewMode].undo_stack[undoPos].draw_rect[j] = *tmp->GetRECT();
+			undo_viewMode[viewMode].undo_stack[undoPos].target_rect[j] = *tmp->GetTargetRECT();
+			undo_viewMode[viewMode].undo_stack[undoPos].is_hidden[j] = tmp->IsHidden();
+		}
+
+		// Add deleted controls
+		undo_viewMode[viewMode].undo_stack[undoPos].deleted_controls = deleted_control_default_index;
 	}
 
 	void AddCurrentUndo(IPlugBase* pPlug, IGraphics* pGraphics)
@@ -1821,7 +1829,7 @@ private:
 	struct undoStack
 	{
 		vector <undo> undo_stack;
-		int undo_pos = -1;
+		int undo_pos;
 	};
 
 	vector <undo> undo_current_stack;
