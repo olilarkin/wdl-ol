@@ -1520,7 +1520,7 @@ public:
 			{
 				WDL_String text;
 
-				text.SetFormatted(128, "%i (%s), ", j, default_layers[deleted_control_default_index[j]]->GetDerivedClassName());
+				text.SetFormatted(128, "%i (%s), ", deleted_control_default_index[j], default_layers[deleted_control_default_index[j]]->GetDerivedClassName());
 
 				pGraphics->MeasureIText(&txt, text.Get(), &measure);
 
