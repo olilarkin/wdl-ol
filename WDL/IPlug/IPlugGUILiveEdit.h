@@ -1349,6 +1349,8 @@ public:
 							pPlug->GetGUIResize()->RearrangeLayers();
 							pPlug->GetGUIResize()->ResizeControlRects();
 
+							AddUndo(pPlug, pGraphics);
+
 							// Hide removed control
 							for (int j = 1; j < pGraphics->GetNControls(); j++)
 							{
@@ -1358,6 +1360,8 @@ public:
 
 							// Write to file
 							CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, i, false);
+
+							AddCurrentUndo(pPlug, pGraphics);
 						}
 
 						pPlug->GetGUIResize()->SelectViewMode(currentViewMode);
