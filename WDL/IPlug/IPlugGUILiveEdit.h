@@ -83,6 +83,7 @@ public:
 		}
 		else
 		{
+			*liveToogleEditing = true;
 			if (*liveKeyDown == 19)
 			{
 				*liveToogleEditing = true;
@@ -199,7 +200,8 @@ public:
 			}
 
 			// Prepare undo to be executed on next mose click if nedeed
-			if (!liveEditingMod->L) undoMove = true;
+			if (!liveEditingMod->L) 
+				undoMove = true;
 			
 			// Move controls
 			if (liveEditingMod->L && !IsControlDeleted(pControls->Get(*liveMouseCapture)))
@@ -320,6 +322,8 @@ public:
 						{
 							AddCurrentUndo(pPlug, pGraphics);
 						}
+
+						DeleteLastSameUndo(pPlug, pGraphics);
 					}
 
 					liveSelectedRECT = drawArea;
@@ -1603,7 +1607,6 @@ public:
 		int viewSize = 1;
 		lastWasUndo = false;
 		lastWasRedo = false;
-		bool skipIfSame = true;
 
 		if (pPlug->GetGUIResize())
 		{
@@ -1632,37 +1635,6 @@ public:
 
 		// Add deleted controls
 		undo_current_stack[viewMode].deleted_controls = deleted_control_default_index;
-		
-		// Check if previous undo is same as current
-		for (int j = 0; j < pGraphics->GetNControls(); j++)
-		{
-
-			IControl* pControl = pGraphics->GetControl(j);
-			IControl* tmp = default_layers[j];
-
-			bool a, b, c, d, e;
-
-			if (undo_viewMode[viewMode].undo_stack.size() > 0)
-			{
-				a = undo_viewMode[viewMode].undo_stack.back().pointers[j] == undo_current_stack[viewMode].pointers[j];
-				b = undo_viewMode[viewMode].undo_stack.back().draw_rect[j] == undo_current_stack[viewMode].draw_rect[j];
-				c = undo_viewMode[viewMode].undo_stack.back().target_rect[j] == undo_current_stack[viewMode].target_rect[j];
-				d = undo_viewMode[viewMode].undo_stack.back().is_hidden[j] == undo_current_stack[viewMode].is_hidden[j];
-				e = undo_viewMode[viewMode].undo_stack.back().deleted_controls.size() == undo_current_stack[viewMode].deleted_controls.size();
-
-				if (!a || !b || !c || !d || !e)
-				{
-					skipIfSame = false;
-					break;
-				}
-			}
-		}
-
-		if (skipIfSame && undo_viewMode[viewMode].undo_stack.size() > 0)
-		{
-			undo_viewMode[viewMode].undo_stack.pop_back();
-			undo_viewMode[viewMode].undo_pos--;
-		}
 	}
 
 	void GetUndo(IPlugBase* pPlug, IGraphics* pGraphics)
@@ -1793,6 +1765,70 @@ public:
 		liveClickedTargetRECT = IRECT(0, 0, 0, 0);
 	}
 
+	void DeleteLastSameUndo(IPlugBase* pPlug, IGraphics* pGraphics)
+	{
+		// If the new undo is same as previous, delete the new one
+
+		int viewMode = 0;
+		int viewSize = 1;
+
+		if (pPlug->GetGUIResize())
+		{
+			viewMode = pPlug->GetGUIResize()->GetViewMode();
+			viewSize = pPlug->GetGUIResize()->GetViewModeSize();
+		}
+
+		// Check if previous undo is same as current
+		bool a = false, b = false, c = false, d = false, e = false;
+
+		int undoSize = undo_viewMode[viewMode].undo_stack.size();
+
+		if (undo_viewMode[viewMode].undo_stack.size() > 1)
+		{
+			a = VectorEquals(undo_viewMode[viewMode].undo_stack[undoSize - 1].pointers, 
+				undo_viewMode[viewMode].undo_stack[undoSize - 2].pointers);
+			b = VectorEquals(undo_viewMode[viewMode].undo_stack[undoSize - 1].draw_rect, 
+				undo_viewMode[viewMode].undo_stack[undoSize - 2].draw_rect);
+			c = VectorEquals(undo_viewMode[viewMode].undo_stack[undoSize - 1].target_rect,
+				undo_viewMode[viewMode].undo_stack[undoSize - 2].target_rect);
+			d = VectorEquals(undo_viewMode[viewMode].undo_stack[undoSize - 1].is_hidden, 
+				undo_viewMode[viewMode].undo_stack[undoSize - 2].is_hidden);
+			e = VectorEquals(undo_viewMode[viewMode].undo_stack[undoSize - 1].deleted_controls, 
+				undo_viewMode[viewMode].undo_stack[undoSize - 2].deleted_controls);
+		}
+
+		if (a && b && c && d && e)
+		{
+			undo_viewMode[viewMode].undo_stack.pop_back();
+			undo_viewMode[viewMode].undo_pos--;
+		}
+	}
+
+	bool ControlIsDeleted(IControl* pControl, vector <int> indexes)
+	{
+		for (int i = 0; i < indexes.size(); i++)
+		{
+			if (default_layers[indexes[i]] == pControl) return true;
+		}
+		return false;
+	}
+
+	template <typename vectorType>
+	bool VectorEquals(vector <vectorType> vec1, vector <vectorType> vec2)
+	{
+		if (vec1.size() == vec2.size())
+		{
+			for (int i = 0; i < vec1.size(); i++)
+			{
+				if (vec1[i] != vec2[i]) return false;
+			}
+		}
+		else return false;
+
+		return true;
+	}
+
+	
 private:
 	// Live editing stuff
 	char* defaultFont = "Tahoma";

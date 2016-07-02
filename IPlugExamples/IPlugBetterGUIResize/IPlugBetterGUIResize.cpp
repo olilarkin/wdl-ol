@@ -163,8 +163,8 @@ void IPlugBetterGUIResize::ProcessDoubleReplacing(double** inputs, double** outp
 
   for (int s = 0; s < nFrames; ++s, ++in1, ++in2, ++out1, ++out2)
   {
-    *out1 = *in1;
-    *out2 = *in2;
+    //*out1 = *in1;
+    //*out2 = *in2;
   }
 }
 
