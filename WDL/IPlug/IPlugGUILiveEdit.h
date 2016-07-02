@@ -83,7 +83,6 @@ public:
 		}
 		else
 		{
-			*liveToogleEditing = true;
 			if (*liveKeyDown == 19)
 			{
 				*liveToogleEditing = true;
@@ -1353,8 +1352,6 @@ public:
 							pPlug->GetGUIResize()->RearrangeLayers();
 							pPlug->GetGUIResize()->ResizeControlRects();
 
-							AddUndo(pPlug, pGraphics);
-
 							// Hide removed control
 							for (int j = 1; j < pGraphics->GetNControls(); j++)
 							{
@@ -1364,15 +1361,14 @@ public:
 
 							// Write to file
 							CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, i, false);
-
-							AddCurrentUndo(pPlug, pGraphics);
 						}
 
 						pPlug->GetGUIResize()->SelectViewMode(currentViewMode);
 						pPlug->GetGUIResize()->RearrangeLayers();
 						pPlug->GetGUIResize()->ResizeControlRects();
-						pControl->Hide(true);
 					}
+
+					pControl->Hide(true);
 
 					liveControlNumber = -1;
 					liveClickedRECT = IRECT(0, 0, 0, 0);
@@ -1677,7 +1673,73 @@ public:
 			}
 
 			// Get deleted controls
-			deleted_control_default_index = undo_viewMode[viewMode].undo_stack[undoPos].deleted_controls;
+			// If deleted controls is changed, unhide all deleted controls and then hide controls from new list
+			if (!VectorEquals(deleted_control_default_index, undo_viewMode[viewMode].undo_stack[undoPos].deleted_controls))
+			{
+				// Do if GUI resize is active
+				if (pPlug->GetGUIResize())
+				{
+					int currentViewMode = pPlug->GetGUIResize()->GetViewMode();
+					int viewSize = pPlug->GetGUIResize()->GetViewModeSize();
+
+					// Unhide all deleted controls
+					for (int i = 0; i < viewSize; i++)
+					{
+						pPlug->GetGUIResize()->SelectViewMode(i);
+						pPlug->GetGUIResize()->RearrangeLayers();
+						pPlug->GetGUIResize()->ResizeControlRects();
+
+						// Hide removed control
+						for (int j = 1; j < pGraphics->GetNControls(); j++)
+						{
+							IControl* tmp = pGraphics->GetControl(j);
+							if (ControlIsDeleted(tmp, deleted_control_default_index)) tmp->Hide(false);
+						}
+
+						// Write to file
+						CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, i, false);
+					}
+
+					deleted_control_default_index = undo_viewMode[viewMode].undo_stack[undoPos].deleted_controls;
+
+					// Hide all deleted controls
+					for (int i = 0; i < viewSize; i++)
+					{
+						pPlug->GetGUIResize()->SelectViewMode(i);
+						pPlug->GetGUIResize()->RearrangeLayers();
+						pPlug->GetGUIResize()->ResizeControlRects();
+
+						// Hide removed control
+						for (int j = 1; j < pGraphics->GetNControls(); j++)
+						{
+							IControl* tmp = pGraphics->GetControl(j);
+							//if (ControlIsDeleted(tmp, deleted_control_default_index)) tmp->Hide(true);
+						}
+
+						// Write to file
+						CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, i, false);
+					}
+
+					pPlug->GetGUIResize()->SelectViewMode(currentViewMode);
+					pPlug->GetGUIResize()->RearrangeLayers();
+					pPlug->GetGUIResize()->ResizeControlRects();
+				}
+				else // If GUI resize is not active
+				{
+					deleted_control_default_index = undo_viewMode[viewMode].undo_stack[undoPos].deleted_controls;
+
+					// Hide removed control
+					for (int j = 1; j < pGraphics->GetNControls(); j++)
+					{
+						IControl* tmp = pGraphics->GetControl(j);
+						if (ControlIsDeleted(tmp, deleted_control_default_index)) tmp->Hide(true);
+					}
+
+					// Write to file
+					CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, viewMode, false);
+				}
+			}
+			else deleted_control_default_index = undo_viewMode[viewMode].undo_stack[undoPos].deleted_controls;
 
 			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, viewMode, false);
 			undo_viewMode[viewMode].undo_pos--;
