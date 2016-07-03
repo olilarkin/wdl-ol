@@ -22,6 +22,18 @@ appreciated but is not required.
 
 */
 
+/*
+USE:
+
+Press E key to activate;
+Press SHIFT while moving control to unsnap from grid;
+Press ALT while moving control to snap to other controls;
+
+
+
+
+*/
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -130,11 +142,15 @@ public:
 				}
 			}
 
-			WDL_String str;
-			str.SetFormatted(32, "x: %i, y: %i", *mMouseX, *mMouseY);
-			IText txt(20, &EDIT_COLOR, defaultFont);
-			IRECT rect(width - 150, height - 20, width, height);
-			pGraphics->DrawIText(&txt, str.Get(), &rect);
+			// Draw mouse coordinates
+			if (drawMouseCoordinats)
+			{
+				WDL_String str;
+				str.SetFormatted(32, "x: %i, y: %i", *mMouseX, *mMouseY);
+				IText txt(20, &EDIT_COLOR, defaultFont);
+				IRECT rect(width - 150, height - 20, width, height);
+				pGraphics->DrawIText(&txt, str.Get(), &rect);
+			}
 
 			// Draw resizing handles
 			int liveHandleSize = int(8.0 * guiScaleRatio);
@@ -203,131 +219,19 @@ public:
 				undoMove = true;
 			
 			// Move controls
-			if (liveEditingMod->L && !IsControlDeleted(pControls->Get(*liveMouseCapture)))
+			if (liveEditingMod->L && !liveEditingMod->C && !multipleControlsSelected && !IsControlDeleted(pControls->Get(*liveMouseCapture)))
 			{
-				IControl* pControl = pControls->Get(*liveMouseCapture);
-
-				liveSelectedRECT = *pControl->GetRECT();
-				liveSelectedTargetRECT = *pControl->GetTargetRECT();
-				liveControlNumber = *liveMouseCapture;
-
-				// Find where mouse was clicked
-				if (*liveMouseCapture != lastliveMouseCapture)
-				{
-					liveClickedX = *mMouseX;
-					liveClickedY = *mMouseY;
-					liveClickedRECT = liveSelectedRECT;
-					liveClickedTargetRECT = liveSelectedTargetRECT;
-
-					IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
-					liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
-				}
-
-
-				// Change cursor when clicked on handle
-				if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
-				else SetCursor(LoadCursor(NULL, IDC_ARROW));
-
-				// Prevent editing
-				if (*liveMouseDragging || liveEditingMod->C)
-				{
-					IRECT drawArea;
-					if (!liveClickedOnHandle)
-					{
-						drawArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
-						drawArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
-						drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-						drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-					}
-					else
-					{
-						drawArea.L = liveClickedRECT.L;
-						drawArea.T = liveClickedRECT.T;
-						drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-						drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-					}
-
-					IRECT targetArea;
-					if (!liveClickedOnHandle)
-					{
-						targetArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
-						targetArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
-						targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-						targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-					}
-					else
-					{
-						targetArea.L = liveClickedRECT.L;
-						targetArea.T = liveClickedRECT.T;
-						targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-						targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-					}
-
-					// Snap to grid
-					if (!liveEditingMod->A)
-					{
-						if (!liveClickedOnHandle)
-						{
-							int gridL = (drawArea.L / liveScaledGridSize) * liveScaledGridSize;
-							int gridT = (drawArea.T / liveScaledGridSize) * liveScaledGridSize;
-
-							int diffL = gridL - drawArea.L;
-							int diffT = gridT - drawArea.T;
-
-							drawArea.L += diffL;
-							drawArea.T += diffT;
-							drawArea.R += diffL;
-							drawArea.B += diffT;
-
-							targetArea.L += diffL;
-							targetArea.T += diffT;
-							targetArea.R += diffL;
-							targetArea.B += diffT;
-						}
-						else
-						{
-							int gridR = (drawArea.R / liveScaledGridSize) * liveScaledGridSize;
-							int gridB = (drawArea.B / liveScaledGridSize) * liveScaledGridSize;
-
-							int diffR = gridR - drawArea.R;
-							int diffB = gridB - drawArea.B;
-
-							drawArea.R += diffR;
-							drawArea.B += diffB;
-
-							targetArea.R += diffR;
-							targetArea.B += diffB;
-						}
-					}
-
-					// Snap to control Function
-					SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &drawArea, &targetArea, controlSize);
-
-					// Prevent moving background
-					if (liveControlNumber > 0)
-					{
-						// Add undo
-						if ((pControl->GetRECT() != &drawArea || pControl->GetTargetRECT() != &targetArea) && undoMove)
-						{
-							AddUndo(pPlug, pGraphics);
-							undoMove = false;
-						}
-
-						pControl->SetDrawRECT(drawArea);
-						pControl->SetTargetRECT(targetArea);
-
-						// Add current undo
-						if (!undoMove)
-						{
-							AddCurrentUndo(pPlug, pGraphics);
-						}
-
-						DeleteLastSameUndo(pPlug, pGraphics);
-					}
-
-					liveSelectedRECT = drawArea;
-				}
+				MoveControl(pPlug, pGraphics, pDrawBitmap, pControls, liveEditingMod, liveSnap, 
+					liveMouseCapture, controlSize, overControlHandle, liveHandleSize, liveMouseDragging, mMouseX, mMouseY);
 			}
+
+			// Move selection of controls
+			if (liveEditingMod->L && (liveEditingMod->C || multipleControlsSelected))
+			{
+				MoveSelectionOfControls(pPlug, pGraphics, pDrawBitmap, pControls, liveEditingMod, liveSnap,
+					liveMouseCapture, controlSize, overControlHandle, liveHandleSize, liveMouseDragging, mMouseX, mMouseY);
+			}
+
 
 			*liveMouseDragging = false;
 			lastliveMouseCapture = *liveMouseCapture;
@@ -386,11 +290,266 @@ public:
 		}
 	}
 
+	void MoveControl(IPlugBase* pPlug, IGraphics* pGraphics, LICE_IBitmap* pDrawBitmap, WDL_PtrList<IControl>* pControls,
+		IMouseMod* liveEditingMod, int* liveSnap, int* liveMouseCapture, int controlSize, bool overControlHandle, int liveHandleSize,
+		bool* liveMouseDragging, int* mMouseX, int* mMouseY)
+	{
+
+		IControl* pControl = pControls->Get(*liveMouseCapture);
+
+		liveSelectedRECT = *pControl->GetRECT();
+		liveSelectedTargetRECT = *pControl->GetTargetRECT();
+		liveControlNumber = *liveMouseCapture;
+
+		// Find where mouse was clicked
+		if (*liveMouseCapture != lastliveMouseCapture)
+		{
+			liveClickedX = *mMouseX;
+			liveClickedY = *mMouseY;
+			liveClickedRECT = liveSelectedRECT;
+			liveClickedTargetRECT = liveSelectedTargetRECT;
+
+			IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
+			liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
+		}
+
+
+		// Change cursor when clicked on handle
+		if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+		else SetCursor(LoadCursor(NULL, IDC_ARROW));
+
+		// Prevent editing
+		if (*liveMouseDragging || liveEditingMod->A)
+		{
+			IRECT drawArea;
+			if (!liveClickedOnHandle)
+			{
+				drawArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
+				drawArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
+				drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+			else
+			{
+				drawArea.L = liveClickedRECT.L;
+				drawArea.T = liveClickedRECT.T;
+				drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+
+			IRECT targetArea;
+			if (!liveClickedOnHandle)
+			{
+				targetArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
+				targetArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
+				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+			else
+			{
+				targetArea.L = liveClickedRECT.L;
+				targetArea.T = liveClickedRECT.T;
+				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+
+			// Snap to grid
+			if (!liveEditingMod->S)
+			{
+				if (!liveClickedOnHandle)
+				{
+					int gridL = (drawArea.L / liveScaledGridSize) * liveScaledGridSize;
+					int gridT = (drawArea.T / liveScaledGridSize) * liveScaledGridSize;
+
+					int diffL = gridL - drawArea.L;
+					int diffT = gridT - drawArea.T;
+
+					drawArea.L += diffL;
+					drawArea.T += diffT;
+					drawArea.R += diffL;
+					drawArea.B += diffT;
+
+					targetArea.L += diffL;
+					targetArea.T += diffT;
+					targetArea.R += diffL;
+					targetArea.B += diffT;
+				}
+				else
+				{
+					int gridR = (drawArea.R / liveScaledGridSize) * liveScaledGridSize;
+					int gridB = (drawArea.B / liveScaledGridSize) * liveScaledGridSize;
+
+					int diffR = gridR - drawArea.R;
+					int diffB = gridB - drawArea.B;
+
+					drawArea.R += diffR;
+					drawArea.B += diffB;
+
+					targetArea.R += diffR;
+					targetArea.B += diffB;
+				}
+			}
+
+			// Snap to control Function
+			SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &drawArea, &targetArea, controlSize);
+
+			// Prevent moving background
+			if (liveControlNumber > 0)
+			{
+				// Add undo
+				if ((pControl->GetRECT() != &drawArea || pControl->GetTargetRECT() != &targetArea) && undoMove)
+				{
+					AddUndo(pPlug, pGraphics);
+					undoMove = false;
+				}
+
+				pControl->SetDrawRECT(drawArea);
+				pControl->SetTargetRECT(targetArea);
+
+				// Add current undo
+				if (!undoMove)
+				{
+					AddCurrentUndo(pPlug, pGraphics);
+				}
+
+				DeleteLastSameUndo(pPlug, pGraphics);
+			}
+
+			liveSelectedRECT = drawArea;
+		}
+	}
+
+	void MoveSelectionOfControls(IPlugBase* pPlug, IGraphics* pGraphics, LICE_IBitmap* pDrawBitmap, WDL_PtrList<IControl>* pControls,
+		IMouseMod* liveEditingMod, int* liveSnap, int* liveMouseCapture, int controlSize, bool overControlHandle, int liveHandleSize,
+		bool* liveMouseDragging, int* mMouseX, int* mMouseY)
+	{
+		liveControlNumber = -1;
+		liveClickedRECT = IRECT(0, 0, 0, 0);
+		liveClickedTargetRECT = IRECT(0, 0, 0, 0);
+
+		// Find where mouse was clicked
+		if (*liveMouseCapture != lastliveMouseCapture)
+		{
+			liveClickedX = *mMouseX;
+			liveClickedY = *mMouseY;
+			liveClickedRECT = liveSelectedRECT;
+			liveClickedTargetRECT = liveSelectedTargetRECT;
+
+			IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
+			liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
+		}
+
+
+		// Change cursor when clicked on handle
+		if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
+		else SetCursor(LoadCursor(NULL, IDC_ARROW));
+
+		// Prevent editing
+		if (*liveMouseDragging || liveEditingMod->A)
+		{
+			IRECT drawArea;
+			if (!liveClickedOnHandle)
+			{
+				drawArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
+				drawArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
+				drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+			else
+			{
+				drawArea.L = liveClickedRECT.L;
+				drawArea.T = liveClickedRECT.T;
+				drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+
+			IRECT targetArea;
+			if (!liveClickedOnHandle)
+			{
+				targetArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
+				targetArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
+				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+			else
+			{
+				targetArea.L = liveClickedRECT.L;
+				targetArea.T = liveClickedRECT.T;
+				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
+				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+			}
+
+			// Snap to grid
+			if (!liveEditingMod->S)
+			{
+				if (!liveClickedOnHandle)
+				{
+					int gridL = (drawArea.L / liveScaledGridSize) * liveScaledGridSize;
+					int gridT = (drawArea.T / liveScaledGridSize) * liveScaledGridSize;
+
+					int diffL = gridL - drawArea.L;
+					int diffT = gridT - drawArea.T;
+
+					drawArea.L += diffL;
+					drawArea.T += diffT;
+					drawArea.R += diffL;
+					drawArea.B += diffT;
+
+					targetArea.L += diffL;
+					targetArea.T += diffT;
+					targetArea.R += diffL;
+					targetArea.B += diffT;
+				}
+				else
+				{
+					int gridR = (drawArea.R / liveScaledGridSize) * liveScaledGridSize;
+					int gridB = (drawArea.B / liveScaledGridSize) * liveScaledGridSize;
+
+					int diffR = gridR - drawArea.R;
+					int diffB = gridB - drawArea.B;
+
+					drawArea.R += diffR;
+					drawArea.B += diffB;
+
+					targetArea.R += diffR;
+					targetArea.B += diffB;
+				}
+			}
+
+			// Snap to control Function
+			SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &drawArea, &targetArea, controlSize);
+
+			// Prevent moving background
+			if (liveControlNumber > 0)
+			{
+				// Add undo
+				if ((pControl->GetRECT() != &drawArea || pControl->GetTargetRECT() != &targetArea) && undoMove)
+				{
+					AddUndo(pPlug, pGraphics);
+					undoMove = false;
+				}
+
+				pControl->SetDrawRECT(drawArea);
+				pControl->SetTargetRECT(targetArea);
+
+				// Add current undo
+				if (!undoMove)
+				{
+					AddCurrentUndo(pPlug, pGraphics);
+				}
+
+				DeleteLastSameUndo(pPlug, pGraphics);
+			}
+
+			liveSelectedRECT = drawArea;
+		}
+	}
+
 	void SnapToControl(LICE_IBitmap* pDrawBitmap, WDL_PtrList<IControl>* pControls, 
 		IMouseMod* liveEditingMod,int* liveSnap, int* liveMouseCapture, IRECT* drawArea, IRECT* targetArea, int controlSize)
 	{
 		// Snap to other control
-		if (liveEditingMod->C)
+		if (liveEditingMod->A)
 		{
 			int snapSize = *liveSnap + 1;
 
@@ -1077,16 +1236,20 @@ public:
 		else menu.AddItem("Show Grid");
 
 		// Item 15
-		menu.AddSeparator();
+		if (drawMouseCoordinats) menu.AddItem("Hide Mouse Coordinates");
+		else menu.AddItem("Show Mouse Coordinates");
 
 		// Item 16
-		menu.AddItem("Reset View");
-
-		// Item 17
 		menu.AddSeparator();
 
+		// Item 17
+		menu.AddItem("Reset View to Default");
+
 		// Item 18
-		menu.AddItem("Delete Control");
+		menu.AddSeparator();
+
+		// Item 19
+		menu.AddItem("Delete Control !!!");
 
 		if (pGraphics->CreateIPopupMenu(&menu, x, y))
 		{
@@ -1271,8 +1434,15 @@ public:
 				else drawGridToogle = true;
 			}
 
+			// Show/Hide Mouse Coordinates
+			if (itemChosen == 15)
+			{
+				if (drawMouseCoordinats) drawMouseCoordinats = false;
+				else drawMouseCoordinats = true;
+			}
+
 			// Reset View to Default
-			if (itemChosen == 16)
+			if (itemChosen == 17)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1316,7 +1486,7 @@ public:
 			}
 
 			// Remove Control
-			if (itemChosen == 18)
+			if (itemChosen == 19)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1900,6 +2070,7 @@ private:
 	IRECT liveSelectedTargetRECT = IRECT(0, 0, 0, 0);
 	IRECT liveClickedRECT = IRECT(0, 0, 0, 0);
 	IRECT liveClickedTargetRECT = IRECT(0, 0, 0, 0);
+	IRECT selectionRECT = IRECT(0, 0, 0, 0);
 	int liveControlNumber = -1;
 	int lastliveMouseCapture = -1;
 	int liveClickedX = 0, liveClickedY = 0;
@@ -1926,6 +2097,8 @@ private:
 	bool undoMove = true;
 	bool lastWasUndo = false;
 	bool lastWasRedo = false;
+	bool drawMouseCoordinats = false;
+	bool multipleControlsSelected = false;
 	
 	struct undo
 	{
