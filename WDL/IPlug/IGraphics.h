@@ -238,7 +238,7 @@ public:
 	}
 
 	// In debug mode you can use this to move controls live and to make GUI layout setting more easy
-	inline void LiveEditing(bool enable, int gridSize = 6, int snapSize = 4)
+	inline void LiveEditing(int gridSize = 6, int snapSize = 4)
 	{
 		if (gridSize > 0) liveGridSize = gridSize;
 		else liveGridSize = 1;
@@ -246,7 +246,7 @@ public:
 		if (snapSize > 0) liveSnap = snapSize;
 		else liveSnap = 0;
 
-		liveEditing = enable;
+		liveEditing = true;
 	}
 
 	// Updates tooltips after (un)hiding controls.

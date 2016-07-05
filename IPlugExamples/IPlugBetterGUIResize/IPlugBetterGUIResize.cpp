@@ -106,11 +106,11 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   AttachGraphics(pGraphics);
 
-  liveLayout.SetControlPositions(pGraphics);
+  //liveLayout.SetControlPositions(pGraphics);
   liveLayout.SetGUIResizeLayout(pGraphics, GetGUIResize());
 
   pGraphics->ShowControlBounds(true);
-  pGraphics->LiveEditing(true, 16);
+  pGraphics->LiveEditing(16);
 
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
