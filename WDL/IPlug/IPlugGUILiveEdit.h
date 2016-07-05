@@ -218,6 +218,24 @@ public:
 			if (!liveEditingMod->L) 
 				undoMove = true;
 			
+			// Check if clicked on selection
+			if ((liveEditingMod->L != lastLDown) || (liveEditingMod->R != lastRDown))
+			{
+				clickedX = *mMouseX;
+				clickedY = *mMouseY;
+
+				lastLDown = liveEditingMod->L;
+				lastRDown = liveEditingMod->R;
+			}
+
+			if ((liveEditingMod->L || liveEditingMod->R) && !liveEditingMod->C)
+			{
+				if (!selectionRECT.Contains(clickedX, clickedY)) selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+			}
+
+            if (selectedControlsRECT == IRECT(999999999, 999999999, 0, 0)) multipleControlsSelected = false;
+			else multipleControlsSelected = true;
+
 			// Move controls
 			if (liveEditingMod->L && !liveEditingMod->C && !multipleControlsSelected && !IsControlDeleted(pControls->Get(*liveMouseCapture)))
 			{
@@ -226,10 +244,14 @@ public:
 			}
 
 			// Move selection of controls
-			if (liveEditingMod->L && (liveEditingMod->C || multipleControlsSelected))
+			if (liveEditingMod->C || multipleControlsSelected)
 			{
 				MoveSelectionOfControls(pPlug, pGraphics, pDrawBitmap, pControls, liveEditingMod, liveSnap,
 					liveMouseCapture, controlSize, overControlHandle, liveHandleSize, liveMouseDragging, mMouseX, mMouseY);
+			}
+			else
+			{
+				prevSelectingControls = false;
 			}
 
 
@@ -427,121 +449,205 @@ public:
 		liveClickedRECT = IRECT(0, 0, 0, 0);
 		liveClickedTargetRECT = IRECT(0, 0, 0, 0);
 
+		IRECT dragSelectionRECT = IRECT(0, 0, 0, 0);
+		
 		// Find where mouse was clicked
-		if (*liveMouseCapture != lastliveMouseCapture)
+		if (liveEditingMod->L != prevSelectingControls)
 		{
-			liveClickedX = *mMouseX;
-			liveClickedY = *mMouseY;
-			liveClickedRECT = liveSelectedRECT;
-			liveClickedTargetRECT = liveSelectedTargetRECT;
+			liveSelectionClickedX = *mMouseX;
+			liveSelectionClickedY = *mMouseY;
 
-			IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
-			liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
+			prevSelectingControls = liveEditingMod->L;
 		}
 
-
-		// Change cursor when clicked on handle
-		if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
-		else SetCursor(LoadCursor(NULL, IDC_ARROW));
-
-		// Prevent editing
-		if (*liveMouseDragging || liveEditingMod->A)
+		// Select only if ctrl is pressed
+		if (liveEditingMod->C)
 		{
-			IRECT drawArea;
-			if (!liveClickedOnHandle)
+			// Get selection rect
+			if (liveEditingMod->L)
 			{
-				drawArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
-				drawArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
-				drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-				drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-			}
-			else
-			{
-				drawArea.L = liveClickedRECT.L;
-				drawArea.T = liveClickedRECT.T;
-				drawArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-				drawArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-			}
-
-			IRECT targetArea;
-			if (!liveClickedOnHandle)
-			{
-				targetArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
-				targetArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
-				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-			}
-			else
-			{
-				targetArea.L = liveClickedRECT.L;
-				targetArea.T = liveClickedRECT.T;
-				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
-			}
-
-			// Snap to grid
-			if (!liveEditingMod->S)
-			{
-				if (!liveClickedOnHandle)
+				if (*mMouseX < liveSelectionClickedX)
 				{
-					int gridL = (drawArea.L / liveScaledGridSize) * liveScaledGridSize;
-					int gridT = (drawArea.T / liveScaledGridSize) * liveScaledGridSize;
-
-					int diffL = gridL - drawArea.L;
-					int diffT = gridT - drawArea.T;
-
-					drawArea.L += diffL;
-					drawArea.T += diffT;
-					drawArea.R += diffL;
-					drawArea.B += diffT;
-
-					targetArea.L += diffL;
-					targetArea.T += diffT;
-					targetArea.R += diffL;
-					targetArea.B += diffT;
+					dragSelectionRECT.R = liveSelectionClickedX;
+					dragSelectionRECT.L = *mMouseX;
 				}
 				else
 				{
-					int gridR = (drawArea.R / liveScaledGridSize) * liveScaledGridSize;
-					int gridB = (drawArea.B / liveScaledGridSize) * liveScaledGridSize;
+					dragSelectionRECT.L = liveSelectionClickedX;
+					dragSelectionRECT.R = *mMouseX;
+				}
 
-					int diffR = gridR - drawArea.R;
-					int diffB = gridB - drawArea.B;
+				if (*mMouseY < liveSelectionClickedY)
+				{
+					dragSelectionRECT.B = liveSelectionClickedY;
+					dragSelectionRECT.T = *mMouseY;
+				}
+				else
+				{
+					dragSelectionRECT.T = liveSelectionClickedY;
+					dragSelectionRECT.B = *mMouseY;
+				}
+			}
+		}
 
-					drawArea.R += diffR;
-					drawArea.B += diffB;
+		// Draw selection rect
 
-					targetArea.R += diffR;
-					targetArea.B += diffB;
+		// Draw only if mouse is down
+		if (liveEditingMod->C && liveEditingMod->L)
+		{
+			// T
+			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.L, dragSelectionRECT.T, dragSelectionRECT.R, dragSelectionRECT.T, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
+			//B
+			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.L, dragSelectionRECT.B, dragSelectionRECT.R, dragSelectionRECT.B, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
+			//L
+			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.L, dragSelectionRECT.T, dragSelectionRECT.L, dragSelectionRECT.B, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
+			//R
+			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.R, dragSelectionRECT.T, dragSelectionRECT.R, dragSelectionRECT.B, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
+		}
+
+		// Find selectedControlsRECT only while selecting
+		if (liveEditingMod->C)
+		{
+			// Find selected controls and selectedControlsRECT
+			selected_controls.resize(0);
+			selected_draw_rect.resize(0);
+			selected_target_rect.reserve(0);
+			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+
+			for (int j = 1; j < controlSize; j++)
+			{
+				IControl* pControl = pControls->Get(j);
+
+				if (!IsControlDeleted(pControl))
+				{
+					IRECT drawRECT = *pControl->GetRECT();
+					IRECT targetRECT = *pControl->GetTargetRECT();
+
+					if (dragSelectionRECT.Contains(&drawRECT))
+					{
+						selected_controls.push_back(j);
+
+						selectedControlsRECT.L = IPMIN(selectedControlsRECT.L, drawRECT.L);
+						selectedControlsRECT.T = IPMIN(selectedControlsRECT.T, drawRECT.T);
+						selectedControlsRECT.R = IPMAX(selectedControlsRECT.R, drawRECT.R);
+						selectedControlsRECT.B = IPMAX(selectedControlsRECT.B, drawRECT.B);
+
+						selected_draw_rect.push_back(drawRECT);
+						selected_target_rect.push_back(targetRECT);
+					}
 				}
 			}
 
-			// Snap to control Function
-			SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &drawArea, &targetArea, controlSize);
+			// Get rect before move
+			selectionRECT = selectedControlsRECT;
+		}
 
-			// Prevent moving background
-			if (liveControlNumber > 0)
+		// Check if mouse has clicked on selection and get mouse coordinates
+		// Get only if mouse has clicked
+		if (liveEditingMod->L != prevClickedOnSelection)
+		{
+			clickedSelectionX = *mMouseX;
+			clickedSelectionY = *mMouseY;
+
+			for (int i = 0; i < selected_controls.size(); i++)
 			{
-				// Add undo
-				if ((pControl->GetRECT() != &drawArea || pControl->GetTargetRECT() != &targetArea) && undoMove)
+				IControl* pControl = pGraphics->GetControl(selected_controls[i]);
+				IRECT drawRECT = *pControl->GetRECT();
+				IRECT targetRECT = *pControl->GetTargetRECT();
+
+				selected_draw_rect[i] = drawRECT;
+				selected_target_rect[i] = targetRECT;
+			}
+
+			// Get rect before move
+			selectionRECT = selectedControlsRECT;
+
+			prevClickedOnSelection = liveEditingMod->L;
+
+			if (liveEditingMod->L)
+				AddUndo(pPlug, pGraphics);
+		}
+
+
+		if (liveEditingMod->L)//  && selectedControlsRECT.Contains(clickedSelectionX, clickedSelectionY))
+		{
+			if (!liveEditingMod->C)
+			{
+				selectedControlsRECT.L = selectionRECT.L + (*mMouseX - clickedSelectionX);
+				selectedControlsRECT.T = selectionRECT.T + (*mMouseY - clickedSelectionY);
+				selectedControlsRECT.R = selectionRECT.R + (*mMouseX - clickedSelectionX);
+				selectedControlsRECT.B = selectionRECT.B + (*mMouseY - clickedSelectionY);
+				
+				// Snap to grid
+				if (!liveEditingMod->S)
 				{
-					AddUndo(pPlug, pGraphics);
-					undoMove = false;
+						int gridL = (selectedControlsRECT.L / liveScaledGridSize) * liveScaledGridSize;
+						int gridT = (selectedControlsRECT.T / liveScaledGridSize) * liveScaledGridSize;
+
+						int diffL = gridL - selectedControlsRECT.L;
+						int diffT = gridT - selectedControlsRECT.T;
+
+						selectedControlsRECT.L += diffL;
+						selectedControlsRECT.T += diffT;
+						selectedControlsRECT.R += diffL;
+						selectedControlsRECT.B += diffT;
+					
 				}
 
-				pControl->SetDrawRECT(drawArea);
-				pControl->SetTargetRECT(targetArea);
+				// Snap to control Function
+				//SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &selectedControlsRECT, &selectedControlsRECT, controlSize);
 
-				// Add current undo
-				if (!undoMove)
+				for (int i = 0; i < selected_controls.size(); i++)
 				{
-					AddCurrentUndo(pPlug, pGraphics);
+					// Prevent editing
+					if (*liveMouseDragging)
+					{
+						IControl* pControl = pGraphics->GetControl(selected_controls[i]);
+						int diffL = selectedControlsRECT.L - selectionRECT.L;
+						int diffT = selectedControlsRECT.T - selectionRECT.T;
+						IRECT drawArea = *pControl->GetRECT();
+						IRECT targetArea = *pControl->GetTargetRECT();
+
+						drawArea.L = selected_draw_rect[i].L + diffL;
+						drawArea.T = selected_draw_rect[i].T + diffT;
+						drawArea.R = selected_draw_rect[i].R + diffL;
+						drawArea.B = selected_draw_rect[i].B + diffT;
+
+						targetArea.L = selected_target_rect[i].L + diffL;
+						targetArea.T = selected_target_rect[i].T + diffT;
+						targetArea.R = selected_target_rect[i].R + diffL;
+						targetArea.B = selected_target_rect[i].B + diffT;
+
+						pControl->SetDrawRECT(drawArea);
+						pControl->SetTargetRECT(targetArea);
+					}
 				}
 
+				AddCurrentUndo(pPlug, pGraphics);
 				DeleteLastSameUndo(pPlug, pGraphics);
 			}
+		}
 
-			liveSelectedRECT = drawArea;
+		// Draw selected controls selection
+		if (selectedControlsRECT != IRECT(999999999, 999999999, 0, 0))
+		{
+			// Draw selected Controls
+			// T
+			LICE_DashedLine(pDrawBitmap, selectedControlsRECT.L, selectedControlsRECT.T, selectedControlsRECT.R, selectedControlsRECT.T, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
+			//B
+			LICE_DashedLine(pDrawBitmap, selectedControlsRECT.L, selectedControlsRECT.B, selectedControlsRECT.R, selectedControlsRECT.B, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
+			//L
+			LICE_DashedLine(pDrawBitmap, selectedControlsRECT.L, selectedControlsRECT.T, selectedControlsRECT.L, selectedControlsRECT.B, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
+			//R
+			LICE_DashedLine(pDrawBitmap, selectedControlsRECT.R, selectedControlsRECT.T, selectedControlsRECT.R, selectedControlsRECT.B, 2, 2,
+				LICE_RGBA(SELECTION_COLOR.R, SELECTION_COLOR.G, SELECTION_COLOR.B, SELECTION_COLOR.A));
 		}
 	}
 
@@ -2065,15 +2171,18 @@ private:
 	// Live editing stuff
 	char* defaultFont = "Tahoma";
 	IColor EDIT_COLOR = IColor(255, 255, 255, 255);
+	IColor SELECTION_COLOR = IColor(255, 255, 100, 100);
 	IColor controlTextBackgroundColor = IColor(122, 0, 0, 0);
 	IRECT liveSelectedRECT = IRECT(0, 0, 0, 0);
 	IRECT liveSelectedTargetRECT = IRECT(0, 0, 0, 0);
 	IRECT liveClickedRECT = IRECT(0, 0, 0, 0);
 	IRECT liveClickedTargetRECT = IRECT(0, 0, 0, 0);
-	IRECT selectionRECT = IRECT(0, 0, 0, 0);
+	IRECT selectionRECT = IRECT(999999999, 999999999, 0, 0);
+	IRECT selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
 	int liveControlNumber = -1;
 	int lastliveMouseCapture = -1;
 	int liveClickedX = 0, liveClickedY = 0;
+	int liveSelectionClickedX = 0, liveSelectionClickedY = 0;
 	int liveScaledGridSize = 1;
 	bool liveClickedOnHandle = false;
 	bool liveLastMouseDownL = false;
@@ -2091,6 +2200,9 @@ private:
 	vector <IControl*> current_layers;
 	vector <string> code_view_mode;
 	vector <int> deleted_control_default_index;
+	vector <int> selected_controls;
+	vector <IRECT> selected_draw_rect;
+	vector <IRECT> selected_target_rect;
 	int currentViewMode = 0;
 	int viewModeSize = 1;
 	bool retrieveOldLayoutChanges = false;
@@ -2099,6 +2211,14 @@ private:
 	bool lastWasRedo = false;
 	bool drawMouseCoordinats = false;
 	bool multipleControlsSelected = false;
+	bool clickedOnSelection = false;
+	bool prevClickedOnSelection = false;
+	bool selectingControls = false;
+	bool prevSelectingControls = false;
+	int clickedX, clickedY;
+	bool lastLDown = false;
+	bool lastRDown = false;
+	int clickedSelectionX = -1, clickedSelectionY = -1;
 	
 	struct undo
 	{

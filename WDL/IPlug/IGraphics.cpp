@@ -1347,7 +1347,7 @@ void IGraphics::OnMouseUp(int x, int y, IMouseMod* pMod)
 {
 	liveMouseCapture = -1;
 	liveEditingMod.A = pMod->A;
-	liveEditingMod.C = pMod->C;
+	liveEditingMod.C = false;
 	liveEditingMod.L = pMod->L;
 	liveEditingMod.R = pMod->R;
 	liveEditingMod.S = pMod->S;
@@ -1407,7 +1407,6 @@ void IGraphics::OnMouseDrag(int x, int y, IMouseMod* pMod)
 {
 	liveMouseDragging = true;
 	liveEditingMod.A = pMod->A;
-	liveEditingMod.C = pMod->C;
 	liveEditingMod.S = pMod->S;
 
 	int c = mMouseCapture;
