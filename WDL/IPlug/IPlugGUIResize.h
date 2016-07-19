@@ -169,13 +169,14 @@ public:
 	virtual void DrawBackgroundAtFastResizing(IGraphics* pGraphics, IRECT *pRECT);
 	virtual void DrawReopenPluginInterface(IGraphics* pGraphics, IRECT *pRECT);
 	virtual void DrawHandle(IGraphics* pGraphics, IRECT *pRECT);
+	virtual void DoPopupMenu() {}
 
 	// Call this to resize GUI
 	void ResizeGraphics();
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
-	// Used by framework ---------------------------------------------------------------------------------------------------------------------------
+	// Used by the framework ---------------------------------------------------------------------------------------------------------------------------
 	void ResizeAtGUIOpen();
 	bool Draw(IGraphics* pGraphics);
 	void RescaleBitmapsAtLoad();
@@ -196,48 +197,6 @@ public:
 		}
 	}
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-	// Testing
-	void DoPopupMenu()
-	{
-
-		IPopupMenu menu;
-
-		IGraphics* gui = mPlug->GetGUI();
-
-		menu.AddItem("Test 1");
-		menu.AddItem("Test 2");
-		menu.AddSeparator();
-		menu.AddItem("Test 3");
-		menu.AddItem("Test 4");
-
-		if (gui->CreateIPopupMenu(&menu, &mRECT))
-		{
-			int itemChosen = menu.GetChosenItemIdx();
-			WDL_String fileName;
-
-			//printf("chosen %i /n", itemChosen);
-			switch (itemChosen)
-			{
-			case 0: //Save Program
-
-				break;
-			case 1: //Save Bank
-
-				break;
-			case 3: //Load Preset
-
-				break;
-			case 4: // Load Bank
-
-				break;
-			default:
-				break;
-			}
-		}
-	}
 		
 	bool IsDirty();
 

@@ -126,7 +126,6 @@ public:
 		{
 			*liveMode = 0;
 			liveControlNumber = -1;
-			*liveKeyDown = -1;
 			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
 		}
 
@@ -134,7 +133,6 @@ public:
 		{
 			*liveMode = 1;
 			liveControlNumber = -1;
-			*liveKeyDown = -1;
 			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
 		}
 
@@ -142,9 +140,11 @@ public:
 		{
 			*liveMode = 2;
 			liveControlNumber = -1;
-			*liveKeyDown = -1;
 			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
 		}
+
+		// Set key down to -1
+		*liveKeyDown = -1;
 
 		// If snap mode is not forced to change
 		if (!liveEditingMod->S) snapMode = *liveMode;
@@ -912,9 +912,9 @@ public:
 				int tmpArea_TM = tmpArea.T + tmpArea.H() / 2;
 
 				IRECT tmpRECT(0, 0, 0, 0);
-				if (snapMode == 0 && (*drawArea == *targetArea)) tmpRECT = *drawArea;
-				else if (snapMode == 1) tmpRECT = *drawArea;
-				else if (snapMode == 2) tmpRECT = *targetArea;
+				if (*liveMode == 0 && (*drawArea == *targetArea)) tmpRECT = *drawArea;
+				else if (*liveMode == 1) tmpRECT = *drawArea;
+				else if (*liveMode == 2) tmpRECT = *targetArea;
 
 				int Area_L = tmpRECT.L;
 				int Area_LM = tmpRECT.L + tmpRECT.W() / 2;
@@ -1072,9 +1072,9 @@ public:
 				int tmpArea_B = tmpArea.B;
 
 				IRECT tmpRECT(0, 0, 0, 0);
-				if (snapMode == 0 && (*drawArea == *targetArea)) tmpRECT = *drawArea;
-				else if (snapMode == 1) tmpRECT = *drawArea;
-				else if (snapMode == 2) tmpRECT = *targetArea;
+				if (*liveMode == 0 && (*drawArea == *targetArea)) tmpRECT = *drawArea;
+				else if (*liveMode == 1) tmpRECT = *drawArea;
+				else if (*liveMode == 2) tmpRECT = *targetArea;
 
 				int Area_LM = tmpRECT.L + tmpRECT.W() / 2;
 				int Area_T = tmpRECT.T;
