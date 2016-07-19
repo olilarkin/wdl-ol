@@ -306,6 +306,7 @@ private:
 
 	// Live editing stuff
 	int liveGetControlIdx(int x, int y, bool mo = false);
+	int liveMode = 0;
 	bool liveEditing = false;
 	IMouseMod liveEditingMod;
 	int liveGridSize = 1;

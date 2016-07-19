@@ -26,8 +26,14 @@ appreciated but is not required.
 USE:
 
 Press E key to activate;
-Press SHIFT while moving control to unsnap from grid;
-Press ALT while moving control to snap to other controls;
+Press B to change editing mode to include both draw and terget rect;
+Press D to change editing mode to include both draw;
+Press T to change editing mode to include terget rect;
+Press ALT while moving control to unsnap from grid;
+Press SHIFT while moving control to snap to other controls;
+Press SHIFT + B to force snapping to controls that have same draw and target rect;
+Press SHIFT + D to force snapping to controls to draw rect;
+Press SHIFT + T to force snapping to controls to target rect;
 Press CTRL + LEFT MOUSE BUTTON and drag to make a selection;
 */
 
@@ -51,7 +57,7 @@ public:
 
 	void EditGUI(IPlugBase* pPlug, IGraphics* pGraphics, WDL_PtrList<IControl>* pControls, LICE_IBitmap* pDrawBitmap, 
 		IMouseMod* liveEditingMod, int* liveGridSize, int* liveSnap, int* liveKeyDown, bool* liveToogleEditing, int* liveMouseCapture,
-		bool* liveMouseDragging, int* mMouseX, int* mMouseY, int width, int height, double guiScaleRatio)
+		bool* liveMouseDragging, int* liveMode, int* mMouseX, int* mMouseY, int width, int height, double guiScaleRatio)
 	{
 		// Moving controls --------------------------------------------------------------------
 	
@@ -99,6 +105,51 @@ public:
 			}
 		}
 
+		// Toogle snap mode
+		if (liveEditingMod->S && *liveKeyDown == 16)
+		{
+			snapMode = 0;
+		}
+
+		else if (liveEditingMod->S && *liveKeyDown == 18)
+		{
+			snapMode = 1;
+		}
+
+		else if (liveEditingMod->S && *liveKeyDown == 34)
+		{
+			snapMode = 2;
+		}
+
+		// Toogle mode
+		if (!liveEditingMod->S && *liveKeyDown == 16)
+		{
+			*liveMode = 0;
+			liveControlNumber = -1;
+			*liveKeyDown = -1;
+			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+		}
+
+		else if (!liveEditingMod->S && *liveKeyDown == 18)
+		{
+			*liveMode = 1;
+			liveControlNumber = -1;
+			*liveKeyDown = -1;
+			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+		}
+
+		else if (!liveEditingMod->S && *liveKeyDown == 34)
+		{
+			*liveMode = 2;
+			liveControlNumber = -1;
+			*liveKeyDown = -1;
+			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+		}
+
+		// If snap mode is not forced to change
+		if (!liveEditingMod->S) snapMode = *liveMode;
+	
+
 		// If live editing is not active disable selected rect
 		if (!*liveToogleEditing) selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
 
@@ -131,10 +182,14 @@ public:
 
 					if (!IsControlDeleted(pControl))
 					{
-						IRECT drawRECT = *pControl->GetRECT();
-						IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
+						IRECT tmpRECT(0, 0, 0, 0);
+						if (*liveMode == 0 && (*pControl->GetRECT() == *pControl->GetTargetRECT())) tmpRECT = *pControl->GetRECT();
+						else if (*liveMode == 1) tmpRECT = *pControl->GetRECT();
+						else if (*liveMode == 2) tmpRECT = *pControl->GetTargetRECT();
 
-						if (drawRECT.Contains(*mMouseX, *mMouseY))
+						IRECT handle = IRECT(tmpRECT.R - liveHandleSize, tmpRECT.B - liveHandleSize, tmpRECT.R, tmpRECT.B);
+
+						if (tmpRECT.Contains(*mMouseX, *mMouseY))
 						{
 							overControlHandle = handle.Contains(*mMouseX, *mMouseY);
 						}
@@ -166,7 +221,12 @@ public:
 					liveClickedRECT = liveSelectedRECT;
 					liveClickedTargetRECT = liveSelectedTargetRECT;
 
-					IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
+					IRECT tmpRECT(0, 0, 0, 0);
+					if (*liveMode == 0 && (*pControl->GetRECT() == *pControl->GetTargetRECT())) tmpRECT = *pControl->GetRECT();
+					else if (*liveMode == 1) tmpRECT = *pControl->GetRECT();
+					else if (*liveMode == 2) tmpRECT = *pControl->GetTargetRECT();
+
+					IRECT handle = IRECT(tmpRECT.R - liveHandleSize, tmpRECT.B - liveHandleSize, tmpRECT.R, tmpRECT.B);
 					liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
 				}
 			}
@@ -197,14 +257,14 @@ public:
 			if (liveEditingMod->L && !liveEditingMod->C && !multipleControlsSelected && !IsControlDeleted(pControls->Get(*liveMouseCapture)))
 			{
 				MoveControl(pPlug, pGraphics, pDrawBitmap, pControls, liveEditingMod, liveSnap, 
-					liveMouseCapture, controlSize, overControlHandle, liveHandleSize, liveMouseDragging, mMouseX, mMouseY);
+					liveMouseCapture, controlSize, overControlHandle, liveHandleSize, liveMouseDragging, liveMode, mMouseX, mMouseY);
 			}
 
 			// Move selection of controls
 			if (liveEditingMod->C || multipleControlsSelected)
 			{
 				MoveSelectionOfControls(pPlug, pGraphics, pDrawBitmap, pControls, liveEditingMod, liveSnap,
-					liveMouseCapture, controlSize, overControlHandle, liveHandleSize, liveMouseDragging, mMouseX, mMouseY);
+					liveMouseCapture, controlSize, overControlHandle, liveHandleSize, liveMouseDragging, liveMode, mMouseX, mMouseY);
 			}
 			else
 			{
@@ -231,29 +291,91 @@ public:
 			{
 				IControl* pControl = pControls->Get(j);
 
-				IRECT drawRECT = *pControl->GetRECT();
+				IRECT tmpRECT(0, 0, 0, 0);
+				IColor color;
+				if (*liveMode == 0) color = EDIT_COLOR_BOTH;
+				else if (*liveMode == 1) color = EDIT_COLOR_DRAW;
+				else if (*liveMode == 2) color = EDIT_COLOR_TARGET;
 
 				// Dont outline deleted control
 				if (!IsControlDeleted(pControl))
 				{
-					// T
-					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.R, drawRECT.T, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-					//B
-					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.B, drawRECT.R, drawRECT.B, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-					//L
-					LICE_DashedLine(pDrawBitmap, drawRECT.L, drawRECT.T, drawRECT.L, drawRECT.B, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
-					//R
-					LICE_DashedLine(pDrawBitmap, drawRECT.R, drawRECT.T, drawRECT.R, drawRECT.B, 2, 2,
-						LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A));
+					if (*pControl->GetRECT() == *pControl->GetTargetRECT())
+					{
+						tmpRECT = *pControl->GetRECT();
+
+						// T
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.T, tmpRECT.R, tmpRECT.T, 2, 2,
+							LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A));
+						//B
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.B, tmpRECT.R, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A));
+						//L
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.T, tmpRECT.L, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A));
+						//R
+						LICE_DashedLine(pDrawBitmap, tmpRECT.R, tmpRECT.T, tmpRECT.R, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A));
+					}
+					else
+					{
+						tmpRECT = *pControl->GetTargetRECT();
+
+						// T
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.T, tmpRECT.R, tmpRECT.T, 2, 2,
+							LICE_RGBA(EDIT_COLOR_TARGET.R, EDIT_COLOR_TARGET.G, EDIT_COLOR_TARGET.B, EDIT_COLOR_TARGET.A));
+						//B
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.B, tmpRECT.R, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_TARGET.R, EDIT_COLOR_TARGET.G, EDIT_COLOR_TARGET.B, EDIT_COLOR_TARGET.A));
+						//L
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.T, tmpRECT.L, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_TARGET.R, EDIT_COLOR_TARGET.G, EDIT_COLOR_TARGET.B, EDIT_COLOR_TARGET.A));
+						//R
+						LICE_DashedLine(pDrawBitmap, tmpRECT.R, tmpRECT.T, tmpRECT.R, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_TARGET.R, EDIT_COLOR_TARGET.G, EDIT_COLOR_TARGET.B, EDIT_COLOR_TARGET.A));
+
+
+						tmpRECT = *pControl->GetRECT();
+
+						// T
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.T, tmpRECT.R, tmpRECT.T, 2, 2,
+							LICE_RGBA(EDIT_COLOR_DRAW.R, EDIT_COLOR_DRAW.G, EDIT_COLOR_DRAW.B, EDIT_COLOR_DRAW.A));
+						//B
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.B, tmpRECT.R, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_DRAW.R, EDIT_COLOR_DRAW.G, EDIT_COLOR_DRAW.B, EDIT_COLOR_DRAW.A));
+						//L
+						LICE_DashedLine(pDrawBitmap, tmpRECT.L, tmpRECT.T, tmpRECT.L, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_DRAW.R, EDIT_COLOR_DRAW.G, EDIT_COLOR_DRAW.B, EDIT_COLOR_DRAW.A));
+						//R
+						LICE_DashedLine(pDrawBitmap, tmpRECT.R, tmpRECT.T, tmpRECT.R, tmpRECT.B, 2, 2,
+							LICE_RGBA(EDIT_COLOR_DRAW.R, EDIT_COLOR_DRAW.G, EDIT_COLOR_DRAW.B, EDIT_COLOR_DRAW.A));
+					}
+
 				}
 			}
 
 
 			// Outline selected rect
-			if (liveControlNumber > 0) pGraphics->DrawRect(&EDIT_COLOR, pControls->Get(liveControlNumber)->GetRECT());
+			if (liveControlNumber > 0 && *liveMode == 0 && *pControls->Get(liveControlNumber)->GetRECT() == *pControls->Get(liveControlNumber)->GetTargetRECT()) 
+				pGraphics->DrawRect(&EDIT_COLOR_BOTH, pControls->Get(liveControlNumber)->GetRECT());
+
+			else if (liveControlNumber > 0)
+			{
+				pGraphics->DrawRect(&EDIT_COLOR_TARGET, pControls->Get(liveControlNumber)->GetTargetRECT());
+				pGraphics->DrawRect(&EDIT_COLOR_DRAW, pControls->Get(liveControlNumber)->GetRECT());
+			}
+
+			// Draw connection between draw and target rect if it is not the same
+			if (liveControlNumber > 0  && *pControls->Get(liveControlNumber)->GetRECT() != *pControls->Get(liveControlNumber)->GetTargetRECT())
+			{
+				IRECT drawRECT = *pControls->Get(liveControlNumber)->GetRECT();
+				IRECT targetRECT = *pControls->Get(liveControlNumber)->GetTargetRECT();
+
+					LICE_Line(pDrawBitmap, drawRECT.L + drawRECT.W() / 2, drawRECT.T + drawRECT.H() / 2,
+						targetRECT.L + targetRECT.W() / 2, targetRECT.T + targetRECT.H() / 2,
+						LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A));
+
+			}
 
 			// Draw handles
 			for (int j = 1; j < controlSize; j++)
@@ -262,9 +384,18 @@ public:
 
 				if (!IsControlDeleted(pControl))
 				{
-					IRECT drawRECT = *pControl->GetRECT();
-					IRECT handle = IRECT(drawRECT.R - liveHandleSize, drawRECT.B - liveHandleSize, drawRECT.R, drawRECT.B);
-					pGraphics->FillTriangle(&EDIT_COLOR, handle.L, handle.B, handle.R, handle.B, handle.R, handle.T, 0);
+					IRECT tmpRECT(0,0,0,0);
+					if (*liveMode == 0 && (*pControl->GetRECT() == *pControl->GetTargetRECT())) tmpRECT = *pControl->GetRECT();
+					else if (*liveMode == 1) tmpRECT = *pControl->GetRECT();
+					else if (*liveMode == 2) tmpRECT = *pControl->GetTargetRECT();
+
+					IColor color;
+					if (*liveMode == 0) color = EDIT_COLOR_BOTH;
+					else if (*liveMode == 1) color = EDIT_COLOR_DRAW;
+					else if (*liveMode == 2) color = EDIT_COLOR_TARGET;
+
+					IRECT handle = IRECT(tmpRECT.R - liveHandleSize, tmpRECT.B - liveHandleSize, tmpRECT.R, tmpRECT.B);
+					pGraphics->FillTriangle(&color, handle.L, handle.B, handle.R, handle.B, handle.R, handle.T, 0);
 				}
 			}
 
@@ -273,59 +404,73 @@ public:
 			// Prevent readout to go out of window borders
 			//liveSelectedRECT = RestrictToWindow(liveSelectedRECT, pGraphics->Width(), pGraphics->Height());
 
+			// Make mode rect
+			IRECT modeRECT(0, 0, 0, 0);
+			if (*liveMode == 0 && (liveSelectedRECT == liveSelectedTargetRECT)) modeRECT = liveSelectedRECT;
+			else if (*liveMode == 1) modeRECT = liveSelectedRECT;
+			else if (*liveMode == 2) modeRECT = liveSelectedTargetRECT;
+
 			// Check if gui resize is active, if so scale out rect
 			IRECT printRECT;
 			if (pPlug->GetGUIResize())
 			{
-				printRECT.L = int((double)liveSelectedRECT.L * guiScaleRatio);
-				printRECT.T = int((double)liveSelectedRECT.T * guiScaleRatio);
-				printRECT.R = int((double)liveSelectedRECT.R * guiScaleRatio);
-				printRECT.B = int((double)liveSelectedRECT.B * guiScaleRatio);
+				printRECT.L = int((double)modeRECT.L * guiScaleRatio);
+				printRECT.T = int((double)modeRECT.T * guiScaleRatio);
+				printRECT.R = int((double)modeRECT.R * guiScaleRatio);
+				printRECT.B = int((double)modeRECT.B * guiScaleRatio);
 
 			}
 			else
 			{
-				printRECT = liveSelectedRECT;
+				printRECT = modeRECT;
 			}
 
-			// Print selected control
-			int textSize = 15;
-			WDL_String controlNumber;
-
-			// Different outputs if control is hidden
-			if (liveControlNumber > 0 && !pGraphics->GetControl(liveControlNumber)->IsHidden())
-				controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
-			if (liveControlNumber > 0 && pGraphics->GetControl(liveControlNumber)->IsHidden())
-				controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i) (HIDDEN)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
-
-			IText txtControlNumber(textSize, &EDIT_COLOR, defaultFont, IText::kStyleNormal, IText::kAlignNear, 0, IText::kQualityClearType);
-			IRECT textRect;
-			if (liveControlNumber > 0) pGraphics->MeasureIText(&txtControlNumber, controlNumber.Get(), &textRect);
-			IRECT rectControlNumber(liveSelectedRECT.L, liveSelectedRECT.T - textSize, liveSelectedRECT.L + textRect.R, liveSelectedRECT.T);
-
-			if (rectControlNumber.T < 0)
+			// Print if rect if valid
+			if (printRECT.W() > 0 && printRECT.H() > 0)
 			{
-				rectControlNumber.T = liveSelectedRECT.B;
-				rectControlNumber.B = liveSelectedRECT.B + textSize;
+				// Print selected control
+				int textSize = 15;
+				WDL_String controlNumber;
+
+				// Different outputs if control is hidden
+				if (liveControlNumber > 0 && !pGraphics->GetControl(liveControlNumber)->IsHidden())
+					controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
+				if (liveControlNumber > 0 && pGraphics->GetControl(liveControlNumber)->IsHidden())
+					controlNumber.SetFormatted(100, "N:%i IRECT(%i,%i,%i,%i) (HIDDEN)", liveControlNumber, printRECT.L, printRECT.T, printRECT.R, printRECT.B);
+
+				IText txtControlNumber(textSize, &EDIT_COLOR_BOTH, defaultFont, IText::kStyleNormal, IText::kAlignNear, 0, IText::kQualityClearType);
+				IRECT textRect;
+				if (liveControlNumber > 0) pGraphics->MeasureIText(&txtControlNumber, controlNumber.Get(), &textRect);
+				IRECT rectControlNumber(modeRECT.L, modeRECT.T - textSize, modeRECT.L + textRect.R, modeRECT.T);
+
+				if (rectControlNumber.T < 0)
+				{
+					rectControlNumber.T = modeRECT.B;
+					rectControlNumber.B = modeRECT.B + textSize;
+				}
+
+				if (liveControlNumber > 0) pGraphics->FillIRect(&controlTextBackgroundColor, &rectControlNumber);
+				if (liveControlNumber > 0) pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
 			}
-
-			if (liveControlNumber > 0) pGraphics->FillIRect(&controlTextBackgroundColor, &rectControlNumber);
-			if (liveControlNumber > 0) pGraphics->DrawIText(&txtControlNumber, controlNumber.Get(), &rectControlNumber);
-
 
 			// Draw mouse coordinates
 			if (drawMouseCoordinats)
 			{
+				IColor color;
+				if (*liveMode == 0) color = EDIT_COLOR_BOTH;
+				else if (*liveMode == 1) color = EDIT_COLOR_DRAW;
+				else if (*liveMode == 2) color = EDIT_COLOR_TARGET;
+
 				WDL_String str;
 				str.SetFormatted(32, "x: %i, y: %i", *mMouseX, *mMouseY);
-				IText txt(20, &EDIT_COLOR, defaultFont);
+				IText txt(20, &color, defaultFont);
 				IRECT rect(width - 150, height - 20, width, height);
 				pGraphics->DrawIText(&txt, str.Get(), &rect);
 			}
 
 			
 			if (liveEditingMod->R)
-				DoPopupMenu(pPlug, pGraphics, *mMouseX, *mMouseY, guiScaleRatio);
+				DoPopupMenu(pPlug, pGraphics, *mMouseX, *mMouseY, liveMode, guiScaleRatio);
 
 			// Write to file
 			CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode, false);
@@ -334,7 +479,7 @@ public:
 
 	void MoveControl(IPlugBase* pPlug, IGraphics* pGraphics, LICE_IBitmap* pDrawBitmap, WDL_PtrList<IControl>* pControls,
 		IMouseMod* liveEditingMod, int* liveSnap, int* liveMouseCapture, int controlSize, bool overControlHandle, int liveHandleSize,
-		bool* liveMouseDragging, int* mMouseX, int* mMouseY)
+		bool* liveMouseDragging, int* liveMode, int* mMouseX, int* mMouseY)
 	{
 
 		IControl* pControl = pControls->Get(*liveMouseCapture);
@@ -351,17 +496,21 @@ public:
 			liveClickedRECT = liveSelectedRECT;
 			liveClickedTargetRECT = liveSelectedTargetRECT;
 
-			IRECT handle = IRECT(liveClickedRECT.R - liveHandleSize, liveClickedRECT.B - liveHandleSize, liveClickedRECT.R, liveClickedRECT.B);
+			IRECT tmpRECT(0, 0, 0, 0);
+			if (*liveMode == 0 && (*pControl->GetRECT() == *pControl->GetTargetRECT())) tmpRECT = *pControl->GetRECT();
+			else if (*liveMode == 1) tmpRECT = *pControl->GetRECT();
+			else if (*liveMode == 2) tmpRECT = *pControl->GetTargetRECT();
+
+			IRECT handle = IRECT(tmpRECT.R - liveHandleSize, tmpRECT.B - liveHandleSize, tmpRECT.R, tmpRECT.B);
 			liveClickedOnHandle = handle.Contains(liveClickedX, liveClickedY);
 		}
-
 
 		// Change cursor when clicked on handle
 		if (liveClickedOnHandle || overControlHandle) SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 		else SetCursor(LoadCursor(NULL, IDC_ARROW));
 
 		// Prevent editing
-		if (*liveMouseDragging || liveEditingMod->A)
+		if (*liveMouseDragging || liveEditingMod->S)
 		{
 			IRECT drawArea;
 			if (!liveClickedOnHandle)
@@ -382,21 +531,21 @@ public:
 			IRECT targetArea;
 			if (!liveClickedOnHandle)
 			{
-				targetArea.L = liveClickedRECT.L + (*mMouseX - liveClickedX);
-				targetArea.T = liveClickedRECT.T + (*mMouseY - liveClickedY);
-				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+				targetArea.L = liveClickedTargetRECT.L + (*mMouseX - liveClickedX);
+				targetArea.T = liveClickedTargetRECT.T + (*mMouseY - liveClickedY);
+				targetArea.R = liveClickedTargetRECT.R + (*mMouseX - liveClickedX);
+				targetArea.B = liveClickedTargetRECT.B + (*mMouseY - liveClickedY);
 			}
 			else
 			{
-				targetArea.L = liveClickedRECT.L;
-				targetArea.T = liveClickedRECT.T;
-				targetArea.R = liveClickedRECT.R + (*mMouseX - liveClickedX);
-				targetArea.B = liveClickedRECT.B + (*mMouseY - liveClickedY);
+				targetArea.L = liveClickedTargetRECT.L;
+				targetArea.T = liveClickedTargetRECT.T;
+				targetArea.R = liveClickedTargetRECT.R + (*mMouseX - liveClickedX);
+				targetArea.B = liveClickedTargetRECT.B + (*mMouseY - liveClickedY);
 			}
 
 			// Snap to grid
-			if (!liveEditingMod->S)
+			if (!liveEditingMod->A)
 			{
 				if (!liveClickedOnHandle)
 				{
@@ -433,7 +582,7 @@ public:
 			}
 
 			// Snap to control Function
-			SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &drawArea, &targetArea, controlSize);
+			SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &drawArea, &targetArea, liveMode, controlSize);
 
 			// Prevent moving background
 			if (liveControlNumber > 0)
@@ -445,8 +594,8 @@ public:
 					undoMove = false;
 				}
 
-				pControl->SetDrawRECT(drawArea);
-				pControl->SetTargetRECT(targetArea);
+				if (*liveMode == 0 || *liveMode == 1) pControl->SetDrawRECT(drawArea);
+				if (*liveMode == 0 || *liveMode == 2) pControl->SetTargetRECT(targetArea);
 
 				//pControl->SetDrawRECT(RestrictToWindow(drawArea, pGraphics->Width(), pGraphics->Height()));
 				//pControl->SetTargetRECT(RestrictToWindow(targetArea, pGraphics->Width(), pGraphics->Height()));
@@ -460,13 +609,14 @@ public:
 				DeleteLastSameUndo(pPlug, pGraphics);
 			}
 
-			liveSelectedRECT = drawArea;
+			if (*liveMode == 0 || *liveMode == 1) liveSelectedRECT = drawArea;
+			if (*liveMode == 0 || *liveMode == 2) liveSelectedRECT = targetArea;
 		}
 	}
 
 	void MoveSelectionOfControls(IPlugBase* pPlug, IGraphics* pGraphics, LICE_IBitmap* pDrawBitmap, WDL_PtrList<IControl>* pControls,
 		IMouseMod* liveEditingMod, int* liveSnap, int* liveMouseCapture, int controlSize, bool overControlHandle, int liveHandleSize,
-		bool* liveMouseDragging, int* mMouseX, int* mMouseY)
+		bool* liveMouseDragging, int* liveMode, int* mMouseX, int* mMouseY)
 	{
 		liveControlNumber = -1;
 		liveClickedRECT = IRECT(0, 0, 0, 0);
@@ -518,18 +668,23 @@ public:
 		// Draw only if mouse is down
 		if (liveEditingMod->C && liveEditingMod->L)
 		{
+			IColor color;
+			if (snapMode == 0) color = EDIT_COLOR_BOTH;
+			else if (snapMode == 1) color = EDIT_COLOR_DRAW;
+			else if (snapMode == 2) color = EDIT_COLOR_TARGET;
+
 			// T
 			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.L, dragSelectionRECT.T, dragSelectionRECT.R, dragSelectionRECT.T, 2, 2,
-				LICE_RGBA(SELECTING_COLOR.R, SELECTING_COLOR.G, SELECTING_COLOR.B, SELECTING_COLOR.A));
+				LICE_RGBA(color.R, color.G, color.B, color.A));
 			//B
 			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.L, dragSelectionRECT.B, dragSelectionRECT.R, dragSelectionRECT.B, 2, 2,
-				LICE_RGBA(SELECTING_COLOR.R, SELECTING_COLOR.G, SELECTING_COLOR.B, SELECTING_COLOR.A));
+				LICE_RGBA(color.R, color.G, color.B, color.A));
 			//L
 			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.L, dragSelectionRECT.T, dragSelectionRECT.L, dragSelectionRECT.B, 2, 2,
-				LICE_RGBA(SELECTING_COLOR.R, SELECTING_COLOR.G, SELECTING_COLOR.B, SELECTING_COLOR.A));
+				LICE_RGBA(color.R, color.G, color.B, color.A));
 			//R
 			LICE_DashedLine(pDrawBitmap, dragSelectionRECT.R, dragSelectionRECT.T, dragSelectionRECT.R, dragSelectionRECT.B, 2, 2,
-				LICE_RGBA(SELECTING_COLOR.R, SELECTING_COLOR.G, SELECTING_COLOR.B, SELECTING_COLOR.A));
+				LICE_RGBA(color.R, color.G, color.B, color.A));
 		}
 
 		// Find selectedControlsRECT only while selecting
@@ -550,14 +705,19 @@ public:
 					IRECT drawRECT = *pControl->GetRECT();
 					IRECT targetRECT = *pControl->GetTargetRECT();
 
-					if (dragSelectionRECT.Contains(&drawRECT))
+					IRECT tmpRECT(0, 0, 0, 0);
+					if (*liveMode == 0 && (*pControl->GetRECT() == *pControl->GetTargetRECT())) tmpRECT = *pControl->GetRECT();
+					else if (*liveMode == 1) tmpRECT = *pControl->GetRECT();
+					else if (*liveMode == 2) tmpRECT = *pControl->GetTargetRECT();
+
+					if (dragSelectionRECT.Contains(&tmpRECT))
 					{
 						selected_controls.push_back(j);
 
-						selectedControlsRECT.L = IPMIN(selectedControlsRECT.L, drawRECT.L);
-						selectedControlsRECT.T = IPMIN(selectedControlsRECT.T, drawRECT.T);
-						selectedControlsRECT.R = IPMAX(selectedControlsRECT.R, drawRECT.R);
-						selectedControlsRECT.B = IPMAX(selectedControlsRECT.B, drawRECT.B);
+						selectedControlsRECT.L = IPMIN(selectedControlsRECT.L, tmpRECT.L);
+						selectedControlsRECT.T = IPMIN(selectedControlsRECT.T, tmpRECT.T);
+						selectedControlsRECT.R = IPMAX(selectedControlsRECT.R, tmpRECT.R);
+						selectedControlsRECT.B = IPMAX(selectedControlsRECT.B, tmpRECT.B);
 
 						selected_draw_rect.push_back(drawRECT);
 						selected_target_rect.push_back(targetRECT);
@@ -606,7 +766,7 @@ public:
 				selectedControlsRECT.B = selectionRECT.B + (*mMouseY - clickedSelectionY);
 				
 				// Snap to grid
-				if (!liveEditingMod->S)
+				if (!liveEditingMod->A)
 				{
 						int gridL = (selectedControlsRECT.L / liveScaledGridSize) * liveScaledGridSize;
 						int gridT = (selectedControlsRECT.T / liveScaledGridSize) * liveScaledGridSize;
@@ -622,8 +782,8 @@ public:
 				}
 
 				// Snap to control Function
-				IRECT dummy = IRECT(0,0,0,0);
-				SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &selectedControlsRECT, &dummy, controlSize, true);
+				//IRECT dummy = IRECT(0,0,0,0);
+				SnapToControl(pDrawBitmap, pControls, liveEditingMod, liveSnap, liveMouseCapture, &selectedControlsRECT, &selectedControlsRECT, liveMode, controlSize, true);
 
 				// Prevent selection to go out the window
 				//selectedControlsRECT = RestrictToWindow(selectedControlsRECT, pGraphics->Width(), pGraphics->Height());
@@ -639,18 +799,24 @@ public:
 						IRECT drawArea = *pControl->GetRECT();
 						IRECT targetArea = *pControl->GetTargetRECT();
 
-						drawArea.L = selected_draw_rect[i].L + diffL;
-						drawArea.T = selected_draw_rect[i].T + diffT;
-						drawArea.R = selected_draw_rect[i].R + diffL;
-						drawArea.B = selected_draw_rect[i].B + diffT;
+						if (*liveMode == 0 || *liveMode == 1)
+						{
+							drawArea.L = selected_draw_rect[i].L + diffL;
+							drawArea.T = selected_draw_rect[i].T + diffT;
+							drawArea.R = selected_draw_rect[i].R + diffL;
+							drawArea.B = selected_draw_rect[i].B + diffT;
+						}
 
-						targetArea.L = selected_target_rect[i].L + diffL;
-						targetArea.T = selected_target_rect[i].T + diffT;
-						targetArea.R = selected_target_rect[i].R + diffL;
-						targetArea.B = selected_target_rect[i].B + diffT;
+						if (*liveMode == 0 || *liveMode == 2)
+						{
+							targetArea.L = selected_target_rect[i].L + diffL;
+							targetArea.T = selected_target_rect[i].T + diffT;
+							targetArea.R = selected_target_rect[i].R + diffL;
+							targetArea.B = selected_target_rect[i].B + diffT;
+						}
 
-						pControl->SetDrawRECT(drawArea);
-						pControl->SetTargetRECT(targetArea);
+						if (*liveMode == 0 || *liveMode == 1) pControl->SetDrawRECT(drawArea);
+						if (*liveMode == 0 || *liveMode == 2) pControl->SetTargetRECT(targetArea);
 					}
 				}
 
@@ -679,17 +845,28 @@ public:
 			// Outline selected rects
 			for (int i = 0; i < selected_controls.size(); i++)
 			{
-				pGraphics->DrawRect(&EDIT_COLOR, pControls->Get(selected_controls[i])->GetRECT());
+				IRECT tmpRECT(0, 0, 0, 0);
+				if (*liveMode == 0 && (*pControls->Get(selected_controls[i])->GetRECT() == *pControls->Get(selected_controls[i])->GetTargetRECT()))
+					tmpRECT = *pControls->Get(selected_controls[i])->GetRECT();
+				else if (*liveMode == 1) tmpRECT = *pControls->Get(selected_controls[i])->GetRECT();
+				else if (*liveMode == 2) tmpRECT = *pControls->Get(selected_controls[i])->GetTargetRECT();
+
+				IColor color;
+				if (*liveMode == 0) color = EDIT_COLOR_BOTH;
+				else if (*liveMode == 1) color = EDIT_COLOR_DRAW;
+				else if (*liveMode == 2) color = EDIT_COLOR_TARGET;
+
+				pGraphics->DrawRect(&color, &tmpRECT);
 			}
 
 		}
 	}
 
 	void SnapToControl(LICE_IBitmap* pDrawBitmap, WDL_PtrList<IControl>* pControls, 
-		IMouseMod* liveEditingMod,int* liveSnap, int* liveMouseCapture, IRECT* drawArea, IRECT* targetArea, int controlSize, bool snapSelection = false)
+		IMouseMod* liveEditingMod,int* liveSnap, int* liveMouseCapture, IRECT* drawArea, IRECT* targetArea, int* liveMode, int controlSize, bool snapSelection = false)
 	{
 		// Snap to other control
-		if (liveEditingMod->A)
+		if (liveEditingMod->S)
 		{
 			int snapSize = *liveSnap + 1;
 
@@ -712,31 +889,37 @@ public:
 			IRECT lineMaxL, lineMaxT;
 			IRECT lineL, lineT;
 
+
 			for (int index = 0; index < controlSize; index++)
 			{
 				if (!snapSelection && (index == *liveMouseCapture)) continue;
 
 				IControl* pSnapControl = pControls->Get(index);
-				IRECT tmpDrawArea = *pSnapControl->GetRECT();
 
+				IRECT tmpArea(0, 0, 0, 0);
+				if (snapMode == 0 && (*pSnapControl->GetRECT() == *pSnapControl->GetTargetRECT())) tmpArea = *pSnapControl->GetRECT();
+				else if (snapMode == 1) tmpArea = *pSnapControl->GetRECT();
+				else if (snapMode == 2) tmpArea = *pSnapControl->GetTargetRECT();
+				
 				if (snapSelection && IsControlSelected(pControls, pSnapControl)) continue;
 				
 				int tmpSnapL;
 				IRECT tmpRECTL;
 
-				int tmpDrawArea_L = tmpDrawArea.L;
-				int tmpDrawArea_LM = tmpDrawArea.L + tmpDrawArea.W() / 2;
-				int tmpDrawArea_R = tmpDrawArea.R;
-				int tmpDrawArea_T = tmpDrawArea.T;
-				int tmpDrawArea_TM = tmpDrawArea.T + tmpDrawArea.H() / 2;
-				int tmpDrawArea_B = tmpDrawArea.B;
+				int tmpArea_L = tmpArea.L;
+				int tmpArea_LM = tmpArea.L + tmpArea.W() / 2;
+				int tmpArea_R = tmpArea.R;
+				int tmpArea_TM = tmpArea.T + tmpArea.H() / 2;
 
-				int drawArea_L = drawArea->L;
-				int drawArea_LM = drawArea->L + drawArea->W() / 2;
-				int drawArea_R = drawArea->R;
-				int drawArea_T = drawArea->T;
-				int drawArea_TM = drawArea->T + drawArea->H() / 2;
-				int drawArea_B = drawArea->B;
+				IRECT tmpRECT(0, 0, 0, 0);
+				if (snapMode == 0 && (*drawArea == *targetArea)) tmpRECT = *drawArea;
+				else if (snapMode == 1) tmpRECT = *drawArea;
+				else if (snapMode == 2) tmpRECT = *targetArea;
+
+				int Area_L = tmpRECT.L;
+				int Area_LM = tmpRECT.L + tmpRECT.W() / 2;
+				int Area_R = tmpRECT.R;
+				int Area_TM = tmpRECT.T + tmpRECT.H() / 2;
 
 				// Find snap to L
 				for (int j = 0; j < 9; j++)
@@ -748,48 +931,48 @@ public:
 
 					if (j == 0) // L to L
 					{
-						tmpSnapL = tmpDrawArea_L - drawArea_L;
-						tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_L, drawArea_TM);
+						tmpSnapL = tmpArea_L - Area_L;
+						tmpRECTL = IRECT(tmpArea_L, tmpArea_TM, Area_L, Area_TM);
 					}
 					if (j == 1) // L to LM
 					{
-						tmpSnapL = tmpDrawArea_L - drawArea_LM;
-						tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						tmpSnapL = tmpArea_L - Area_LM;
+						tmpRECTL = IRECT(tmpArea_L, tmpArea_TM, Area_LM, Area_TM);
 					}
 					if (j == 2) // L to R
 					{
-						tmpSnapL = tmpDrawArea_L - drawArea_R;
-						tmpRECTL = IRECT(tmpDrawArea_L, tmpDrawArea_TM, drawArea_R, drawArea_TM);
+						tmpSnapL = tmpArea_L - Area_R;
+						tmpRECTL = IRECT(tmpArea_L, tmpArea_TM, Area_R, Area_TM);
 					}
 					if (j == 3) // LM to L
 					{
-						tmpSnapL = tmpDrawArea_LM - drawArea_L;
-						tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_L, drawArea_TM);
+						tmpSnapL = tmpArea_LM - Area_L;
+						tmpRECTL = IRECT(tmpArea_LM, tmpArea_TM, Area_L, Area_TM);
 					}
 					if (j == 4) // LM to LM
 					{
-						tmpSnapL = tmpDrawArea_LM - drawArea_LM;
-						tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						tmpSnapL = tmpArea_LM - Area_LM;
+						tmpRECTL = IRECT(tmpArea_LM, tmpArea_TM, Area_LM, Area_TM);
 					}
 					if (j == 5) // LM to R
 					{
-						tmpSnapL = tmpDrawArea_LM - drawArea_R;
-						tmpRECTL = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_R, drawArea_TM);
+						tmpSnapL = tmpArea_LM - Area_R;
+						tmpRECTL = IRECT(tmpArea_LM, tmpArea_TM, Area_R, Area_TM);
 					}
 					if (j == 6) // R to L
 					{
-						tmpSnapL = tmpDrawArea_R - drawArea_L;
-						tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_L, drawArea_TM);
+						tmpSnapL = tmpArea_R - Area_L;
+						tmpRECTL = IRECT(tmpArea_R, tmpArea_TM, Area_L, Area_TM);
 					}
 					if (j == 7) // R to LM
 					{
-						tmpSnapL = tmpDrawArea_R - drawArea_LM;
-						tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						tmpSnapL = tmpArea_R - Area_LM;
+						tmpRECTL = IRECT(tmpArea_R, tmpArea_TM, Area_LM, Area_TM);
 					}
 					if (j == 8) // R to R
 					{
-						tmpSnapL = tmpDrawArea_R - drawArea_R;
-						tmpRECTL = IRECT(tmpDrawArea_R, tmpDrawArea_TM, drawArea_R, drawArea_TM);
+						tmpSnapL = tmpArea_R - Area_R;
+						tmpRECTL = IRECT(tmpArea_R, tmpArea_TM, Area_R, Area_TM);
 					}
 
 					// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -836,24 +1019,35 @@ public:
 				// Snap control
 				if (snapL != 0)
 				{
-					if (!liveClickedOnHandle)
+					if (*liveMode == 0 || *liveMode == 1)
 					{
-						drawArea->L = drawArea->L + snapL;
-						drawArea->R = drawArea->R + snapL;
+						if (!liveClickedOnHandle)
+						{
+							drawArea->L = drawArea->L + snapL;
+							drawArea->R = drawArea->R + snapL;
+						}
+						else drawArea->R = drawArea->R + snapL;
 					}
-					else drawArea->R = drawArea->R + snapL;
 
-					if (!liveClickedOnHandle)
+					if (*liveMode == 0 || *liveMode == 2)
 					{
-						targetArea->L = targetArea->L + snapL;
-						targetArea->R = targetArea->R + snapL;
+						if (!liveClickedOnHandle)
+						{
+							targetArea->L = targetArea->L + snapL;
+							targetArea->R = targetArea->R + snapL;
+						}
+						else targetArea->R = targetArea->R + snapL;
 					}
-					else targetArea->R = targetArea->R + snapL;
 				}
+
+				IColor color;
+				if (snapMode == 0) color = EDIT_COLOR_BOTH;
+				else if (snapMode == 1) color = EDIT_COLOR_DRAW;
+				else if (snapMode == 2) color = EDIT_COLOR_TARGET;
 
 				// Draw snap line
 				LICE_DashedLine(pDrawBitmap, lineL.L, lineL.T, lineL.R + snapL, lineL.B, 2, 2,
-					LICE_RGBA(SNAP_COLOR.R, SNAP_COLOR.G, SNAP_COLOR.B, SNAP_COLOR.A));
+					LICE_RGBA(color.R, color.G, color.B, color.A));
 			}
 
 			for (int index = 0; index < controlSize; index++)
@@ -861,25 +1055,31 @@ public:
 				if (!snapSelection && (index == *liveMouseCapture)) continue;
 
 				IControl* pSnapControl = pControls->Get(index);
-				IRECT tmpDrawArea = *pSnapControl->GetRECT();
+
+				IRECT tmpArea(0, 0, 0, 0);
+				if (snapMode == 0 && (*pSnapControl->GetRECT() == *pSnapControl->GetTargetRECT())) tmpArea = *pSnapControl->GetRECT();
+				else if (snapMode == 1) tmpArea = *pSnapControl->GetRECT();
+				else if (snapMode == 2) tmpArea = *pSnapControl->GetTargetRECT();
 
 				int tmpSnapT;
 				IRECT tmpRECTT;
 
 				if (snapSelection && IsControlSelected(pControls, pSnapControl)) continue;
-				int tmpDrawArea_L = tmpDrawArea.L;
-				int tmpDrawArea_LM = tmpDrawArea.L + tmpDrawArea.W() / 2;
-				int tmpDrawArea_R = tmpDrawArea.R;
-				int tmpDrawArea_T = tmpDrawArea.T;
-				int tmpDrawArea_TM = tmpDrawArea.T + tmpDrawArea.H() / 2;
-				int tmpDrawArea_B = tmpDrawArea.B;
 
-				int drawArea_L = drawArea->L;
-				int drawArea_LM = drawArea->L + drawArea->W() / 2;
-				int drawArea_R = drawArea->R;
-				int drawArea_T = drawArea->T;
-				int drawArea_TM = drawArea->T + drawArea->H() / 2;
-				int drawArea_B = drawArea->B;
+				int tmpArea_LM = tmpArea.L + tmpArea.W() / 2;
+				int tmpArea_T = tmpArea.T;
+				int tmpArea_TM = tmpArea.T + tmpArea.H() / 2;
+				int tmpArea_B = tmpArea.B;
+
+				IRECT tmpRECT(0, 0, 0, 0);
+				if (snapMode == 0 && (*drawArea == *targetArea)) tmpRECT = *drawArea;
+				else if (snapMode == 1) tmpRECT = *drawArea;
+				else if (snapMode == 2) tmpRECT = *targetArea;
+
+				int Area_LM = tmpRECT.L + tmpRECT.W() / 2;
+				int Area_T = tmpRECT.T;
+				int Area_TM = tmpRECT.T + tmpRECT.H() / 2;
+				int Area_B = tmpRECT.B;
 
 				// Find snap to T
 				for (int j = 0; j < 9; j++)
@@ -891,48 +1091,48 @@ public:
 
 					if (j == 0) // T to T
 					{
-						tmpSnapT = tmpDrawArea_T - drawArea_T;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_T);
+						tmpSnapT = tmpArea_T - Area_T;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_T, Area_LM, Area_T);
 					}
 					if (j == 1) // T to TM
 					{
-						tmpSnapT = tmpDrawArea_T - drawArea_TM;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_TM);
+						tmpSnapT = tmpArea_T - Area_TM;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_T, Area_LM, Area_TM);
 					}
 					if (j == 2) // T to B
 					{
-						tmpSnapT = tmpDrawArea_T - drawArea_B;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_T, drawArea_LM, drawArea_B);
+						tmpSnapT = tmpArea_T - Area_B;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_T, Area_LM, Area_B);
 					}
 					if (j == 3) // TM to T
 					{
-						tmpSnapT = tmpDrawArea_TM - drawArea_T;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_T);
+						tmpSnapT = tmpArea_TM - Area_T;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_TM, Area_LM, Area_T);
 					}
 					if (j == 4) // TM to TM
 					{
-						tmpSnapT = tmpDrawArea_TM - drawArea_TM;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_TM);
+						tmpSnapT = tmpArea_TM - Area_TM;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_TM, Area_LM, Area_TM);
 					}
 					if (j == 5) // TM to B
 					{
-						tmpSnapT = tmpDrawArea_TM - drawArea_B;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_TM, drawArea_LM, drawArea_B);
+						tmpSnapT = tmpArea_TM - Area_B;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_TM, Area_LM, Area_B);
 					}
 					if (j == 6) // B to T
 					{
-						tmpSnapT = tmpDrawArea_B - drawArea_T;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_T);
+						tmpSnapT = tmpArea_B - Area_T;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_B, Area_LM, Area_T);
 					}
 					if (j == 7) // B to TM
 					{
-						tmpSnapT = tmpDrawArea_B - drawArea_TM;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_TM);
+						tmpSnapT = tmpArea_B - Area_TM;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_B, Area_LM, Area_TM);
 					}
 					if (j == 8) // B to B
 					{
-						tmpSnapT = tmpDrawArea_B - drawArea_B;
-						tmpRECTT = IRECT(tmpDrawArea_LM, tmpDrawArea_B, drawArea_LM, drawArea_B);
+						tmpSnapT = tmpArea_B - Area_B;
+						tmpRECTT = IRECT(tmpArea_LM, tmpArea_B, Area_LM, Area_B);
 					}
 
 					// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -979,25 +1179,35 @@ public:
 				// Snap control
 				if (snapT != 0)
 				{
-					if (!liveClickedOnHandle)
+					if (*liveMode == 0 || *liveMode == 1)
 					{
-						drawArea->T = drawArea->T + snapT;
-						drawArea->B = drawArea->B + snapT;
+						if (!liveClickedOnHandle)
+						{
+							drawArea->T = drawArea->T + snapT;
+							drawArea->B = drawArea->B + snapT;
+						}
+						else drawArea->B = drawArea->B + snapT;
 					}
-					else drawArea->B = drawArea->B + snapT;
 
-
-					if (!liveClickedOnHandle)
+					if (*liveMode == 0 || *liveMode == 2)
 					{
-						targetArea->T = targetArea->T + snapT;
-						targetArea->B = targetArea->B + snapT;
+						if (!liveClickedOnHandle)
+						{
+							targetArea->T = targetArea->T + snapT;
+							targetArea->B = targetArea->B + snapT;
+						}
+						else targetArea->B = targetArea->B + snapT;
 					}
-					else targetArea->B = targetArea->B + snapT;
 				}
+
+				IColor color;
+				if (snapMode == 0) color = EDIT_COLOR_BOTH;
+				else if (snapMode == 1) color = EDIT_COLOR_DRAW;
+				else if (snapMode == 2) color = EDIT_COLOR_TARGET;
 
 				// Draw snap line
 				LICE_DashedLine(pDrawBitmap, lineT.L, lineT.T, lineT.R, lineT.B + snapT, 2, 2,
-					LICE_RGBA(SNAP_COLOR.R, SNAP_COLOR.G, SNAP_COLOR.B, SNAP_COLOR.A));
+					LICE_RGBA(color.R, color.G, color.B, color.A));
 			}
 		}
 	}
@@ -1307,24 +1517,24 @@ public:
 			for (int i = 0; i < width; i += liveScaledGridSize)
 			{
 				LICE_Line(pDrawBitmap, i, 0, i, height,
-					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.17f);
+					LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A), 0.17f);
 			}
 
 			// Horisontal Lines grid
 			for (int i = 0; i < height; i += liveScaledGridSize)
 			{
 				LICE_Line(pDrawBitmap, 0, i, width, i,
-					LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.17f);
+					LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A), 0.17f);
 			}
 		}
 		else
 		{
 			LICE_FillRect(pDrawBitmap, 0, 0, width, height,
-				LICE_RGBA(EDIT_COLOR.R, EDIT_COLOR.G, EDIT_COLOR.B, EDIT_COLOR.A), 0.11f);
+				LICE_RGBA(EDIT_COLOR_BOTH.R, EDIT_COLOR_BOTH.G, EDIT_COLOR_BOTH.B, EDIT_COLOR_BOTH.A), 0.11f);
 		}
 	}
 
-	void DoPopupMenu(IPlugBase* pPlug, IGraphics* pGraphics, int x, int y, double guiScaleRatio)
+	void DoPopupMenu(IPlugBase* pPlug, IGraphics* pGraphics, int x, int y, int* liveMode, double guiScaleRatio)
 	{
 		IPopupMenu menu;
 
@@ -1360,13 +1570,25 @@ public:
 		}
 
 		// Item 5
-		menu.AddSeparator();
+		if (liveControlNumber <= 0 || multipleControlsSelected || 
+			*pGraphics->GetControl(liveControlNumber)->GetRECT() == *pGraphics->GetControl(liveControlNumber)->GetTargetRECT())
+		{
+			menu.AddItem("Merge Draw and Target IRECT");
+			menu.SetItemState(5, IPopupMenuItem::kDisabled, true);
+		}
+		else
+		{
+			menu.AddItem("Merge Draw and Target Rect");
+		}
 
 		// Item 6
+		menu.AddSeparator();
+
+		// Item 7
 		if (liveControlNumber <= 0 || multipleControlsSelected)
 		{
 			menu.AddItem("Show Control");
-			menu.SetItemState(6, IPopupMenuItem::kDisabled, true);
+			menu.SetItemState(7, IPopupMenuItem::kDisabled, true);
 		}
 		else
 		{
@@ -1374,60 +1596,60 @@ public:
 			else menu.AddItem("Hide Control");
 		}
 
-		// Item 7
-		menu.AddSeparator();
-
 		// Item 8
-		if (liveControlNumber <= 0 || multipleControlsSelected)
-		{
-			menu.AddItem("Bring to Front");
-			menu.SetItemState(8, IPopupMenuItem::kDisabled, true);
-		}
-		else
-		{
-			menu.AddItem("Bring to Front");
-		}
+		menu.AddSeparator();
 
 		// Item 9
 		if (liveControlNumber <= 0 || multipleControlsSelected)
 		{
-			menu.AddItem("Send to Back");
+			menu.AddItem("Bring to Front");
 			menu.SetItemState(9, IPopupMenuItem::kDisabled, true);
 		}
 		else
 		{
-			menu.AddItem("Send to Back");
+			menu.AddItem("Bring to Front");
 		}
 
 		// Item 10
-		menu.AddSeparator();
-
-		// Item 11
 		if (liveControlNumber <= 0 || multipleControlsSelected)
 		{
-			menu.AddItem("Bring Forward");
-			menu.SetItemState(11, IPopupMenuItem::kDisabled, true);
+			menu.AddItem("Send to Back");
+			menu.SetItemState(10, IPopupMenuItem::kDisabled, true);
 		}
 		else
 		{
-			menu.AddItem("Bring Forward");
+			menu.AddItem("Send to Back");
 		}
+
+		// Item 11
+		menu.AddSeparator();
 
 		// Item 12
 		if (liveControlNumber <= 0 || multipleControlsSelected)
 		{
-			menu.AddItem("Send Backward");
+			menu.AddItem("Bring Forward");
 			menu.SetItemState(12, IPopupMenuItem::kDisabled, true);
+		}
+		else
+		{
+			menu.AddItem("Bring Forward");
+		}
+
+		// Item 13
+		if (liveControlNumber <= 0 || multipleControlsSelected)
+		{
+			menu.AddItem("Send Backward");
+			menu.SetItemState(13, IPopupMenuItem::kDisabled, true);
 		}
 		else
 		{
 			menu.AddItem("Send Backward");
 		}
 
-		// Item 13
+		// Item 14
 		menu.AddSeparator();
 
-		// Item 14
+		// Item 15
 		if (multipleControlsSelected)
 		{
 			menu.AddItem("Deselect");
@@ -1435,31 +1657,31 @@ public:
 		else
 		{
 			menu.AddItem("Deselect");
-			menu.SetItemState(14, IPopupMenuItem::kDisabled, true);
+			menu.SetItemState(15, IPopupMenuItem::kDisabled, true);
 		}
 
-		// Item 15
+		// Item 16
 		if (drawGridToogle) menu.AddItem("Hide Grid");
 		else menu.AddItem("Show Grid");
 
-		// Item 16
+		// Item 17
 		if (drawMouseCoordinats) menu.AddItem("Hide Mouse Coordinates");
 		else menu.AddItem("Show Mouse Coordinates");
 
-		// Item 17
-		menu.AddSeparator();
-
 		// Item 18
-		menu.AddItem("Reset View to Default");
+		menu.AddSeparator();
 
 		// Item 19
-		menu.AddSeparator();
+		menu.AddItem("Reset View to Default");
 
 		// Item 20
+		menu.AddSeparator();
+
+		// Item 21
 		if (liveControlNumber <= 0 || multipleControlsSelected)
 		{
 			menu.AddItem("Delete Control !!!");
-			menu.SetItemState(20, IPopupMenuItem::kDisabled, true);
+			menu.SetItemState(21, IPopupMenuItem::kDisabled, true);
 		}
 		else
 		{
@@ -1492,21 +1714,27 @@ public:
 				IRECT drawRECT;
 				IRECT targetRECT;
 
-				drawRECT.L = int((double)default_draw_rect[liveControlNumber].L * guiScaleRatio);
-				drawRECT.T = int((double)default_draw_rect[liveControlNumber].T * guiScaleRatio);
-				drawRECT.R = drawRECT.L + liveSelectedRECT.W();
-				drawRECT.B = drawRECT.T + liveSelectedRECT.H();
+				if (*liveMode == 0 || *liveMode == 1)
+				{
+					drawRECT.L = int((double)default_draw_rect[liveControlNumber].L * guiScaleRatio);
+					drawRECT.T = int((double)default_draw_rect[liveControlNumber].T * guiScaleRatio);
+					drawRECT.R = drawRECT.L + liveSelectedRECT.W();
+					drawRECT.B = drawRECT.T + liveSelectedRECT.H();
+				}
 
-				targetRECT.L = int((double)default_terget_rect[liveControlNumber].L * guiScaleRatio);
-				targetRECT.T = int((double)default_terget_rect[liveControlNumber].T * guiScaleRatio);
-				targetRECT.R = targetRECT.L + liveSelectedTargetRECT.W();
-				targetRECT.B = targetRECT.T + liveSelectedTargetRECT.H();
+				if (*liveMode == 0 || *liveMode == 2)
+				{
+					targetRECT.L = int((double)default_terget_rect[liveControlNumber].L * guiScaleRatio);
+					targetRECT.T = int((double)default_terget_rect[liveControlNumber].T * guiScaleRatio);
+					targetRECT.R = targetRECT.L + liveSelectedTargetRECT.W();
+					targetRECT.B = targetRECT.T + liveSelectedTargetRECT.H();
+				}
 
-				liveSelectedRECT = drawRECT;
-				liveSelectedTargetRECT = targetRECT;
+				if (*liveMode == 0 || *liveMode == 1) liveSelectedRECT = drawRECT;
+				if (*liveMode == 0 || *liveMode == 2) liveSelectedTargetRECT = targetRECT;
 
-				pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
-				pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
+				if (*liveMode == 0 || *liveMode == 1) pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
+				if (*liveMode == 0 || *liveMode == 2) pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
 
 				// Write to file
 				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode, false);
@@ -1522,21 +1750,50 @@ public:
 				IRECT drawRECT;
 				IRECT targetRECT;
 
-				drawRECT.L = liveSelectedRECT.L;
-				drawRECT.T = liveSelectedRECT.T;
-				drawRECT.R = drawRECT.L + int((double)default_draw_rect[liveControlNumber].W() * guiScaleRatio);
-				drawRECT.B = drawRECT.T + int((double)default_draw_rect[liveControlNumber].H() * guiScaleRatio);
+				if (*liveMode == 0 || *liveMode == 1)
+				{
+					drawRECT.L = liveSelectedRECT.L;
+					drawRECT.T = liveSelectedRECT.T;
+					drawRECT.R = drawRECT.L + int((double)default_draw_rect[liveControlNumber].W() * guiScaleRatio);
+					drawRECT.B = drawRECT.T + int((double)default_draw_rect[liveControlNumber].H() * guiScaleRatio);
+				}
 
-				targetRECT.L = liveSelectedTargetRECT.L;
-				targetRECT.T = liveSelectedTargetRECT.T;
-				targetRECT.R = targetRECT.L + int((double)default_terget_rect[liveControlNumber].W() * guiScaleRatio);
-				targetRECT.B = targetRECT.T + int((double)default_terget_rect[liveControlNumber].H() * guiScaleRatio);
+				if (*liveMode == 0 || *liveMode == 2)
+				{
+					targetRECT.L = liveSelectedTargetRECT.L;
+					targetRECT.T = liveSelectedTargetRECT.T;
+					targetRECT.R = targetRECT.L + int((double)default_terget_rect[liveControlNumber].W() * guiScaleRatio);
+					targetRECT.B = targetRECT.T + int((double)default_terget_rect[liveControlNumber].H() * guiScaleRatio);
+				}
 
-				liveSelectedRECT = drawRECT;
-				liveSelectedTargetRECT = targetRECT;
+				if (*liveMode == 0 || *liveMode == 1) liveSelectedRECT = drawRECT;
+				if (*liveMode == 0 || *liveMode == 2) liveSelectedTargetRECT = targetRECT;
 
-				pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
-				pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
+				if (*liveMode == 0 || *liveMode == 1) pGraphics->GetControl(liveControlNumber)->SetDrawRECT(drawRECT);
+				if (*liveMode == 0 || *liveMode == 2) pGraphics->GetControl(liveControlNumber)->SetTargetRECT(targetRECT);
+
+				// Write to file
+				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode, false);
+
+				AddCurrentUndo(pPlug, pGraphics);
+			}
+
+			// Merge Draw and Target IRECT
+			if (itemChosen == 5)
+			{
+				AddUndo(pPlug, pGraphics);
+
+				if (*liveMode == 1)
+				{
+					pGraphics->GetControl(liveControlNumber)->SetDrawRECT(liveSelectedTargetRECT);
+					liveSelectedRECT = liveSelectedTargetRECT;
+				}
+
+				if (*liveMode == 2)
+				{
+					pGraphics->GetControl(liveControlNumber)->SetTargetRECT(liveSelectedRECT);
+					liveSelectedTargetRECT = liveSelectedRECT;
+				}
 
 				// Write to file
 				CreateLayoutCode(pPlug, pGraphics, guiScaleRatio, currentViewMode, false);
@@ -1545,7 +1802,7 @@ public:
 			}
 
 			// Show/Hide Control
-			if (itemChosen == 6)
+			if (itemChosen == 7)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1559,7 +1816,7 @@ public:
 			}
 
 			// Bring to Front
-			if (itemChosen == 8)
+			if (itemChosen == 9)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1579,7 +1836,7 @@ public:
 			}
 
 			// Send to Back
-			if (itemChosen == 9)
+			if (itemChosen == 10)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1599,7 +1856,7 @@ public:
 			}
 
 			// Bring Forward
-			if (itemChosen == 11)
+			if (itemChosen == 12)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1622,7 +1879,7 @@ public:
 			}
 
 			// Send Backward
-			if (itemChosen == 12)
+			if (itemChosen == 13)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1645,27 +1902,27 @@ public:
 			}
 
 			// Deselect
-			if (itemChosen == 14)
+			if (itemChosen == 15)
 			{
 				selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
 			}
 
 			// Show/Hide Grid
-			if (itemChosen == 15)
+			if (itemChosen == 16)
 			{
 				if (drawGridToogle) drawGridToogle = false;
 				else drawGridToogle = true;
 			}
 
 			// Show/Hide Mouse Coordinates
-			if (itemChosen == 16)
+			if (itemChosen == 17)
 			{
 				if (drawMouseCoordinats) drawMouseCoordinats = false;
 				else drawMouseCoordinats = true;
 			}
 
 			// Reset View to Default
-			if (itemChosen == 18)
+			if (itemChosen == 19)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1709,7 +1966,7 @@ public:
 			}
 
 			// Remove Control
-			if (itemChosen == 20)
+			if (itemChosen == 21)
 			{
 				AddUndo(pPlug, pGraphics);
 
@@ -1904,7 +2161,7 @@ public:
 		if (deleted_control_default_index.size() > 0)
 		{
 			int textSize = 15;
-			IText txt(textSize, &EDIT_COLOR, defaultFont);
+			IText txt(textSize, &EDIT_COLOR_BOTH, defaultFont);
 			txt.mAlign = IText::kAlignNear;
 
 			IRECT rect(0, 0, 0, textSize);
@@ -2315,7 +2572,9 @@ public:
 private:
 	// Live editing stuff
 	char* defaultFont = "Tahoma";
-	IColor EDIT_COLOR = IColor(255, 255, 255, 255);
+	IColor EDIT_COLOR_BOTH = IColor(255, 255, 255, 255);
+	IColor EDIT_COLOR_DRAW = IColor(255, 50, 255, 50);
+	IColor EDIT_COLOR_TARGET = IColor(255, 255, 255, 50);
 	IColor SELECTING_COLOR = IColor(255, 255, 255, 255);
 	IColor SELECTION_COLOR = IColor(255, 255, 100, 100);
 	IColor SNAP_COLOR = IColor(255, 255, 255, 255);
@@ -2367,6 +2626,9 @@ private:
 	bool lastRDown = false;
 	int clickedSelectionX = -1, clickedSelectionY = -1;
 	int liveHandleSize;
+	int editMode = 0;
+	int snapMode = 0;
+
 	
 	struct undo
 	{

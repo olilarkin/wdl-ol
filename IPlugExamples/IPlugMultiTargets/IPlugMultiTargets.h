@@ -45,7 +45,7 @@ private:
 #ifndef OS_IOS
   IBitmapOverlayControl* mAboutBox;
   IControl* mKeyboard;
-  int mMeterIdx_L, mMeterIdx_R;
+  int *mMeterIdx_L, *mMeterIdx_R;
 #endif
 
   IMidiQueue mMidiQueue;

@@ -22,7 +22,7 @@ appreciated but is not required.
 */
 
 #include <vector>
-#include <algorithm>
+#include <cmath>
 #include <string>
 #include "IPlugBase.h"
 

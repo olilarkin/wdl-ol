@@ -139,7 +139,7 @@ public:
 		double animateWidth = GetAnimation()->Animation("animatePosition", button, 0, mRECT.W(), 60, 60, animationFlag::_QuinticEaseInOut, animationFlag::_QuarticEaseInOut);
 		double animateHeight = mRECT.H();// = GetAnimation()->Animation("animateHeight", button, 0, mRECT.H(), 10, 10, animationFlag::_CubicEaseIn, animationFlag::_CubicEaseIn);
 
-		pGraphics->FillIRect(&COLOR_BLACK, &IRECT(mRECT.L, mRECT.T, mRECT.L + (int)animateWidth, mRECT.T + (int)animateHeight), &mBlend);
+		//pGraphics->FillIRect(&COLOR_BLACK, &IRECT(mRECT.L, mRECT.T, mRECT.L + (int)animateWidth, //mRECT.T + (int)animateHeight), &mBlend);
 
 
 		if (!button)

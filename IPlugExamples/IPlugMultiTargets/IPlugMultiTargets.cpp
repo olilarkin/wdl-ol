@@ -1,6 +1,9 @@
 #include "IPlugMultiTargets.h"
 #include "IPlug_include_in_plug_src.h"
 #include "resource.h"
+#include "LiveEditLayout.h"
+
+LiveEditLayout liveLayout;
 
 #ifndef OS_IOS
 #include "IControl.h"
@@ -86,7 +89,13 @@ IPlugMultiTargets::IPlugMultiTargets(IPlugInstanceInfo instanceInfo)
   IBitmap* about = pGraphics->LoadPointerToBitmap(ABOUTBOX_ID, ABOUTBOX_FN);
   mAboutBox = new IBitmapOverlayControl(this, 100, 100, about, IRECT(540, 250, 680, 290));
   pGraphics->AttachControl(mAboutBox);
+
   AttachGraphics(pGraphics);
+
+  // This handles live editing
+  liveLayout.SetDefaultViewLayout(pGraphics);
+  pGraphics->LiveEditing(16);
+
 #endif
   //MakePreset("preset 1", ... );
   MakeDefaultPreset((char *) "-", kNumPrograms);
@@ -203,8 +212,8 @@ void IPlugMultiTargets::ProcessDoubleReplacing(double** inputs, double** outputs
 
   if (GetGUI())
   {
-    GetGUI()->SetControlFromPlug(mMeterIdx_L, peakL);
-    GetGUI()->SetControlFromPlug(mMeterIdx_R, peakR);
+    GetGUI()->SetControlFromPlug(*mMeterIdx_L, peakL);
+    GetGUI()->SetControlFromPlug(*mMeterIdx_R, peakR);
   }
 
   mMidiQueue.Flush(nFrames);

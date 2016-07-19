@@ -1264,7 +1264,7 @@ bool IGraphics::Draw(IRECT* pR)
 	if (liveEditing)
 	{
 		mPlug->GetGUILiveEdit()->EditGUI(mPlug, this, &mControls, mDrawBitmap, &liveEditingMod, &liveGridSize, &liveSnap, &liveKeyDown,
-			&liveToogleEditing, &liveMouseCapture, &liveMouseDragging, &mMouseX, &mMouseY, Width(), Height(), guiScaleRatio);
+			&liveToogleEditing, &liveMouseCapture, &liveMouseDragging, &liveMode, &mMouseX, &mMouseY, Width(), Height(), guiScaleRatio);
 	}
 
 	return DrawScreen(pR);
@@ -1521,10 +1521,6 @@ int IGraphics::liveGetControlIdx(int x, int y, bool mo)
 		return liveMouseCapture;
 	}
 
-	bool allow; // this is so that mouseovers can still be called when a control is greyed out
-
-				// The BG is a control and will catch everything, so assume the programmer
-				// attached the controls from back to front, and return the frontmost match.
 	int i = mControls.GetSize() - 1;
 
 	// Exclude gui resize controls
@@ -1535,22 +1531,12 @@ int IGraphics::liveGetControlIdx(int x, int y, bool mo)
 	{
 		IControl* pControl = *ppControl;
 
-		if (mo)
-		{
-			if (pControl->GetMOWhenGrayed())
-				allow = true;
-			else
-				allow = !pControl->IsGrayed();
-		}
-		else
-		{
-			allow = !pControl->IsGrayed();
-		}
-
-		if (pControl->IsHit(x, y)) //(!pControl->IsHidden() && allow && pControl->IsHit(x, y))
-		{
-			return i;
-		}
+		// If we need to move controls that have same draw rect and target rect
+		if (liveMode == 0 && pControl->GetRECT()->Contains(x,y) && (*pControl->GetTargetRECT() == *pControl->GetRECT())) return i;
+		// Move just draw rect
+		else if (liveMode == 1 && pControl->GetRECT()->Contains(x, y)) return i;
+		// Move just target rect
+		else if (liveMode == 2 && pControl->GetTargetRECT()->Contains(x, y)) return i;
 	}
 	return -1;
 }

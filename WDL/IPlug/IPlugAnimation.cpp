@@ -330,7 +330,7 @@ inline double IPlugAnimation::FindXFor(double t, double Cx, double Bx, double Ax
 	while (i < 10) { // making 10 iterations max
 		z = BezierX(x, Cx, Bx, Ax) - t;
 
-		if (abs(z) < 0.001) break; // if already got close enough
+        if (abs(z) < 0.001) break; // if already got close enough
 
 		x = x - z / BezierXDer(x, Cx, Bx, Ax);
 		i++;

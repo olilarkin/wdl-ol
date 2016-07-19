@@ -1,9 +1,9 @@
-#define PLUG_MFR "Youlean"
+#define PLUG_MFR "AcmeInc"
 #define PLUG_NAME "IPlugBetterGUIResize"
 
 #define PLUG_CLASS_NAME IPlugBetterGUIResize
 
-#define BUNDLE_MFR "Youlean"
+#define BUNDLE_MFR "AcmeInc"
 #define BUNDLE_NAME "IPlugBetterGUIResize"
 
 #define PLUG_ENTRY IPlugBetterGUIResize_Entry
@@ -33,7 +33,7 @@
   const int PLUG_TYPE_IDS_AS[2] = {'EFA1', 'EFA2'}; // AudioSuite
 #endif
 
-#define PLUG_MFR_PT "Youlean\nYoulean\nAcme"
+#define PLUG_MFR_PT "AcmeInc\nAcmeInc\nAcme"
 #define PLUG_NAME_PT "IPlugBetterGUIResize\nIPEF"
 #define PLUG_TYPE_PT "Effect"
 #define PLUG_DOES_AUDIOSUITE 1
