@@ -1272,9 +1272,9 @@ public:
 			findStart.SetFormatted(128, "		// View Mode: (%i)", i);
 			findEnd.SetFormatted(128, "		// End (%i)", i);
 
-			unsigned start_index = oldCode.find(findStart.Get());
-			unsigned next_start_index = oldCode.find("        // class", start_index);
-			unsigned end_index = oldCode.find(findEnd.Get());
+			size_t start_index = oldCode.find(findStart.Get());
+			size_t next_start_index = oldCode.find("        // class", start_index);
+			size_t end_index = oldCode.find(findEnd.Get());
 			
 			if (oldCode.npos > next_start_index && oldCode.npos > end_index)
 			{
