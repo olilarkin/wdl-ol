@@ -69,13 +69,13 @@ IPlugGUIResize::IPlugGUIResize(IPlugBase* pPlug, IGraphics* pGraphics, bool useH
 	settings_ini_path.Append("/");
 	settings_ini_path.Append(pPlug->GetMfrName());
 
-	// Create directory if it dowsn't exist
+	// Create directory if it doesn't exist
 	CreateDirectory(settings_ini_path.Get(), NULL);
 
 	settings_ini_path.Append("/");
 	settings_ini_path.Append(pPlug->GetEffectName());
 	
-	// Create directory if it dowsn't exist
+	// Create directory if it doesn't exist
 	CreateDirectory(settings_ini_path.Get(), NULL);
 
 	settings_ini_path.Append("/Settings.ini");
@@ -92,7 +92,7 @@ IPlugGUIResize::IPlugGUIResize(IPlugBase* pPlug, IGraphics* pGraphics, bool useH
 		gui_scale_ratio = GetDoubleFromFile("guiscale");
 	}
 
-	// Initiaize parameters
+	// Initialize parameters
 	mPlug->GetParam(viewMode)->InitInt("", -1, -1, 1000000);
 	mPlug->GetParam(viewMode)->SetCanAutomate(false);
 
@@ -175,7 +175,7 @@ void IPlugGUIResize::DrawHandle(IGraphics * pGraphics, IRECT * pRECT)
 
 IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 {
-	// Check if we need to attach horisontal and vertical handles
+	// Check if we need to attach horizontal and vertical handles
 	int* verticalControl = mGraphics->AttachControl(new VerticalResizing(mPlug, mGraphics, one_side_handle_size));
 	int* horisontalControl = mGraphics->AttachControl(new HorisontalResizing(mPlug, mGraphics, one_side_handle_size));
 
@@ -774,7 +774,7 @@ void IPlugGUIResize::MoveHandle()
 	// Take care of one side handles
 	if (using_one_size_resize)
 	{
-		// Set horisontal handle
+		// Set horizontal handle
 		x = (double)plugin_width / gui_scale_ratio - one_side_handle_size;
 		y = (double)plugin_height / gui_scale_ratio;
 		MoveControl(index - 1, x, 0);
@@ -932,7 +932,7 @@ bool IPlugGUIResize::IsDirty()
 }
 
 
-// Horisontal handle ------------------------------------------------------------------------------------
+// Horizontal handle ------------------------------------------------------------------------------------
 HorisontalResizing::HorisontalResizing(IPlugBase *pPlug, IGraphics *pGraphics, int width)
 	: IControl(pPlug, IRECT(pGraphics->Width() - width, 0, pGraphics->Width(), pGraphics->Height()))
 {

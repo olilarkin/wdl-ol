@@ -202,7 +202,7 @@ public:
 
 private:
 
-	// Functions that are used internaly -----------------------------------------------------------------------------------------------
+	// Functions that are used internally -----------------------------------------------------------------------------------------------
 	bool double_equals(double a, double b, double epsilon = 0.0000000001);
 	DRECT IRECT_to_DRECT(IRECT * iRECT);
 	IRECT DRECT_to_IRECT(DRECT * dRECT);
@@ -324,7 +324,7 @@ private:
 
 
 // One side handle classes
-// NOTE: Horisontal control position is control size - 2
+// NOTE: Horizontal control position is control size - 2
 class HorisontalResizing : public IControl
 {
 public:

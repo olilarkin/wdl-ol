@@ -2574,9 +2574,9 @@ private:
 	char* defaultFont = "Tahoma";
 	IColor EDIT_COLOR_BOTH = IColor(255, 255, 255, 255);
 	IColor EDIT_COLOR_DRAW = IColor(255, 50, 255, 50);
-	IColor EDIT_COLOR_TARGET = IColor(255, 255, 255, 50);
-	IColor SELECTING_COLOR = IColor(255, 255, 255, 255);
-	IColor SELECTION_COLOR = IColor(255, 255, 100, 100);
+	IColor EDIT_COLOR_TARGET = IColor(255, 255, 50, 50);
+	IColor SELECTING_COLOR = IColor(255, 30, 30, 30);
+	IColor SELECTION_COLOR = IColor(255, 255, 255, 255);
 	IColor SNAP_COLOR = IColor(255, 255, 255, 255);
 	IColor controlTextBackgroundColor = IColor(122, 0, 0, 0);
 	IRECT liveSelectedRECT = IRECT(0, 0, 0, 0);

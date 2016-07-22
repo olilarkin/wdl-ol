@@ -261,70 +261,33 @@ IGraphics::~IGraphics()
 	DELETE_NULL(mTmpBitmap);
 }
 
-inline int SafeGetPixel(int* input, int x_get, int y_get, int w, int h)
+inline int SafeGetPixel(int* input, int x_get, int y_get, int rowSpan, int w, int h)
 {
 	// Inside buffer
 	if (x_get < w && y_get < h)
 	{
-		return input[x_get + (y_get * w)];
-	}
-
-	// x is outside buffer by one pixel
-	else if (x_get == w && y_get < h)
-	{
-		return input[w + (y_get * w)];
-	}
-
-	// x is outside buffer by more than one pixel
-	else if (x_get > w && y_get < h)
-	{
-		return 0;
-	}
-
-	// y is outside buffer by one pixel
-	else if (x_get < w && y_get == h)
-	{
-		return input[x_get + ((h - 1) * w)];
-	}
-
-	// x is outside buffer by more than one pixel
-	else if (x_get < w && y_get > h)
-	{
-		return 0;
-	}
-
-	// x and y are outside buffer by one pixel
-	else if (x_get == w && y_get == h)
-	{
-		return input[w * h];
-	}
-
-	// x and y are outside buffer by more than one pixel
-	else if (x_get > w && y_get > h)
-	{
-		return 0;
+		return input[x_get + (y_get * rowSpan)];
 	}
 
 	return 0;
 }
 
-void ResizeBilinear(int row_span, int* input, int* out, int w1, int h1, int w2, int h2, bool smoothBitmaps, bool framesAreHoriztonal = false, int src_width = 0, int dst_width = 0)
+void ResizeBilinear(int sourceRowSpan, int sourceWidth, int destinationRowSpan, int destinationWidth, int* input, int* out, int w1, int h1, int w2, int h2, bool smoothBitmaps, bool framesAreHoriztonal = false)
 {
-	int rowSpan = row_span - w2;
 	int a = 0, b = 0, c = 0, d = 0;
 	int x, y;
 
-	int w_ratio = IPMAX(int((double)w1 / (double)w2), 0) + (int)smoothBitmaps;
-	int h_ratio = IPMAX(int((double)h1 / (double)h2), 0) + (int)smoothBitmaps;
+	int w_ratio = IPMAX(int(double(w1) / double(w2)), 0) + (int)smoothBitmaps;
+	int h_ratio = IPMAX(int(double(h1) / double(h2)), 0) + (int)smoothBitmaps;
 
-	double x_ratio = (double)w1 / (double)w2;
-	double y_ratio = (double)h1 / (double)h2;
+	double x_ratio = ((double)w1) / (double)(w2);
+	double y_ratio = ((double)h1) / (double)(h2);
 
 	double hw_ratio = 1.0 / IPMAX(double(w_ratio * h_ratio), 1.0);
 
 	double x_diff, y_diff;
 	double blue = 0.0, red = 0.0, green = 0.0, alpha = 0.0;
-	int offset = 0, offset_src = 0, offset_dst = 0;
+	int offset = 0;
 
 	for (int i = 0; i<h2; i++)
 	{
@@ -343,21 +306,11 @@ void ResizeBilinear(int row_span, int* input, int* out, int w1, int h1, int w2, 
 				for (int w = -1; w < w_ratio; w++)
 				{
 					if (w == -1) w++;
-
-					if (framesAreHoriztonal)
-					{
-						a = SafeGetPixel(input, x + w, y + h, src_width, h1);
-						b = SafeGetPixel(input, x + w + 1, y + h, src_width, h1);
-						c = SafeGetPixel(input, x + w, y + h + 1, src_width, h1);
-						d = SafeGetPixel(input, x + w + 1, y + h + 1, src_width, h1);
-					}
-					else
-					{
-						a = SafeGetPixel(input, x + w, y + h, w1, h1);
-						b = SafeGetPixel(input, x + w + 1, y + h, w1, h1);
-						c = SafeGetPixel(input, x + w, y + h + 1, w1, h1);
-						d = SafeGetPixel(input, x + w + 1, y + h + 1, w1, h1);
-					}
+					
+					a = SafeGetPixel(input, x + w, y + h, sourceRowSpan, sourceWidth, h1);
+					b = SafeGetPixel(input, x + w + 1, y + h, sourceRowSpan, sourceWidth, h1);
+					c = SafeGetPixel(input, x + w, y + h + 1, sourceRowSpan, sourceWidth, h1);
+					d = SafeGetPixel(input, x + w + 1, y + h + 1, sourceRowSpan, sourceWidth, h1);
 
 					// blue element
 					blue += (a & 0xff)*(1 - x_diff)*(1 - y_diff) + (b & 0xff)*(x_diff)*(1 - y_diff) +
@@ -389,11 +342,14 @@ void ResizeBilinear(int row_span, int* input, int* out, int w1, int h1, int w2, 
 				((int)blue);
 		}
 
-		offset += rowSpan;
-
+		
 		if (framesAreHoriztonal)
 		{
-			offset += dst_width - w2 - rowSpan;
+			offset += destinationRowSpan - w2;
+		}
+		else
+		{
+			offset += destinationRowSpan - destinationWidth;
 		}
 	}
 }
@@ -413,7 +369,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 		if (framesAreHoriztonal)
 		{
 			int src_width = (int)((double)source->getWidth() / nStates);
-			int dst_width = (int)((double)destination->getWidth() / nStates);
+			int dst_width = (int)((double)(destination->getWidth() - nStates) / nStates);
 
 			// Set whole destination bitmap to 0 alpha. This is to fix some graphical glitches on different knob positions
 			LICE_Clear(destination, 0);
@@ -426,7 +382,8 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 				pointer_to_source = pointer_to_source + srcX;
 				pointer_to_destination = pointer_to_destination + dstX;
 
-				ResizeBilinear(destination->getRowSpan(), pointer_to_source, pointer_to_destination, src_width, source->getHeight(), dst_width, destination->getHeight(), smoothBitmaps, true, source->getRowSpan(), destination->getRowSpan());
+				ResizeBilinear(source->getRowSpan(), source->getWidth(), destination->getRowSpan(), destination->getWidth(),
+					pointer_to_source, pointer_to_destination, src_width, source->getHeight(), dst_width, destination->getHeight(), smoothBitmaps, true);
 
 				pointer_to_source = pointer_to_source - srcX;
 				pointer_to_destination = pointer_to_destination - dstX;
@@ -436,7 +393,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 		{
 
 			int src_height = (int)((double)source->getHeight() / nStates);
-			int dst_height = (int)((double)destination->getHeight() / nStates);
+			int dst_height = (int)((double)(destination->getHeight() - nStates) / nStates);
 
 			// Set whole destination bitmap to 0 alpha. This is to fix some graphical glitches on different knob positions
 			LICE_Clear(destination, 0);
@@ -449,7 +406,8 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 				pointer_to_source = pointer_to_source + (srcY * source->getRowSpan());
 				pointer_to_destination = pointer_to_destination + (dstY * destination->getRowSpan());
 
-				ResizeBilinear(destination->getRowSpan(), pointer_to_source, pointer_to_destination, source->getWidth(), src_height, destination->getWidth(), dst_height, smoothBitmaps);
+				ResizeBilinear(source->getRowSpan(), source->getWidth(), destination->getRowSpan(), destination->getWidth(),
+					pointer_to_source, pointer_to_destination, source->getWidth(), src_height, destination->getWidth(), dst_height, smoothBitmaps);
 
 				pointer_to_source = pointer_to_source - (srcY * source->getRowSpan());
 				pointer_to_destination = pointer_to_destination - (dstY * destination->getRowSpan());
@@ -458,7 +416,8 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 	}
 	else
 	{
-		ResizeBilinear(destination->getRowSpan(), pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight(), smoothBitmaps);
+		ResizeBilinear(source->getRowSpan(), source->getWidth(), destination->getRowSpan(), destination->getWidth(),
+			pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight(), smoothBitmaps);
 	}
 }
 
@@ -466,7 +425,7 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio, bool smoothBitmaps)
 {
 	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
 	{
-		// Load bitmas from binary 
+		// Load bitmaps from binary 
 		LICE_IBitmap* lb = OSLoadBitmap(storeLoadedBitmap.GetID(i), storeLoadedBitmap.GetName(i));
 
 		// Get new bitmap width and height
@@ -476,19 +435,22 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio, bool smoothBitmaps)
 		// Get current bitmap
 		LICE_IBitmap* currentBitmap = (LICE_IBitmap*)storeLoadedBitmap.GetBitmap(i)->mData;
 
-		// Get current bitmap propeties
+		// Get current bitmap properties
 		int nStates = storeLoadedBitmap.GetBitmap(i)->N;
 		bool framesAreHoriztonal = storeLoadedBitmap.GetBitmap(i)->mFramesAreHorizontal;
 
 		// Create new LICE_IBitmap to use after resizing
 		LICE_IBitmap* newBitmap;
 
-		if (nStates > 1 && framesAreHoriztonal == false)
-			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height + nStates, currentBitmap->getRowSpan() - currentBitmap->getWidth());
-		else if (nStates > 1 && framesAreHoriztonal == true)
-			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width + nStates, new_height, currentBitmap->getRowSpan() - currentBitmap->getWidth());
+		// We are adding nStates to have headroom of 1px between all frames. 
+		// This is to fix graphical glitches that may occur during bitmap rescaling.
+
+		if (nStates > 1 && !framesAreHoriztonal)
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height + nStates);
+		else if (nStates > 1 && framesAreHoriztonal)
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width + nStates, new_height);
 		else
-			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height, currentBitmap->getRowSpan() - currentBitmap->getWidth());
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(new_width, new_height);
 
 
 		// Resize old content and write to new bitmap
@@ -704,7 +666,7 @@ void IGraphics::SetParameterFromPlug(int paramIdx, double value, bool normalized
 			// Could be more than one, don't break until we check them all.
 		}
 
-		// now look for any auxilliary parameters
+		// now look for any auxiliary parameters
 		int auxParamIdx = pControl->AuxParamIdx(paramIdx);
 
 		if (auxParamIdx > -1) // there are aux params
@@ -812,14 +774,14 @@ IBitmap* IGraphics::LoadPointerToBitmap(int ID, const char* name, int nStates, b
 		assert(imgResourceFound); // Protect against typos in resource.h and .rc files.
 
 								  // Rescale bitmap if oversample is specified
-								  // If we use bitmap oversampling we wont recale bitmaps here. We will let iplugguiresize do it for us
+								  // If we use bitmap oversampling we wont rescale bitmaps here. We will let iplugguiresize do it for us
 		if (bitmapOversample > 1)
 		{
 			// Get new bitmap width and height
 			int new_width = (int)(double)(lb->getWidth() / bitmapOversample);
 			int new_height = (int)(double)(lb->getHeight() / bitmapOversample);
 
-			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(1, 1, 0);
+			newBitmap = (LICE_IBitmap*) new LICE_MemBitmap(1, 1);
 			s_bitmapCache.Add(newBitmap, ID);
 			storeLoadedBitmap.Add(new IBitmap(newBitmap, new_width, new_height, nStates, framesAreHoriztonal), ID, name);
 			delete lb;
@@ -1484,10 +1446,10 @@ int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
 		return mMouseCapture;
 	}
 
-	bool allow; // this is so that mouseovers can still be called when a control is greyed out
+	bool allow; // this is so that mouseovers can still be called when a control is grayed out
 
 				// The BG is a control and will catch everything, so assume the programmer
-				// attached the controls from back to front, and return the frontmost match.
+				// attached the controls from back to front, and return the front most match.
 	int i = mControls.GetSize() - 1;
 	IControl** ppControl = mControls.GetList() + i;
 	for (/* */; i >= 0; --i, --ppControl)
