@@ -332,7 +332,8 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
   
   CGDataProviderRef provider = CGDataProviderCreateWithData(NULL,retina_buf ? retina_buf : p,4*sw*h,NULL);
   img = CGImageCreate(w,h,8,32,4*sw,(CGColorSpaceRef)mColorSpace,
-                                 kCGImageAlphaNoneSkipFirst  | kCGBitmapByteOrder32Little,//kCGImageAlphaNoneSkipFirst,
+                                 //kCGImageAlphaNoneSkipFirst  | kCGBitmapByteOrder32Little,
+                      kCGImageAlphaNoneSkipFirst,
                                  provider,NULL,NO,kCGRenderingIntentDefault);
   CGDataProviderRelease(provider);
 #endif

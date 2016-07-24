@@ -447,7 +447,7 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
     int x, y;
     [self getMouseXY:pEvent x:&x y:&y];
     int d = [pEvent deltaY];
-
+    
     IMouseMod ms = GetMouseMod(pEvent);
     mGraphics->OnMouseWheel(x, y, &ms, d);
   }

@@ -39,9 +39,10 @@ IPlugControls::IPlugControls(IPlugInstanceInfo instanceInfo)
 
   // Instantiate a graphics engine.
 
+  
   IGraphics* pGraphics = MakeGraphics(this, kW, kH); // MakeGraphics(this, kW, kH);
   pGraphics->AttachBackground(BG_ID, BG_FN);
-
+  
   // Attach controls to the graphics engine.  Controls are automatically associated
   // with a parameter if you construct the control with a parameter index.
 

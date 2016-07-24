@@ -54,7 +54,8 @@
 typedef unsigned int LICE_pixel;
 typedef unsigned char LICE_pixel_chan;
 // FIX - temp
-#ifdef __APPLE__
+#ifdef WIN32
+//#ifdef __APPLE__
 
 #define LICE_RGBA(r,g,b,a) (((b)&0xff)|(((g)&0xff)<<8)|(((r)&0xff)<<16)|(((a)&0xff)<<24))
 #define LICE_GETB(v) ((v)&0xff)
@@ -68,9 +69,9 @@ typedef unsigned char LICE_pixel_chan;
 #define LICE_PIXEL_R 2
 #define LICE_PIXEL_A 3
 
-//#elif defined(__APPLE__)
+#elif defined(__APPLE__)
 // start apple
-/*#define LICE_PIXEL_A 0
+#define LICE_PIXEL_A 0
 #define LICE_PIXEL_R 1
 #define LICE_PIXEL_G 2
 #define LICE_PIXEL_B 3
@@ -91,7 +92,7 @@ typedef unsigned char LICE_pixel_chan;
 #define LICE_GETG(v) (((v)>>16)&0xff)
 #define LICE_GETB(v) (((v)>>24)&0xff)
 
-#endif*/
+#endif
 
 // end apple
 #else
