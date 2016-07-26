@@ -326,6 +326,12 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       SendMessage(rootHWnd, msg, wParam, lParam);
       return DefWindowProc(hWnd, msg, wParam, lParam);
     }
+	case WM_SIZE:
+	{
+		InvalidateRect(hWnd, NULL, FALSE);
+		//UpdateWindow(hWnd);
+		return 0;
+	}
     case WM_PAINT:
     {
       RECT r;
