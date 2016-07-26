@@ -226,12 +226,16 @@ IPlugGUIResize* IPlugGUIResize::AttachGUIResize()
 	for (int i = 0; i < mGraphics->GetNControls(); i++)
 	{
 		layout_container[0].org_pointer.push_back(mGraphics->GetControl(i));
+		layout_container[0].moved_pointer.push_back(mGraphics->GetControl(i));
 	}
 	// Add IPlugGUIResize control
 	layout_container[0].org_pointer.push_back(this);
+	layout_container[0].moved_pointer.push_back(this);
 
 	// Adding global layout container to a local one
-	layout_container[0] = global_layout_container[0];
+	layout_container[0].org_draw_area = global_layout_container[0].org_draw_area;
+	layout_container[0].org_target_area = global_layout_container[0].org_target_area;
+	layout_container[0].org_is_hidden = global_layout_container[0].org_is_hidden;
 
 	// Adding new layout for this view. By default it is copying default view layout
 	for (int i = 0; i < view_container.view_mode.size(); i++)
