@@ -272,13 +272,13 @@ inline int SafeGetPixel(int* input, int x_get, int y_get, int rowSpan, int w, in
 	return 0;
 }
 
-void ResizeBilinear(int sourceRowSpan, int sourceWidth, int destinationRowSpan, int destinationWidth, int* input, int* out, int w1, int h1, int w2, int h2, bool smoothBitmaps, bool framesAreHoriztonal = false)
+void ResizeBilinear(int sourceRowSpan, int sourceWidth, int destinationRowSpan, int destinationWidth, int* input, int* out, int w1, int h1, int w2, int h2, bool framesAreHoriztonal = false)
 {
 	int a = 0, b = 0, c = 0, d = 0;
 	int x, y;
 
-	int w_ratio = IPMAX(int(double(w1) / double(w2)), 0) + (int)smoothBitmaps;
-	int h_ratio = IPMAX(int(double(h1) / double(h2)), 0) + (int)smoothBitmaps;
+	int w_ratio = IPMAX(int(double(w1) / double(w2) + 0.99999999999), 0);
+	int h_ratio = IPMAX(int(double(h1) / double(h2) + 0.99999999999), 0);
 
 	double x_ratio = ((double)w1) / (double)(w2);
 	double y_ratio = ((double)h1) / (double)(h2);
@@ -354,7 +354,7 @@ void ResizeBilinear(int sourceRowSpan, int sourceWidth, int destinationRowSpan, 
 	}
 }
 
-void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, bool framesAreHoriztonal, bool smoothBitmaps)
+void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, bool framesAreHoriztonal)
 {
 	int* pointer_to_source = (int*)source->getBits();
 	int srcX = 0;
@@ -383,7 +383,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 				pointer_to_destination = pointer_to_destination + dstX;
 
 				ResizeBilinear(source->getRowSpan(), source->getWidth(), destination->getRowSpan(), destination->getWidth(),
-					pointer_to_source, pointer_to_destination, src_width, source->getHeight(), dst_width, destination->getHeight(), smoothBitmaps, true);
+					pointer_to_source, pointer_to_destination, src_width, source->getHeight(), dst_width, destination->getHeight(), true);
 
 				pointer_to_source = pointer_to_source - srcX;
 				pointer_to_destination = pointer_to_destination - dstX;
@@ -407,7 +407,7 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 				pointer_to_destination = pointer_to_destination + (dstY * destination->getRowSpan());
 
 				ResizeBilinear(source->getRowSpan(), source->getWidth(), destination->getRowSpan(), destination->getWidth(),
-					pointer_to_source, pointer_to_destination, source->getWidth(), src_height, destination->getWidth(), dst_height, smoothBitmaps);
+					pointer_to_source, pointer_to_destination, source->getWidth(), src_height, destination->getWidth(), dst_height);
 
 				pointer_to_source = pointer_to_source - (srcY * source->getRowSpan());
 				pointer_to_destination = pointer_to_destination - (dstY * destination->getRowSpan());
@@ -417,11 +417,11 @@ void ResizeBitmap(LICE_IBitmap* source, LICE_IBitmap* destination, int nStates, 
 	else
 	{
 		ResizeBilinear(source->getRowSpan(), source->getWidth(), destination->getRowSpan(), destination->getWidth(),
-			pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight(), smoothBitmaps);
+			pointer_to_source, pointer_to_destination, source->getWidth(), source->getHeight(), destination->getWidth(), destination->getHeight());
 	}
 }
 
-void IGraphics::RescaleBitmaps(double guiScaleRatio, bool smoothBitmaps)
+void IGraphics::RescaleBitmaps(double guiScaleRatio)
 {
 	for (int i = 0; i < storeLoadedBitmap.GetSize(); i++)
 	{
@@ -454,7 +454,7 @@ void IGraphics::RescaleBitmaps(double guiScaleRatio, bool smoothBitmaps)
 
 
 		// Resize old content and write to new bitmap
-		ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal, smoothBitmaps);
+		ResizeBitmap(lb, newBitmap, nStates, framesAreHoriztonal);
 
 		// Copy resized image to cached bitmap that all plugins are using
 		LICE_Copy(currentBitmap, newBitmap);

@@ -133,7 +133,6 @@ public:
 	// These must be called in your plugin constructor ---------------------------------------------------------------------------------------------
 	void UsingBitmaps();
 	void DisableFastBitmapResizing();
-	void SmoothResizedBitmaps();
 	void AddNewView(int viewMode, int viewWidth, int viewHeight);
 	void UseOneSideResizing(int handleSize, int minHandleSize = 5, resizeOneSide flag = horisontalAndVerticalResizing);
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -312,7 +311,6 @@ private:
 	bool fast_bitmap_resizing = true;
 	bool bitmaps_rescaled_at_load_skip = false;
 	bool presets_loaded = false;
-	bool smooth_bitmap_resizing = false;
 	double* backup_parameters;
 	IRECT gui_resize_area;
 	WDL_String settings_ini_path;

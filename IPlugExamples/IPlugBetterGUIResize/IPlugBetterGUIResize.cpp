@@ -49,7 +49,6 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
-  //GetGUIResize()->SmoothResizedBitmaps();
   GetGUIResize()->DisableFastBitmapResizing();
 
   // Adding a new view. Default view will always be 0.

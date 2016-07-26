@@ -414,11 +414,6 @@ void IPlugGUIResize::DisableFastBitmapResizing()
 	fast_bitmap_resizing = false;
 }
 
-void IPlugGUIResize::SmoothResizedBitmaps()
-{
-	smooth_bitmap_resizing = true;
-}
-
 void IPlugGUIResize::HideControl(int index)
 {
 	IControl* pControl = mGraphics->GetControl(index);
@@ -645,7 +640,7 @@ void IPlugGUIResize::RescaleBitmapsAtLoad()
 {
 	if (!bitmaps_rescaled_at_load)
 	{
-		mGraphics->RescaleBitmaps(gui_scale_ratio, smooth_bitmap_resizing);
+		mGraphics->RescaleBitmaps(gui_scale_ratio);
 
 		bitmaps_rescaled_at_load = true;
 	}
@@ -688,7 +683,7 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 	{
 		if (using_bitmaps && !bitmaps_rescaled_at_load_skip && !double_equals(global_gui_scale_ratio, gui_scale_ratio))
 		{
-			mGraphics->RescaleBitmaps(gui_scale_ratio, smooth_bitmap_resizing);
+			mGraphics->RescaleBitmaps(gui_scale_ratio);
 		}
 		bitmaps_rescaled_at_load_skip = false;
 
@@ -737,7 +732,7 @@ void IPlugGUIResize::ResizeGraphics()
 		{
 			if (!window_resizing)
 			{
-				mGraphics->RescaleBitmaps(gui_scale_ratio, smooth_bitmap_resizing);
+				mGraphics->RescaleBitmaps(gui_scale_ratio);
 			}
 
 			InitializeGUIControls(mGraphics);
@@ -882,7 +877,7 @@ void IPlugGUIResize::OnMouseUp(int x, int y, IMouseMod * pMod)
 
 	if (using_bitmaps && fast_bitmap_resizing && !gui_should_be_closed)
 	{
-		mGraphics->RescaleBitmaps(gui_scale_ratio, smooth_bitmap_resizing);
+		mGraphics->RescaleBitmaps(gui_scale_ratio);
 
 		ResizeControlRects();
 		InitializeGUIControls(mGraphics);
