@@ -1038,6 +1038,17 @@ void IGraphicsWin::DesktopPath(WDL_String* pPath)
   #endif
 }
 
+void IGraphicsWin::DocumentsPath(WDL_String* pPath)
+{
+#ifndef __MINGW_H // TODO: alternative for gcc?
+	TCHAR strPath[MAX_PATH_LEN];
+
+	SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, strPath);
+
+	pPath->Set(strPath, MAX_PATH_LEN);
+#endif
+}
+
 void IGraphicsWin::AppSupportPath(WDL_String* pPath, bool isSystem)
 {
 #ifndef __MINGW_H // TODO: alternative for gcc?

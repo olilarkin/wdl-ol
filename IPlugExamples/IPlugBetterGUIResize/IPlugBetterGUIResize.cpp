@@ -49,7 +49,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
-  GetGUIResize()->DisableFastBitmapResizing();
+  //GetGUIResize()->DisableFastBitmapResizing();
 
   // Adding a new view. Default view will always be 0.
   GetGUIResize()->AddNewView(miniView, 200, 400);
@@ -108,7 +108,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
   //liveLayout.SetDefaultViewLayout(pGraphics);
   liveLayout.SetGUIResizeLayout(pGraphics, GetGUIResize());
 
-  pGraphics->ShowControlBounds(true);
+  //pGraphics->ShowControlBounds(true);
   pGraphics->LiveEditing(16);
 
   //MakePreset("preset 1", ... );

@@ -160,9 +160,11 @@ public:
 	void MoveControlRightEdge(int index, double R, resizeFlag flag = drawAndTargetArea);
 	void MoveControlBottomEdge(int index, double B, resizeFlag flag = drawAndTargetArea);
 	
+	// Get values
 	double GetGUIScaleRatio();
 	int GetViewMode();
 	int GetViewModeSize();
+	bool CurrentlyFastResizing();
 	
 	// You can override this to use in your custom resizing control
 	virtual void DrawBackgroundAtFastResizing(IGraphics* pGraphics, IRECT *pRECT);
@@ -181,77 +183,22 @@ public:
 	void RescaleBitmapsAtLoad();
 	IPlugGUIResize *AttachGUIResize();
 	void LiveEditSetLayout(int viewMode, int moveToIndex, int moveFromIndex, IRECT drawRECT, IRECT targetRECT, bool isHidden);
-	void LiveRemoveLayer(IControl* pControl)
-	{
-		// This will remove control for every view
-		for (int i = 0; i < GetViewModeSize(); i++)
-		{
-			int position = FindLayoutPointerPosition(i, pControl);
-
-			layout_container[i].moved_pointer.erase(layout_container[i].moved_pointer.begin() + position);
-			layout_container[i].org_pointer.erase(layout_container[i].org_pointer.begin() + position);
-			layout_container[i].org_draw_area.erase(layout_container[i].org_draw_area.begin() + position);
-			layout_container[i].org_target_area.erase(layout_container[i].org_target_area.begin() + position);
-			layout_container[i].org_is_hidden.erase(layout_container[i].org_is_hidden.begin() + position);
-		}
-	}
+	void LiveRemoveLayer(IControl* pControl);
+	bool IsDirty();
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
 		
-	bool IsDirty();
-
 private:
-
 	// Functions that are used internally -----------------------------------------------------------------------------------------------
 	bool double_equals(double a, double b, double epsilon = 0.0000000001);
 	DRECT IRECT_to_DRECT(IRECT * iRECT);
 	IRECT DRECT_to_IRECT(DRECT * dRECT);
 	IRECT ResizeIRECT(DRECT * old_IRECT, double width_ratio, double height_ratio);
-
-	DRECT* GetLayoutContainerDrawRECT(int viewMode, IControl* pControl)
-	{
-		int position = FindLayoutPointerPosition(viewMode, pControl);
-		return &layout_container[viewMode].org_draw_area[position];
-	}
-
-	DRECT* GetLayoutContainerTargetRECT(int viewMode, IControl* pControl)
-	{
-		int position = FindLayoutPointerPosition(viewMode, pControl);
-		return &layout_container[viewMode].org_target_area[position];
-	}
-
-	int* GetLayoutContainerIsHidden(int viewMode, IControl* pControl)
-	{
-		int position = FindLayoutPointerPosition(viewMode, pControl);
-		return &layout_container[viewMode].org_is_hidden[position];
-	}
-
-	void SetLayoutContainerAt(int viewMode, IControl* pControl, DRECT drawIn, DRECT targetIn, int isHiddenIn)
-	{
-		int position = FindLayoutPointerPosition(viewMode, pControl);
-
-		layout_container[viewMode].org_draw_area[position] = drawIn;
-		layout_container[viewMode].org_target_area[position] = targetIn;
-		layout_container[viewMode].org_is_hidden[position] = isHiddenIn;
-	}
-
-	int FindLayoutPointerPosition(int viewMode, IControl* pControl)
-	{
-		for (int i = 0; i < layout_container[0].org_pointer.size(); i++)
-		{
-			if (pControl == layout_container[viewMode].org_pointer[i]) return i;
-		}
-		return -1;
-	}
-
-	void RearrangeLayers()
-	{
-		for (int i = 1; i < mGraphics->GetNControls(); i++)
-		{
-			int position = FindLayoutPointerPosition(viewMode, layout_container[current_view_mode].moved_pointer[i]);
-
-			mGraphics->ReplaceControl(position, layout_container[current_view_mode].org_pointer[i]);
-		}
-	}
+	DRECT* GetLayoutContainerDrawRECT(int viewMode, IControl* pControl);
+	DRECT* GetLayoutContainerTargetRECT(int viewMode, IControl* pControl);
+	int* GetLayoutContainerIsHidden(int viewMode, IControl* pControl);
+	void SetLayoutContainerAt(int viewMode, IControl* pControl, DRECT drawIn, DRECT targetIn, int isHiddenIn);
+	int FindLayoutPointerPosition(int viewMode, IControl* pControl);
+	void RearrangeLayers();
 
 	void SetIntToFile(const char *name, int x);
 	int GetIntFromFile(const char *name);
@@ -304,7 +251,7 @@ private:
 	int default_gui_width, default_gui_height;
 	int plugin_width, plugin_height; // This is current plugin instance width
 	int min_control_size, control_size;
-	bool mouse_is_down = false;
+	bool currentlyFastResizing = false;
 	bool mouse_is_dragging = false;
 	bool gui_should_be_closed = false;
 	bool using_bitmaps = false;

@@ -1079,14 +1079,6 @@ bool IGraphics::DrawRadialLine(const IColor* pColor, float cx, float cy, float a
 
 bool IGraphics::IsDirty(IRECT* pR)
 {
-#ifndef NDEBUG
-	if (mShowControlBounds)
-	{
-		*pR = mDrawRECT;
-		return true;
-	}
-#endif
-
 	bool dirty = false;
 	int i, n = mControls.GetSize();
 	IControl** ppControl = mControls.GetList();
@@ -1112,6 +1104,15 @@ bool IGraphics::IsDirty(IRECT* pR)
 		mIdleTicks = 0;
 	}
 #endif
+
+#ifndef NDEBUG
+	if (mShowControlBounds)
+	{
+		*pR = mDrawRECT;
+		return true;
+	}
+#endif
+
 	return dirty;
 }
 
@@ -1121,6 +1122,17 @@ bool IGraphics::Draw(IRECT* pR)
 {
 	//  #pragma REMINDER("Mutex set while drawing")
 	//  WDL_MutexLock lock(&mMutex);
+
+
+	// If GUIResize is actuve and fast bitmap resizing is active, draw overlay image on the plugin while resizing
+	if (mPlug->GetGUIResize() && mPlug->GetGUIResize()->CurrentlyFastResizing())
+	{
+		IRECT backgroundRECT = IRECT(0, 0, Width(), Height());
+		mPlug->GetGUIResize()->DrawBackgroundAtFastResizing(this, &backgroundRECT);
+
+		return DrawScreen(&backgroundRECT);
+	}
+
 
 	int i, j, n = mControls.GetSize();
 	if (!n)
@@ -1199,19 +1211,7 @@ bool IGraphics::Draw(IRECT* pR)
 		{
 			IControl* pControl = mControls.Get(j);
 
-			// If control is hidden cross it with lines
-			if (pControl->IsHidden())
-			{
-				IRECT drawRECT = *pControl->GetRECT();
-				WDL_String strHidden;
-				strHidden.Set("Hidden");
-				IText txtHidden(IPMIN(drawRECT.W() / 4, drawRECT.H()), &CONTROL_BOUNDS_COLOR);
-				DrawIText(&txtHidden, strHidden.Get(), &drawRECT);
-
-				DrawRect(&CONTROL_BOUNDS_COLOR, &drawRECT);
-			}
-			else
-				DrawRect(&CONTROL_BOUNDS_COLOR, pControl->GetRECT());
+			DrawRect(&CONTROL_BOUNDS_COLOR, pControl->GetRECT());
 		}
 
 		WDL_String str;

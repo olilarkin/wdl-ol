@@ -1,5 +1,4 @@
 #include "IPlugGUIResize.h"
-#include "IPlugGUIResize.h"
 
 // Helpers -------------------------------------------------------------------------------------------------------------
 bool IPlugGUIResize::double_equals(double a, double b, double epsilon)
@@ -20,6 +19,52 @@ IRECT IPlugGUIResize::DRECT_to_IRECT(DRECT *dRECT)
 IRECT IPlugGUIResize::ResizeIRECT(DRECT *old_IRECT, double width_ratio, double height_ratio)
 {
 	return IRECT((int)((old_IRECT->L + 0.4999)* width_ratio), (int)((old_IRECT->T + 0.4999) * height_ratio), (int)((old_IRECT->R + 0.4999)* width_ratio), (int)((old_IRECT->B + 0.4999) * height_ratio));
+}
+
+DRECT * IPlugGUIResize::GetLayoutContainerDrawRECT(int viewMode, IControl * pControl)
+{
+	int position = FindLayoutPointerPosition(viewMode, pControl);
+	return &layout_container[viewMode].org_draw_area[position];
+}
+
+DRECT * IPlugGUIResize::GetLayoutContainerTargetRECT(int viewMode, IControl * pControl)
+{
+	int position = FindLayoutPointerPosition(viewMode, pControl);
+	return &layout_container[viewMode].org_target_area[position];
+}
+
+int * IPlugGUIResize::GetLayoutContainerIsHidden(int viewMode, IControl * pControl)
+{
+	int position = FindLayoutPointerPosition(viewMode, pControl);
+	return &layout_container[viewMode].org_is_hidden[position];
+}
+
+void IPlugGUIResize::SetLayoutContainerAt(int viewMode, IControl * pControl, DRECT drawIn, DRECT targetIn, int isHiddenIn)
+{
+	int position = FindLayoutPointerPosition(viewMode, pControl);
+
+	layout_container[viewMode].org_draw_area[position] = drawIn;
+	layout_container[viewMode].org_target_area[position] = targetIn;
+	layout_container[viewMode].org_is_hidden[position] = isHiddenIn;
+}
+
+int IPlugGUIResize::FindLayoutPointerPosition(int viewMode, IControl * pControl)
+{
+	for (int i = 0; i < layout_container[0].org_pointer.size(); i++)
+	{
+		if (pControl == layout_container[viewMode].org_pointer[i]) return i;
+	}
+	return -1;
+}
+
+void IPlugGUIResize::RearrangeLayers()
+{
+	for (int i = 1; i < mGraphics->GetNControls(); i++)
+	{
+		int position = FindLayoutPointerPosition(viewMode, layout_container[current_view_mode].moved_pointer[i]);
+
+		mGraphics->ReplaceControl(position, layout_container[current_view_mode].org_pointer[i]);
+	}
 }
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -65,7 +110,7 @@ IPlugGUIResize::IPlugGUIResize(IPlugBase* pPlug, IGraphics* pGraphics, bool useH
 	plugin_height = pGraphics->Height();
 
 	// Set settings.ini file path
-	pGraphics->AppSupportPath(&settings_ini_path);
+	pGraphics->DocumentsPath(&settings_ini_path);
 	settings_ini_path.Append("/");
 	settings_ini_path.Append(pPlug->GetMfrName());
 
@@ -105,22 +150,14 @@ IPlugGUIResize::IPlugGUIResize(IPlugBase* pPlug, IGraphics* pGraphics, bool useH
 
 bool IPlugGUIResize::Draw(IGraphics * pGraphics)
 {
-	if (mouse_is_down)
+	if (gui_should_be_closed)
 	{
-		IRECT backgroundRECT = IRECT(0, 0, plugin_width, plugin_height);
-		DrawBackgroundAtFastResizing(pGraphics, &backgroundRECT);
+		mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
+		DrawReopenPluginInterface(pGraphics, &mRECT);
 	}
 	else
 	{
-		if (gui_should_be_closed)
-		{
-			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
-			DrawReopenPluginInterface(pGraphics, &mRECT);
-		}
-		else
-		{
-			DrawHandle(pGraphics, &mRECT);
-		}
+		DrawHandle(pGraphics, &mRECT);
 	}
 
 	return true;
@@ -262,6 +299,21 @@ void IPlugGUIResize::LiveEditSetLayout(int viewMode, int moveToIndex, int moveFr
 	layout_container[viewMode].org_draw_area[moveToIndex] = drawDRECT;
 	layout_container[viewMode].org_target_area[moveToIndex] = targetDRECT;
 	layout_container[viewMode].org_is_hidden[moveToIndex] = isHidden;
+}
+
+void IPlugGUIResize::LiveRemoveLayer(IControl * pControl)
+{
+	// This will remove control for every view
+	for (int i = 0; i < GetViewModeSize(); i++)
+	{
+		int position = FindLayoutPointerPosition(i, pControl);
+
+		layout_container[i].moved_pointer.erase(layout_container[i].moved_pointer.begin() + position);
+		layout_container[i].org_pointer.erase(layout_container[i].org_pointer.begin() + position);
+		layout_container[i].org_draw_area.erase(layout_container[i].org_draw_area.begin() + position);
+		layout_container[i].org_target_area.erase(layout_container[i].org_target_area.begin() + position);
+		layout_container[i].org_is_hidden.erase(layout_container[i].org_is_hidden.begin() + position);
+	}
 }
 
 void IPlugGUIResize::UseHandleForGUIScaling(bool statement)
@@ -566,6 +618,11 @@ int IPlugGUIResize::GetViewModeSize()
 	return view_container.view_mode.size();
 }
 
+bool IPlugGUIResize::CurrentlyFastResizing()
+{
+	return currentlyFastResizing;
+}
+
 void IPlugGUIResize::ResizeControlRects()
 {
 	// Set new target and draw area
@@ -744,7 +801,7 @@ void IPlugGUIResize::ResizeGraphics()
 		}
 		else
 		{
-			if (!mouse_is_down)
+			if (!currentlyFastResizing)
 			{
 				InitializeGUIControls(mGraphics);
 			}
@@ -859,7 +916,7 @@ void IPlugGUIResize::OnMouseDown(int x, int y, IMouseMod * pMod)
 	{
 		mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
 
-		mouse_is_down = true;
+		currentlyFastResizing = true;
 	}
 
 	if (pMod->R)
@@ -885,7 +942,7 @@ void IPlugGUIResize::OnMouseUp(int x, int y, IMouseMod * pMod)
 
 		ResizeControlRects();
 		InitializeGUIControls(mGraphics);
-		mouse_is_down = false;
+		currentlyFastResizing = false;
 		mouse_is_dragging = false;
 		global_gui_scale_ratio = gui_scale_ratio;
 		mGraphics->SetAllControlsDirty();
@@ -917,7 +974,7 @@ double IPlugGUIResize::GetDoubleFromFile(const char * name)
 
 bool IPlugGUIResize::IsDirty()
 {
-	if (using_bitmaps && plugin_resized && !gui_should_be_closed && !mouse_is_down)
+	if (using_bitmaps && plugin_resized && !gui_should_be_closed && !currentlyFastResizing)
 	{
 		gui_should_be_closed = !double_equals(global_gui_scale_ratio, gui_scale_ratio);
 

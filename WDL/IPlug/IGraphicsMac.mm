@@ -668,6 +668,14 @@ void IGraphicsMac::DesktopPath(WDL_String* pPath)
 //                      GetController()->GetPluginNameStr());
 //}
 
+void IGraphicsMac::DocumentsPath(WDL_String* pPath)
+{
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  
+  NSString *documentsDirectory = [paths objectAtIndex:0];
+  pPath->Set([documentsDirectory UTF8String]);
+}
+
 void IGraphicsMac::AppSupportPath(WDL_String* pPath, bool isSystem)
 {
   NSArray *paths;
