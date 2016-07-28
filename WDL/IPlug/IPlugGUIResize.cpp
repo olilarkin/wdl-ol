@@ -851,9 +851,6 @@ void IPlugGUIResize::MoveHandle()
 
 void IPlugGUIResize::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
 {
-	double prev_plugin_width = plugin_width;
-	double prev_plugin_height = plugin_height;
-
 	if (!gui_should_be_closed)
 	{
 		SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
@@ -1011,8 +1008,6 @@ void HorisontalResizing::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * p
 {
 	SetCursor(LoadCursor(NULL, IDC_SIZEWE));
 
-	double prev_plugin_width = mGraphics->Width();
-
 	double window_width_normalized = (double)x / GetGUIResize()->GetGUIScaleRatio();
 
 	GetGUIResize()->SetWindowWidth(window_width_normalized);
@@ -1053,8 +1048,6 @@ void VerticalResizing::OnMouseDown(int x, int y, IMouseMod * pMod)
 void VerticalResizing::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
 {
 	SetCursor(LoadCursor(NULL, IDC_SIZENS));
-
-	double prev_plugin_height = mGraphics->Height();
 
 	double window_height_normalized = (double)y / GetGUIResize()->GetGUIScaleRatio();
 

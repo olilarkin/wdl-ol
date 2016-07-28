@@ -1465,7 +1465,6 @@ public:
 				}
 
 				// Update current view mode
-				IControl* tmpControl = pGraphics->GetControl(FindPointerPosition(pControl, current_layers));
 				if (pPlug->GetGUIResize() && reset)
 				{
 					drawRECT = *pControl->GetRECT();
@@ -2322,7 +2321,6 @@ public:
 			{
 				IControl* tmp = pGraphics->GetControl(j);
 				int defaultPos = FindPointerPosition(tmp, default_layers);
-				int undoPointerPos = FindPointerPosition(tmp, undo_viewMode[viewMode].undo_stack[undoPos].pointers);
 
 				pGraphics->ReplaceControl(j, undo_viewMode[viewMode].undo_stack[undoPos].pointers[j]);
 				tmp->SetDrawRECT(undo_viewMode[viewMode].undo_stack[undoPos].draw_rect[defaultPos]);
@@ -2371,7 +2369,7 @@ public:
 						for (int j = 1; j < pGraphics->GetNControls(); j++)
 						{
 							IControl* tmp = pGraphics->GetControl(j);
-							//if (ControlIsDeleted(tmp, deleted_control_default_index)) tmp->Hide(true);
+							if (ControlIsDeleted(tmp, deleted_control_default_index)) tmp->Hide(true);
 						}
 
 						// Write to file
@@ -2442,7 +2440,6 @@ public:
 				{
 					IControl* tmp = pGraphics->GetControl(j);
 					int defaultPos = FindPointerPosition(tmp, default_layers);
-					int undoPointerPos = FindPointerPosition(tmp, undo_viewMode[viewMode].undo_stack[undoPos].pointers);
 
 					pGraphics->ReplaceControl(j, undo_viewMode[viewMode].undo_stack[undoPos].pointers[j]);
 					tmp->SetDrawRECT(undo_viewMode[viewMode].undo_stack[undoPos].draw_rect[defaultPos]);
@@ -2465,8 +2462,7 @@ public:
 				{
 					IControl* tmp = pGraphics->GetControl(j);
 					int defaultPos = FindPointerPosition(tmp, default_layers);
-					int undoPointerPos = FindPointerPosition(tmp, undo_current_stack[viewMode].pointers);
-
+                    
 					pGraphics->ReplaceControl(j, undo_current_stack[viewMode].pointers[j]);
 					tmp->SetDrawRECT(undo_current_stack[viewMode].draw_rect[defaultPos]);
 					tmp->SetTargetRECT(undo_current_stack[viewMode].target_rect[defaultPos]);
