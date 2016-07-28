@@ -180,7 +180,7 @@ void IPlugControls::OnParamChange(int paramIdx)
   {
     if (GetGUI())
     {
-      GetGUI()->SetControlFromPlug(mIISC_Indicator, GetParam(paramIdx)->Bool());
+      GetGUI()->SetControlFromPlug(*mIISC_Indicator, GetParam(paramIdx)->Bool());
     }
   }
 

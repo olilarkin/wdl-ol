@@ -16,7 +16,7 @@ public:
 
 private:
 
-  int mIISC_Indicator;
+  int *mIISC_Indicator;
 };
 
 const int kNumPrograms = 1;
