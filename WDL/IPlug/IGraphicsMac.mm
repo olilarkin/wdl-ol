@@ -462,6 +462,9 @@ bool IGraphicsMac::WindowIsOpen()
 void IGraphicsMac::Resize(int w, int h)
 {
   if (w == Width() && h == Height()) return;
+    
+  int oldHeight = Height();
+  int oldWidth = Width();
 
   IGraphics::Resize(w, h);
 
@@ -474,15 +477,24 @@ void IGraphicsMac::Resize(int w, int h)
   #endif
   if (mGraphicsCocoa)
   {
+    [NSAnimationContext beginGrouping]; // Prevent animated resizing
+    [[NSAnimationContext currentContext] setDuration:0.0f];
+    
     NSSize size = { static_cast<CGFloat>(w), static_cast<CGFloat>(h) };
-  
+    NSSize superviewSize = [(NSView*) mGraphicsCocoa superview].frame.size;
     [(IGRAPHICS_COCOA*) mGraphicsCocoa setFrameSize: size ];
-   
-    // Cocoa window redraw fix (VST2), and disable stupid resize animation
-    NSRect rectNewFrame = [[(IGRAPHICS_COCOA*) mGraphicsCocoa window] frameRectForContentRect:NSMakeRect(0, 0, w, h)];
-    NSRect rect = [[(IGRAPHICS_COCOA*) mGraphicsCocoa window] frame];
-    rectNewFrame.origin = NSMakePoint(rect.origin.x ,rect.origin.y - (rectNewFrame.size.height - rect.size.height));
-    [[(IGRAPHICS_COCOA*) mGraphicsCocoa window] setFrame:rectNewFrame display:NO animate:NO];
+      
+    // Here we are inluding host part of the window.
+    size.height += superviewSize.height - oldHeight;
+    size.width += superviewSize.width - oldWidth;
+    
+    [[(IGRAPHICS_COCOA*) mGraphicsCocoa superview] setFrameSize: size ];
+    
+    [NSAnimationContext endGrouping];
+    
+    // Ask display to redraw
+    [(IGRAPHICS_COCOA*)mGraphicsCocoa  setNeedsDisplay:YES];
+
   }
 }
 
