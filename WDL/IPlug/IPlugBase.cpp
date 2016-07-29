@@ -933,6 +933,18 @@ bool IPlugBase::SerializeParams(ByteChunk* pChunk)
     double v = pParam->Value();
     savedOK &= (pChunk->Put(&v) > 0);
   }
+
+  // Save parameters for GUIResize
+  if (GetGUIResize())
+  {
+	  for (i = 0; i < GetGUIResize()->GetGUIResizeParameterSize(); i++)
+	  {
+		  IParam* pParam = GetGUIResize()->GetGUIResizeParameter(i);
+		  double v = pParam->Value();
+		  pChunk->Put(&v);
+	  }
+  }
+
   return savedOK;
 }
 
@@ -950,6 +962,20 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
     pos = pChunk->Get(&v, pos);
     pParam->Set(v);
   }
+
+  // Save parameters for GUIResize
+  if (GetGUIResize())
+  {
+	  for (i = 0; i < GetGUIResize()->GetGUIResizeParameterSize(); i++)
+	  {
+		  IParam* pParam = GetGUIResize()->GetGUIResizeParameter(i);
+		  double v = 0.0;
+
+		  pos = pChunk->Get(&v, pos);
+		  pParam->Set(v);
+	  }
+  }
+
   OnParamReset();
   return pos;
 }

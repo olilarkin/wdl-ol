@@ -10,15 +10,8 @@ const int kNumPrograms = 2;
 
 enum EParams
 {
-	// This is reserved for GUI resize
-	viewMode = 0,
-	windowWidth = 1,
-	windowHeight = 2,
-	// -------------------------------
-
-	// Your custom parameters:
-	kGain = 3,
-	kGain1 = 4,
+	kGain,
+	kGain1,
 
 	kNumParams
 };
@@ -49,7 +42,7 @@ IPlugBetterGUIResize::IPlugBetterGUIResize(IPlugInstanceInfo instanceInfo)
 
   // You must call UsingBitmaps() if you want to use bitmaps
   GetGUIResize()->UsingBitmaps();
-  //GetGUIResize()->DisableFastBitmapResizing();
+  GetGUIResize()->DisableFastBitmapResizing();
 
   // Adding a new view. Default view will always be 0.
   GetGUIResize()->AddNewView(miniView, 200, 400);

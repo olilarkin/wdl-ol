@@ -138,14 +138,15 @@ IPlugGUIResize::IPlugGUIResize(IPlugBase* pPlug, IGraphics* pGraphics, bool useH
 	}
 
 	// Initialize parameters
-	mPlug->GetParam(viewMode)->InitInt("", -1, -1, 1000000);
-	mPlug->GetParam(viewMode)->SetCanAutomate(false);
-
-	mPlug->GetParam(windowWidth)->InitDouble("", -1.0, -1.0, 1000000, 1.0);
-	mPlug->GetParam(windowWidth)->SetCanAutomate(false);
-
-	mPlug->GetParam(windowHeight)->InitDouble("", -1.0, -1.0, 1000000, 1.0);
-	mPlug->GetParam(windowHeight)->SetCanAutomate(false);
+	guiResizeParameters.Add(new IParam);
+	guiResizeParameters.Get(0)->InitInt("", -1, -1, 1000000);
+	guiResizeParameters.Get(0)->SetCanAutomate(false);
+	guiResizeParameters.Add(new IParam);
+	guiResizeParameters.Get(1)->InitDouble("", -1.0, -1.0, 1000000, 1.0);
+	guiResizeParameters.Get(1)->SetCanAutomate(false);
+	guiResizeParameters.Add(new IParam);
+	guiResizeParameters.Get(2)->InitDouble("", -1.0, -1.0, 1000000, 1.0);
+	guiResizeParameters.Get(2)->SetCanAutomate(false);
 }
 
 bool IPlugGUIResize::Draw(IGraphics * pGraphics)
@@ -715,14 +716,14 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 
 	if (!presets_loaded)
 	{
-		if (mPlug->GetParam(viewMode)->Value() > -0.5)
-			current_view_mode = (int)mPlug->GetParam(viewMode)->Value();
+		if (guiResizeParameters.Get(0)->Value() > -0.5)
+			current_view_mode = (int)guiResizeParameters.Get(0)->Value();
 
-		if (mPlug->GetParam(windowWidth)->Value() > -0.5)
-			window_width_normalized = mPlug->GetParam(windowWidth)->Value();
+		if (guiResizeParameters.Get(1)->Value() > -0.5)
+			window_width_normalized = guiResizeParameters.Get(1)->Value();
 
-		if (mPlug->GetParam(windowHeight)->Value() > -0.5)
-			window_height_normalized = mPlug->GetParam(windowHeight)->Value();
+		if (guiResizeParameters.Get(2)->Value() > -0.5)
+			window_height_normalized = guiResizeParameters.Get(2)->Value();
 
 		presets_loaded = true;
 	}
@@ -774,9 +775,9 @@ void IPlugGUIResize::ResizeGraphics()
 	mGraphics->UpdateGUIScaleRatioValue(gui_scale_ratio);
 
 	// Set parameters
-	mPlug->GetParam(viewMode)->Set(current_view_mode);
-	mPlug->GetParam(windowWidth)->Set(window_width_normalized);
-	mPlug->GetParam(windowHeight)->Set(window_height_normalized);
+	guiResizeParameters.Get(0)->Set(current_view_mode);
+	guiResizeParameters.Get(1)->Set(window_width_normalized);
+	guiResizeParameters.Get(2)->Set(window_height_normalized);
 
 	plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 	plugin_height = (int)(window_height_normalized * gui_scale_ratio);
@@ -818,6 +819,18 @@ void IPlugGUIResize::ResizeGraphics()
 	}
 
 	mGraphics->SetAllControlsDirty();
+}
+
+// Used by the framework ---------------------------------------------------------------------------------------------------------------------------
+
+IParam * IPlugGUIResize::GetGUIResizeParameter(int index)
+{
+	return guiResizeParameters.Get(index);
+}
+
+int IPlugGUIResize::GetGUIResizeParameterSize()
+{
+	return guiResizeParameters.GetSize();
 }
 
 void IPlugGUIResize::MoveHandle()

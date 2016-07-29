@@ -178,6 +178,8 @@ public:
 
 
 	// Used by the framework ---------------------------------------------------------------------------------------------------------------------------
+	IParam* GetGUIResizeParameter(int index);
+	int GetGUIResizeParameterSize();
 	void ResizeAtGUIOpen();
 	bool Draw(IGraphics* pGraphics);
 	void RescaleBitmapsAtLoad();
@@ -263,6 +265,7 @@ private:
 	WDL_String settings_ini_path;
 	char buf[128]; // temp buffer for writing integers to profile strings
 	resizeOneSide one_side_flag;
+	WDL_PtrList<IParam> guiResizeParameters;
 
 	friend class IPlugGUILiveEdit;
 };

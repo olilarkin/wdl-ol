@@ -51,7 +51,8 @@ instrument determined by PLUG _IS _INST
 // if this is 0 RTAS can't get tempo info
 #define PLUG_DOES_MIDI 0
 
-#define PLUG_DOES_STATE_CHUNKS 0
+// GUI resize needs chunks to save window size
+#define PLUG_DOES_STATE_CHUNKS 1
 
 // Unique IDs for each image resource.
 #define KNOB_ID 102
