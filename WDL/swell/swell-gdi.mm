@@ -115,16 +115,16 @@ CGColorSpaceRef __GetDisplayColorSpace()
   if (!cs)
   {
     // use monitor profile for 10.7+
-    if (SWELL_GDI_GetOSXVersion() >= 0x1070)
-    {
-      CMProfileRef systemMonitorProfile = NULL;
-      CMError getProfileErr = CMGetSystemProfile(&systemMonitorProfile);
-      if(noErr == getProfileErr)
-      {
-        cs = CGColorSpaceCreateWithPlatformColorSpace(systemMonitorProfile);
-        CMCloseProfile(systemMonitorProfile);
-      }
-    }
+//    if (SWELL_GDI_GetOSXVersion() >= 0x1070)
+//    {
+//      CMProfileRef systemMonitorProfile = NULL;
+//      CMError getProfileErr = CMGetSystemProfile(&systemMonitorProfile);
+//      if(noErr == getProfileErr)
+//      {
+//        cs = CGColorSpaceCreateWithPlatformColorSpace(systemMonitorProfile);
+//        CMCloseProfile(systemMonitorProfile);
+//      }
+//    }
   }
   if (!cs) 
     cs = CGColorSpaceCreateDeviceRGB();
