@@ -911,9 +911,9 @@ bool IPlugBase::SerializeParams(ByteChunk* pChunk)
 #else
 	  v = pParam->GetNormalized();
 #endif
-#ifndef DEMO
+//#ifndef DEMO
     savedOK &= (pChunk->Put(&v) > 0);
-#endif
+//#endif
   }
   return savedOK;
 
@@ -931,13 +931,13 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
     double v = 0.0;
     Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
     pos = pChunk->Get(&v, pos);
-#ifndef DEMO
+//#ifndef DEMO
 #ifndef IPLUG_SAVE_NORMALIZED_PARAMS
     pParam->Set(v);
 #else
 	pParam->SetNormalized(v);
 #endif
-#endif
+//#endif
   }
 	// set true the fromSessionLoading flagto inform the plug in that we are being restored from a save
   OnParamReset(true);
