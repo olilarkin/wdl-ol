@@ -227,9 +227,10 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
 
   mGraphics = pGraphics;
   NSRect r;
+  double sf = mGraphics->GetScalingFactor();
   r.origin.x = r.origin.y = 0.0f;
-  r.size.width = (float) pGraphics->Width();
-  r.size.height = (float) pGraphics->Height();
+  r.size.width = (float) pGraphics->Width() / sf;
+  r.size.height = (float) pGraphics->Height() / sf;
   self = [super initWithFrame:r];
 
   double sec = 1.0 / (double) pGraphics->FPS();
@@ -286,9 +287,10 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
 {
   if (mGraphics)
   {
+    double sf = mGraphics->GetScalingFactor();
     NSPoint pt = [self convertPoint:[pEvent locationInWindow] fromView:nil];
-    *pX = (int) pt.x - 2;
-    *pY = mGraphics->Height() - (int) pt.y - 3;
+    *pX = (int) (pt.x * sf) - 2;
+    *pY = mGraphics->Height() - (int) (pt.y * sf) - 3;
     mPrevX = *pX;
     mPrevY = *pY;
   }

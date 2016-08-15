@@ -133,7 +133,7 @@ public:
 
   virtual void CloseWindow() = 0;
   virtual void* GetWindow() = 0;
-
+  
   virtual bool GetTextFromClipboard(WDL_String* pStr) = 0;
 
   ////////////////////////////////////////
@@ -144,7 +144,9 @@ public:
   int Width() { return mWidth; }
   int Height() { return mHeight; }
   int FPS() { return mFPS; }
-
+  bool GetIsRetina() { return (mScalingFactor == 2.); }
+  double GetScalingFactor() { return mScalingFactor; }
+  
   IPlugBase* GetPlug() { return mPlug; }
 
   IBitmap LoadIBitmap(int ID, const char* name, int nStates = 1, bool framesAreHoriztonal = false);
@@ -260,6 +262,7 @@ protected:
   IPlugBase* mPlug;
   IRECT mDrawRECT;
   bool mCursorHidden;
+  double mScalingFactor;
   int mHiddenMousePointX, mHiddenMousePointY;
 
   bool CanHandleMouseOver() { return mHandleMouseOver; }
