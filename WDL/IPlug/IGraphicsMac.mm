@@ -813,12 +813,29 @@ void IGraphicsMac::PromptForFile(WDL_String* pFilename, EFileAction action, WDL_
 
 bool IGraphicsMac::PromptForColor(IColor* pColor, char* prompt)
 {
-//  NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
-//	[colorPanel setTarget:self]; // target??
-//	[colorPanel setAction:@selector(colorPanelAction:)];
-//	[NSApp orderFrontColorPanel:self];
+  //NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
+	//NSModalSession session = [NSApp beginModalSessionForWindow:colorPanel];
+	//[colorPanel setTarget:self]; // target??
+	//[colorPanel setAction:@selector(colorPanelAction:)];
+	//[NSApp orderFrontColorPanel:self];
+	
+	RGBColor inColor = {pColor->R * 256, pColor->G * 256, pColor->B * 256};
+	RGBColor outColor = {pColor->R * 256, pColor->G * 256, pColor->B * 256};
+	Point point = {0, 0};
+	if (GetColor(point, (ConstStr255Param)prompt, &inColor, &outColor)) {
+		//NSColor *color = [NSColor colorWithCalibratedRed:(float)outColor.red / (float)UINT16_MAX green:(float)outColor.green / (float)UINT16_MAX blue:(float)outColor.blue / (float)UINT16_MAX alpha:1.0];
+		//[colorWell setColor:color];
+		pColor->R = outColor.red / 256;
+		pColor->G = outColor.green / 256;
+		pColor->B = outColor.blue / 256;
+		//return true;
+	} //else {
+		//return false;
+	//}
+	//[NSApp endModalSession:session];
 
-  return false;
+  return true;
+	
 }
 
 IPopupMenu* IGraphicsMac::CreateIPopupMenu(IPopupMenu* pMenu, IRECT* pTextRect)
