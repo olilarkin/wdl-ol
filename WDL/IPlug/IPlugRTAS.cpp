@@ -54,11 +54,14 @@ IPlugRTAS::IPlugRTAS(IPlugInstanceInfo instanceInfo,
 
 void IPlugRTAS::SetIO(int nInputs, int nOutputs)
 {
-  nInputs += mSideChainIsConnected;
+  //nInputs += mSideChainIsConnected;
 
   SetInputChannelConnections(0, nInputs, true);
-  SetInputChannelConnections(nInputs, NInChannels() - nInputs, false);
-
+	SetInputChannelConnections(nInputs, NInChannels() - nInputs, false);
+	if (mSideChainIsConnected) {
+		SetInputChannelConnections(NInChannels() - 1, 1, true);
+	}
+	
   SetOutputChannelConnections(0, nOutputs, true);
   SetOutputChannelConnections(nOutputs, NOutChannels() - nOutputs, false);
 }
