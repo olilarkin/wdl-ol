@@ -11,7 +11,14 @@
 
 inline double ToNormalizedParam(double nonNormalizedValue, double min, double max, double shape)
 {
-  return pow((nonNormalizedValue - min) / (max - min), 1.0 / shape);
+	double val = pow((nonNormalizedValue - min) / (max - min), 1.0 / shape);
+	if (val < 0.) {
+		val = 0.;
+	}
+	if (val > 1.) {
+		val = 1;
+	}
+	return val;
 }
 
 inline double FromNormalizedParam(double normalizedValue, double min, double max, double shape)
