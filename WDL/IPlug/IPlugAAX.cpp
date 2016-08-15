@@ -333,7 +333,7 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
 	if (ioRenderInfo->mAudioSideChainAddr) {
 		printf("sidechain\n");
 		SetInputChannelConnections(0, numInChannels, true);
-		SetInputChannelConnections(NInChannels() - PLUG_SC_CHANS, 1, true);
+		SetInputChannelConnections(NInChannels() - 1, 1, true);
 	} else {
 		printf("no sidechain\n");
 		SetInputChannelConnections(0, numInChannels, true);
