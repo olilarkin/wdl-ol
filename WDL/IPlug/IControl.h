@@ -495,9 +495,9 @@ class IKnobMultiControlText : public IKnobMultiControl
 	
 public:
 	
-	enum EKnobMultiControlTextPosition { kTxtPosBelow, kTxtPosAbove, kTxtPosMiddle, kTxtPosLeft, kTxtPosRight };
+	enum EKnobMultiControlTextPosition { kTxtPosBelow, kTxtPosAbove, kTxtPosMiddle, kTxtPosLeft, kTxtPosRight, kTxtPosRightBottom };
 	
-	IKnobMultiControlText(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap, IText* pText, bool showParamLabel = true, IKnobMultiControlText::EKnobMultiControlTextPosition labelPosition = kTxtPosBelow)
+	IKnobMultiControlText(IPlugBase* pPlug, int x, int y, int paramIdx, IBitmap* pBitmap, IText* pText, bool showParamLabel = true, IKnobMultiControlText::EKnobMultiControlTextPosition labelPosition = kTxtPosBelow, int labelOffset = 0)
 	:	IKnobMultiControl(pPlug, x, y, paramIdx, pBitmap)
 	{
 		mText = *pText;
@@ -510,7 +510,7 @@ public:
 		int captionTop = mImgRECT.T + (mImgRECT.H()/2) - (captionHeight/2)+2;
 		switch (labelPosition) {
 			case kTxtPosBelow:
-				mTextRECT = IRECT(mImgRECT.L, mImgRECT.B + 4, mImgRECT.L+mImgRECT.W(), mImgRECT.T+mImgRECT.H()+4+captionHeight);
+				mTextRECT = IRECT(mImgRECT.L, mImgRECT.B + 4 + labelOffset, mImgRECT.L+mImgRECT.W(), mImgRECT.T+mImgRECT.H()+4+captionHeight + labelOffset);
 				mTargetRECT.B = mTextRECT.B;
 				break;
 			case kTxtPosAbove:
@@ -521,11 +521,15 @@ public:
 				mTextRECT = IRECT(mImgRECT.L, captionTop, mImgRECT.L+mImgRECT.W(), captionTop+captionHeight);
 				break;
 			case kTxtPosLeft:
-				mTextRECT = IRECT(mImgRECT.L - mImgRECT.W(), captionTop +4, mImgRECT.L, captionTop+captionHeight+4);
+				mTextRECT = IRECT(mImgRECT.L - mImgRECT.W(), captionTop, mImgRECT.L, captionTop+captionHeight);
 				mTargetRECT.L = mTextRECT.L;
 				break;
 			case kTxtPosRight:
-				mTextRECT = IRECT(mImgRECT.L + mImgRECT.W(), captionTop +4 , mImgRECT.L + (mImgRECT.W() * 2) , captionTop+captionHeight+4);
+				mTextRECT = IRECT(mImgRECT.L + mImgRECT.W() + 2, captionTop , mImgRECT.L + (pText->mSize * 6) + 2, captionTop+captionHeight);
+				mTargetRECT.R = mTextRECT.R;
+				break;
+			case kTxtPosRightBottom:
+				mTextRECT = IRECT(mImgRECT.L + mImgRECT.W() - 4, mImgRECT.B - captionHeight , mImgRECT.L + (pText->mSize * 6) - 4, mImgRECT.T+mImgRECT.H());
 				mTargetRECT.R = mTextRECT.R;
 				break;
 		}
