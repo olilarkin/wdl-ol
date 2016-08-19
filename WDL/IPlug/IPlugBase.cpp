@@ -76,6 +76,7 @@ IPlugBase::IPlugBase(int nParams,
   , mLatency(latency)
   , mHost(kHostUninit)
   , mHostVersion(0)
+	, mDoesMIDI(plugDoesMidi)
   , mStateChunks(plugDoesChunks)
   , mGraphics(0)
   , mCurrentPresetIdx(0)
