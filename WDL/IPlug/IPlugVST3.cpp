@@ -196,7 +196,8 @@ tresult PLUGIN_API IPlugVST3::initialize (FUnknown* context)
       addAudioInput(tmpStringBuf, getSpeakerArrForChans(mScChans), kAux, 0);
     }
 
-    if(DoesMIDI())
+		bool doesMidi = DoesMIDI();
+    if(doesMidi)
     {
       addEventInput (STR16("MIDI Input"), 1);
       //addEventOutput(STR16("MIDI Output"), 1);
@@ -251,11 +252,33 @@ tresult PLUGIN_API IPlugVST3::initialize (FUnknown* context)
       Parameter* param = new IPlugParameter(p, i, unitID);
       parameters.addParameter(param);
     }
+		
+		// if does midi is set creates 128 fake parameters to be used to map control change since
+		// vst3 doesn't pass any CC to plugin but wants it mapped to a plugin parameter
+		if(DoesMIDI()) {
+			int origParamNum = NParams();
+			for (int k = 0; k < 128; k++) {
+				Parameter* param = new RangeParameter( STR16("MIDI CC"),
+																							origParamNum + k,
+																							STR16(""),
+																							0,
+																							127,
+																							0,
+																							0, // continuous
+																							ParameterInfo::kCanAutomate,
+																							kRootUnitId);
+				
+				param->setPrecision (1.);
+				parameters.addParameter(param);
+
+			}
+		}
+		
   }
 
   OnHostIdentified();
   RestorePreset(0);
-  
+	
   return result;
 }
 
@@ -398,14 +421,21 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
             case kPresetParam:
               RestorePreset(FromNormalizedParam(value, 0, NPresets(), 1.));
               break;
-              //TODO pitch bend, modwheel etc
             default:
               if (idx >= 0 && idx < NParams())
               {
                 GetParam(idx)->SetNormalized((double)value);
                 if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, (double)value, true);
                 OnParamChange(idx);
-              }
+							}
+							// if idx is > than NParams() we have MIDI CC
+							else if (idx >= NParams() && DoesMIDI())
+							{
+								int midiCCNum = idx - NParams();
+								IMidiMsg msg;
+								msg.MakeControlChangeMsg((IMidiMsg::EControlChangeMsg)midiCCNum, value, 0);
+								ProcessMidiMsg(&msg);
+							}
               break;
           }
 
