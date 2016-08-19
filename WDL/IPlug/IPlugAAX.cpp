@@ -293,24 +293,24 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
   Controller()->GetInputStemFormat(&inFormat);
   Controller()->GetOutputStemFormat(&outFormat);
   
-//  if (DoesMIDI()) 
-//  {
-//    AAX_IMIDINode* midiIn = ioRenderInfo->mInputNode;
-//    AAX_CMidiStream* midiBuffer = midiIn->GetNodeBuffer();
-//    AAX_CMidiPacket* midiBufferPtr = midiBuffer->mBuffer;
-//    uint32_t packets_count = midiBuffer->mBufferSize;
+  if (DoesMIDI()) 
+  {
+    AAX_IMIDINode* midiIn = ioRenderInfo->mInputNode;
+    AAX_CMidiStream* midiBuffer = midiIn->GetNodeBuffer();
+    AAX_CMidiPacket* midiBufferPtr = midiBuffer->mBuffer;
+    uint32_t packets_count = midiBuffer->mBufferSize;
 	
-    // Setup MIDI Out node pointers 
+    // Setup MIDI Out node pointers
 //		AAX_IMIDINode* midiNodeOut = instance->mMIDINodeOutP;
 //		AAX_CMidiStream* midiBufferOut = midiNodeOut->GetNodeBuffer();
 //		AAX_CMidiPacket* midiBufferOutPtr = midiBufferOut->mBuffer;
-        
-//    for (int i = 0; i<packets_count; i++, midiBufferPtr++) 
-//    {
-//      IMidiMsg msg(midiBufferPtr->mTimestamp, midiBufferPtr->mData[0], midiBufferPtr->mData[1], midiBufferPtr->mData[2]);
-//      ProcessMidiMsg(&msg);
-//    }
-//  }
+		
+    for (int i = 0; i<packets_count; i++, midiBufferPtr++) 
+    {
+      IMidiMsg msg(midiBufferPtr->mTimestamp, midiBufferPtr->mData[0], midiBufferPtr->mData[1], midiBufferPtr->mData[2]);
+      ProcessMidiMsg(&msg);
+    }
+  }
 	
   AAX_IMIDINode* transportNode = ioRenderInfo->mTransportNode;
   mTransport = transportNode->GetTransport();
