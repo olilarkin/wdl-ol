@@ -8,6 +8,7 @@
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/vsttypes.h"
 #include "pluginterfaces/vst/ivstcontextmenu.h"
+#include "pluginterfaces/vst/ivstevents.h"
 //#include "IMidiQueue.h"
 
 struct IPlugInstanceInfo
@@ -23,6 +24,7 @@ class IPlugVST3View;
 class IPlugVST3 : public IPlugBase
                 , public IUnitInfo
                 , public SingleComponentEffect
+								, public IMidiMapping
 {
 public:
   IPlugVST3(IPlugInstanceInfo instanceInfo,
@@ -72,6 +74,15 @@ public:
   int32 PLUGIN_API getProgramListCount();
   tresult PLUGIN_API getProgramListInfo(int32 listIndex, ProgramListInfo& info);
   tresult PLUGIN_API getProgramName(ProgramListID listId, int32 programIndex, String128 name);
+	
+	// MIDI mapping to reply to CC sent as parameter change
+	tresult PLUGIN_API getMidiControllerAssignment (int32 /*busIndex*/, int16 channel, CtrlNumber midiControllerNumber, ParamID& resultID)
+	{
+		if(DoesMIDI()) {
+			resultID = midiControllerNumber + NParams();
+		}
+		return kResultTrue; // Returning false makes some hosts stop asking for further MIDI Controller Assignments;
+	}
 
   virtual tresult PLUGIN_API getProgramInfo(ProgramListID listId, int32 programIndex, Steinberg::Vst::CString attributeId, String128 attributeValue) {return kNotImplemented;}
   virtual tresult PLUGIN_API hasProgramPitchNames(ProgramListID listId, int32 programIndex) {return kNotImplemented;}
@@ -118,6 +129,7 @@ public:
   OBJ_METHODS (IPlugVST3, SingleComponentEffect)
   DEFINE_INTERFACES
   DEF_INTERFACE (IUnitInfo)
+	DEF_INTERFACE (IMidiMapping)
   END_DEFINE_INTERFACES (SingleComponentEffect)
   REFCOUNT_METHODS(SingleComponentEffect)
 
