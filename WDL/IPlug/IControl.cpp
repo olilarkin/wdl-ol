@@ -290,10 +290,10 @@ IRadioButtonsControl::IRadioButtonsControl(IPlugBase* pPlug, IRECT pR, int param
   mReverse = reverse;
   mNButtons = nButtons;
 
-  InitializeGUI(1.0);
+  AfterGUIResize(1.0);
 }
 
-void IRadioButtonsControl::InitializeGUI(double guiScaleRatio)
+void IRadioButtonsControl::AfterGUIResize(double guiScaleRatio)
 {
 	IRECT scaledDefaultRECT;
 
@@ -433,10 +433,10 @@ IFaderControl::IFaderControl(IPlugBase* pPlug, int x, int y, int len, int paramI
 	defaultLen = mLen;
 	defaultHandleHeadroom = mHandleHeadroom;
 
-	InitializeGUI(1.0);
+	AfterGUIResize(1.0);
 }
 
-void IFaderControl::InitializeGUI(double guiScaleRatio)
+void IFaderControl::AfterGUIResize(double guiScaleRatio)
 {
 	mHandleHeadroom = int((double)defaultHandleHeadroom * guiScaleRatio);
 	mLen = int((double)defaultLen * guiScaleRatio);
@@ -608,10 +608,10 @@ IKnobLineControl::IKnobLineControl(IPlugBase* pPlug, IRECT pR, int paramIdx,
   }
   mBlend = IChannelBlend(IChannelBlend::kBlendClobber);
 
-  InitializeGUI(1.0);
+  AfterGUIResize(1.0);
 }
 
-void IKnobLineControl::InitializeGUI(double guiScaleRatio)
+void IKnobLineControl::AfterGUIResize(double guiScaleRatio)
 {
 	mGUIScaleRatio = guiScaleRatio;
 }
@@ -659,7 +659,7 @@ bool IKnobRotatingMaskControl::Draw(IGraphics* pGraphics)
   return pGraphics->DrawRotatedMask(mBase, mMask, mTop, mRECT.L, mRECT.T, angle, &mBlend);
 }
 
-void IBitmapOverlayControl::InitializeGUI(double guiScaleRatio)
+void IBitmapOverlayControl::AfterGUIResize(double guiScaleRatio)
 {
 	mTargetArea.L = int((double)defaultTargetArea.L * guiScaleRatio);
 	mTargetArea.T = int((double)defaultTargetArea.T * guiScaleRatio);
@@ -681,7 +681,7 @@ bool IBitmapOverlayControl::Draw(IGraphics* pGraphics)
   }
 }
 
-void ITextControl::InitializeGUI(double guiScaleRatio)
+void ITextControl::AfterGUIResize(double guiScaleRatio)
 {
 	mText = IText((int)((double)defaultText.mSize * guiScaleRatio), &mText.mColor,
 		mText.mFont, mText.mStyle, mText.mAlign, mText.mOrientation,

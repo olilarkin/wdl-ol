@@ -45,8 +45,8 @@ public:
 
 	~CustomControl() {}
 
-	// Initialize GUI size here. This will be called after gui resize
-	void InitializeGUI(double guiScaleRatio)
+	// This will be called after gui resize
+	void AfterGUIResize(double guiScaleRatio)
 	{
 		// We could actually just use mRECT, but this is just to demonstrate this function
 

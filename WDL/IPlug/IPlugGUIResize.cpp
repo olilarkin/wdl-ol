@@ -531,6 +531,78 @@ void IPlugGUIResize::MoveControl(int index, double x, double y, resizeFlag flag)
 	}
 }
 
+void IPlugGUIResize::MoveControlTopEdge(int index, double T, resizeFlag flag)
+{
+	IControl* pControl = mGraphics->GetControl(index);
+
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL; int* isHidden = NULL;
+	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
+	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
+	isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
+
+	double T_relative = T * gui_scale_ratio;
+
+	if (flag == drawAndTargetArea || flag == drawAreaOnly)
+	{
+		double drawAreaL = (double)pControl->GetRECT()->L;
+		double drawAreaR = (double)pControl->GetRECT()->R;
+		double drawAreaB = (double)pControl->GetRECT()->B;
+
+		DRECT drawArea = DRECT(drawAreaL, T_relative, drawAreaR, drawAreaB);
+		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
+
+		orgDrawArea->T = T;
+	}
+
+	if (flag == drawAndTargetArea || flag == targetAreaOnly)
+	{
+		double targetAreaL = (double)pControl->GetTargetRECT()->L;
+		double targetAreaR = (double)pControl->GetTargetRECT()->R;
+		double targetAreaB = (double)pControl->GetTargetRECT()->B;
+
+		DRECT targetArea = DRECT(targetAreaL, T_relative, targetAreaR, targetAreaB);
+		pControl->SetTargetRECT(DRECT_to_IRECT(&targetArea));
+
+		orgTargetArea->T = T;
+	}
+}
+
+void IPlugGUIResize::MoveControlLeftEdge(int index, double L, resizeFlag flag)
+{
+	IControl* pControl = mGraphics->GetControl(index);
+
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL; int* isHidden = NULL;
+	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
+	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
+	isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
+
+	double L_relative = L * gui_scale_ratio;
+
+	if (flag == drawAndTargetArea || flag == drawAreaOnly)
+	{
+		double drawAreaT = (double)pControl->GetRECT()->T;
+		double drawAreaR = (double)pControl->GetRECT()->R;
+		double drawAreaB = (double)pControl->GetRECT()->B;
+
+		DRECT drawArea = DRECT(L_relative, drawAreaT, drawAreaR, drawAreaB);
+		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
+
+		orgDrawArea->L = L;
+	}
+
+	if (flag == drawAndTargetArea || flag == targetAreaOnly)
+	{
+		double targetAreaT = (double)pControl->GetTargetRECT()->T;
+		double targetAreaR = (double)pControl->GetTargetRECT()->R;
+		double targetAreaB = (double)pControl->GetTargetRECT()->B;
+
+		DRECT targetArea = DRECT(L_relative, targetAreaT, targetAreaR, targetAreaB);
+		pControl->SetTargetRECT(DRECT_to_IRECT(&targetArea));
+
+		orgTargetArea->L = L;
+	}
+}
+
 void IPlugGUIResize::MoveControlRightEdge(int index, double R, resizeFlag flag)
 {
 	IControl* pControl = mGraphics->GetControl(index);
@@ -602,6 +674,49 @@ void IPlugGUIResize::MoveControlBottomEdge(int index, double B, resizeFlag flag)
 
 		orgTargetArea->B = B;
 	}
+}
+void IPlugGUIResize::SetNormalizedDrawRect(int index, double L, double T, double R, double B)
+{
+	IControl *tmpControl = mGraphics->GetControl(index);
+	tmpControl->SetDrawRECT(IRECT(int(L * gui_scale_ratio), int(T * gui_scale_ratio), int(R * gui_scale_ratio), int(B * gui_scale_ratio)));
+}
+
+void IPlugGUIResize::SetNormalizedDrawRect(int index, DRECT r)
+{
+	IControl *tmpControl = mGraphics->GetControl(index);
+	tmpControl->SetDrawRECT(IRECT(int(r.L * gui_scale_ratio), int(r.T * gui_scale_ratio), int(r.R * gui_scale_ratio), int(r.B * gui_scale_ratio)));
+}
+
+void IPlugGUIResize::SetNormalizedDrawRect(IControl * pControl, double L, double T, double R, double B)
+{
+	pControl->SetDrawRECT(IRECT(int(L * gui_scale_ratio), int(T * gui_scale_ratio), int(R * gui_scale_ratio), int(B * gui_scale_ratio)));
+}
+
+void IPlugGUIResize::SetNormalizedDrawRect(IControl * pControl, DRECT r)
+{
+	pControl->SetDrawRECT(IRECT(int(r.L * gui_scale_ratio), int(r.T * gui_scale_ratio), int(r.R * gui_scale_ratio), int(r.B * gui_scale_ratio)));
+}
+
+void IPlugGUIResize::SetNormalizedTargetRect(int index, double L, double T, double R, double B)
+{
+	IControl *tmpControl = mGraphics->GetControl(index);
+	tmpControl->SetTargetRECT(IRECT(int(L * gui_scale_ratio), int(T * gui_scale_ratio), int(R * gui_scale_ratio), int(B * gui_scale_ratio)));
+}
+
+void IPlugGUIResize::SetNormalizedTargetRect(int index, DRECT r)
+{
+	IControl *tmpControl = mGraphics->GetControl(index);
+	tmpControl->SetTargetRECT(IRECT(int(r.L * gui_scale_ratio), int(r.T * gui_scale_ratio), int(r.R * gui_scale_ratio), int(r.B * gui_scale_ratio)));
+}
+
+void IPlugGUIResize::SetNormalizedTargetRect(IControl * pControl, double L, double T, double R, double B)
+{
+	pControl->SetTargetRECT(IRECT(int(L * gui_scale_ratio), int(T * gui_scale_ratio), int(R * gui_scale_ratio), int(B * gui_scale_ratio)));
+}
+
+void IPlugGUIResize::SetNormalizedTargetRect(IControl * pControl, DRECT r)
+{
+	pControl->SetTargetRECT(IRECT(int(r.L * gui_scale_ratio), int(r.T * gui_scale_ratio), int(r.R * gui_scale_ratio), int(r.B * gui_scale_ratio)));
 }
 
 double IPlugGUIResize::GetGUIScaleRatio()
@@ -684,7 +799,7 @@ void IPlugGUIResize::InitializeGUIControls(IGraphics * pGraphics)
 	for (int i = 0; i < pGraphics->GetNControls(); i++)
 	{
 		IControl* pControl = pGraphics->GetControl(i);
-		pControl->InitializeGUI(gui_scale_ratio);
+		pControl->AfterGUIResize(gui_scale_ratio);
 	}
 	pGraphics->SetAllControlsDirty();
 }
@@ -694,7 +809,7 @@ void IPlugGUIResize::ResetControlsVisibility()
 	for (int i = 0; i < mGraphics->GetNControls(); i++)
 	{
 		IControl* pControl = mGraphics->GetControl(i);
-		//pControl->Hide(layout_container[current_view_mode].org_is_hidden[i]);
+		pControl->Hide(layout_container[current_view_mode].org_is_hidden[i]);
 	}
 }
 
@@ -729,7 +844,7 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 	}
 
 	gui_scale_ratio = GetDoubleFromFile("guiscale");
-	mGraphics->UpdateGUIScaleRatioValue(gui_scale_ratio);
+	mGraphics->guiScaleRatio = gui_scale_ratio;
 
 	plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 	plugin_height = (int)(window_height_normalized * gui_scale_ratio);
@@ -772,7 +887,7 @@ void IPlugGUIResize::ResizeGraphics()
 		SetDoubleToFile("guiscale", gui_scale_ratio);
 	}
 
-	mGraphics->UpdateGUIScaleRatioValue(gui_scale_ratio);
+	mGraphics->guiScaleRatio = gui_scale_ratio;
 
 	// Set parameters
 	guiResizeParameters.Get(0)->Set(current_view_mode);

@@ -157,8 +157,18 @@ public:
 	void HideControl(int index);
 	void ShowControl(int index);
 	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea);
+	void MoveControlTopEdge(int index, double T, resizeFlag flag = drawAndTargetArea);
+	void MoveControlLeftEdge(int index, double L, resizeFlag flag = drawAndTargetArea);
 	void MoveControlRightEdge(int index, double R, resizeFlag flag = drawAndTargetArea);
 	void MoveControlBottomEdge(int index, double B, resizeFlag flag = drawAndTargetArea);
+	void SetNormalizedDrawRect(int index, double L, double T, double R, double B);
+	void SetNormalizedDrawRect(int index, DRECT r);
+	void SetNormalizedDrawRect(IControl *pControl, double L, double T, double R, double B);
+	void SetNormalizedDrawRect(IControl *pControl, DRECT r);
+	void SetNormalizedTargetRect(int index, double L, double T, double R, double B);
+	void SetNormalizedTargetRect(int index, DRECT r);
+	void SetNormalizedTargetRect(IControl *pControl, double L, double T, double R, double B);
+	void SetNormalizedTargetRect(IControl *pControl, DRECT r);
 	
 	// Get values
 	double GetGUIScaleRatio();

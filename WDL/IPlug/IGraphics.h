@@ -42,9 +42,11 @@ static uint32_t GetAAXModifiersFromIMouseMod(const IMouseMod* pMod)
 class IPlugBase;
 class IControl;
 class IParam;
+class IPlugGUIResize;
 
 class IGraphics
 {
+friend class IPlugGUIResize;
 public:
 	void PrepDraw();    // Called once, when the IGraphics class is attached to the IPlug class.
 
@@ -149,7 +151,6 @@ public:
 	// This is needed for GUI resizing------------------------------------------------------------------------
 	void RescaleBitmaps(double guiScaleRatio);
 	void SetBitmapOversample(unsigned oversample) { bitmapOversample = oversample; }
-	void UpdateGUIScaleRatioValue(double scaleRatio) { guiScaleRatio = scaleRatio; }
 	//--------------------------------------------------------------------------------------------------------
 	
 	IPlugBase* GetPlug() { return mPlug; }

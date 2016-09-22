@@ -44,7 +44,8 @@
       allowLocationSimulation = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         FilePath = "/Applications/Live.app">
+         BundleIdentifier = "com.cockos.reaper"
+         FilePath = "/Applications/REAPER 64.app">
       </PathRunnable>
       <MacroExpansion>
          <BuildableReference

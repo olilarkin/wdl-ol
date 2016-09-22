@@ -577,6 +577,9 @@ void IGraphicsWin::Resize(int w, int h)
       }
     }
 	
+	if (mPlug->GetAPI() == kAPIAAX)
+		SetWindowPos(mPlugWnd, 0, 0, 0, plugW + 0, plugH + 0, SETPOS_FLAGS);
+	else
 	SetWindowPos(mPlugWnd, 0, 0, 0, plugW + dw, plugH + dh, SETPOS_FLAGS);
 
     // don't want to touch the host window in VST3 or RTAS

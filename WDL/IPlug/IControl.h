@@ -47,7 +47,7 @@ public:
   virtual bool Draw(IGraphics* pGraphics) = 0;
 
   // This is used for GUI resize ----------------------------------------------------------------------------------------
-  virtual void InitializeGUI(double guiScaleRatio) {}
+  virtual void AfterGUIResize(double guiScaleRatio) {}
   // --------------------------------------------------------------------------------------------------------------------
 
   // Get animation object. 
@@ -77,8 +77,8 @@ public:
   void SetTextEntryLength(int len) { mTextEntryLength = len;  }
   void SetText(IText* txt) { mText = *txt; }
   IRECT* GetRECT() { return &mRECT; }       // The draw area for this control.
-  void SetDrawRECT(IRECT pR) { mRECT = pR; }
   IRECT* GetTargetRECT() { return &mTargetRECT; } // The mouse target area (default = draw area).
+  void SetDrawRECT(IRECT pR) { mRECT = pR; }
   void SetTargetRECT(IRECT pR) { mTargetRECT = pR; }
   virtual void TextFromTextEntry( const char* txt ) { return; } // does nothing by default
   
@@ -258,7 +258,7 @@ public:
                        EDirection direction = kVertical, bool reverse = false);
   ~IRadioButtonsControl() {}
 
-  void InitializeGUI(double guiScaleRatio);
+  void AfterGUIResize(double guiScaleRatio);
   void OnMouseDown(int x, int y, IMouseMod* pMod);
   bool Draw(IGraphics* pGraphics);
 
@@ -298,7 +298,7 @@ public:
   // Where is the handle right now?
   IRECT GetHandleRECT(double value = -1.0) const;
 
-  void InitializeGUI(double guiScaleRatio);
+  void AfterGUIResize(double guiScaleRatio);
 
   virtual void OnMouseDown(int x, int y, IMouseMod* pMod);
   virtual void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod);
@@ -347,7 +347,7 @@ public:
                    EDirection direction = kVertical, double gearing = DEFAULT_GEARING);
   ~IKnobLineControl() {}
 
-  void InitializeGUI(double guiScaleRatio);
+  void AfterGUIResize(double guiScaleRatio);
   bool Draw(IGraphics* pGraphics);
 
 protected:
@@ -420,7 +420,7 @@ public:
   {
 	  defaultTargetArea = pTargetArea;
 
-	  InitializeGUI(1.0);
+	  AfterGUIResize(1.0);
   }
 
   IBitmapOverlayControl(IPlugBase* pPlug, int x, int y, IBitmap* pBitmap, IRECT pTargetArea)
@@ -428,12 +428,12 @@ public:
   {
 	  defaultTargetArea = pTargetArea;
 
-	  InitializeGUI(1.0);
+	  AfterGUIResize(1.0);
   }
 
   ~IBitmapOverlayControl() {}
 
-  void InitializeGUI(double guiScaleRatio);
+  void AfterGUIResize(double guiScaleRatio);
   bool Draw(IGraphics* pGraphics);
 
 protected:
@@ -451,11 +451,11 @@ public:
 	defaultText = mText;
     mStr.Set(str);
 
-	InitializeGUI(1.0);
+	AfterGUIResize(1.0);
   }
   ~ITextControl() {}
 
-  void InitializeGUI(double guiScaleRatio);
+  void AfterGUIResize(double guiScaleRatio);
   void SetTextFromPlug(char* str);
   void ClearTextFromPlug() { SetTextFromPlug( (char *) ""); }
 

@@ -26,9 +26,9 @@ appreciated but is not required.
 USE:
 
 Press E key to activate;
-Press B to change editing mode to include both draw and terget rect;
+Press B to change editing mode to include both draw and target rect;
 Press D to change editing mode to include both draw;
-Press T to change editing mode to include terget rect;
+Press T to change editing mode to include target rect;
 Press ALT while moving control to unsnap from grid;
 Press SHIFT while moving control to snap to other controls;
 Press SHIFT + B to force snapping to controls that have same draw and target rect;
@@ -126,21 +126,21 @@ public:
 		{
 			*liveMode = 0;
 			liveControlNumber = -1;
-			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+			selectedControlsRECT = IRECTLimit;
 		}
 
 		else if (!liveEditingMod->S && *liveKeyDown == 18)
 		{
 			*liveMode = 1;
 			liveControlNumber = -1;
-			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+			selectedControlsRECT = IRECTLimit;
 		}
 
 		else if (!liveEditingMod->S && *liveKeyDown == 34)
 		{
 			*liveMode = 2;
 			liveControlNumber = -1;
-			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+			selectedControlsRECT = IRECTLimit;
 		}
 
 		// Set key down to -1
@@ -151,7 +151,7 @@ public:
 	
 
 		// If live editing is not active disable selected rect
-		if (!*liveToogleEditing) selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+		if (!*liveToogleEditing) selectedControlsRECT = IRECTLimit;
 
 		// If mouse was clicked
 		if (*liveToogleEditing)
@@ -173,7 +173,7 @@ public:
 			liveHandleSize = int(8.0 * guiScaleRatio);
 
 			bool overControlHandle = false;
-			if (selectedControlsRECT == IRECT(999999999, 999999999, 0, 0))
+			if (selectedControlsRECT == IRECTLimit)
 			{
 				// Find if over control handle
 				for (int j = 1; j < controlSize; j++)
@@ -231,7 +231,7 @@ public:
 				}
 			}
 
-			// Prepare undo to be executed on next mose click if nedeed
+			// Prepare undo to be executed on next mouse click if needed
 			if (!liveEditingMod->L) 
 				undoMove = true;
 			
@@ -247,10 +247,10 @@ public:
 
 			if (liveEditingMod->L && !liveEditingMod->C)
 			{
-				if (!selectionRECT.Contains(clickedX, clickedY)) selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+				if (!selectionRECT.Contains(clickedX, clickedY)) selectedControlsRECT = IRECTLimit;
 			}
 
-            if (selectedControlsRECT == IRECT(999999999, 999999999, 0, 0)) multipleControlsSelected = false;
+            if (selectedControlsRECT == IRECTLimit) multipleControlsSelected = false;
 			else multipleControlsSelected = true;
 
 			// Move controls
@@ -694,7 +694,7 @@ public:
 			selected_controls.resize(0);
 			selected_draw_rect.resize(0);
 			selected_target_rect.reserve(0);
-			selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+			selectedControlsRECT = IRECTLimit;
 
 			for (int j = 1; j < controlSize; j++)
 			{
@@ -826,7 +826,7 @@ public:
 		}
 
 		// Draw selected controls selection
-		if (selectedControlsRECT != IRECT(999999999, 999999999, 0, 0))
+		if (selectedControlsRECT != IRECTLimit)
 		{
 			// Draw selected Controls
 			// T
@@ -1695,14 +1695,14 @@ public:
 			if (itemChosen == 0)
 			{
 				GetUndo(pPlug, pGraphics);
-				selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+				selectedControlsRECT = IRECTLimit;
 			}
 
 			// Redo
 			if (itemChosen == 1)
 			{
 				GetRedo(pPlug, pGraphics);
-				selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+				selectedControlsRECT = IRECTLimit;
 			}
 
 			// Reset Control Position
@@ -1903,7 +1903,7 @@ public:
 			// Deselect
 			if (itemChosen == 15)
 			{
-				selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+				selectedControlsRECT = IRECTLimit;
 			}
 
 			// Show/Hide Grid
@@ -1974,12 +1974,18 @@ public:
 
 				WDL_String warningText, number;
 
+				// Get derived class name
+				WDL_String derivedName;
+				derivedName.SetFormatted(128, "(%s).", pControl->GetDerivedClassName());
+
 				warningText.Append("If you confirm this dialog, you need to delete control number ");
-				number.SetFormatted(32, "%i!", position);
+				number.SetFormatted(32, "%i", position);
 				warningText.Append(number.Get());
+				warningText.Append("\n");
+				warningText.Append(derivedName.Get());
 				warningText.Append("\n\n");
-				warningText.Append("Delete control from plugin constructor immediately, otherwise your GUI layout will be messed up after next recompile...\n\n");
-				warningText.Append("If you want to add new control, just place it after last attached control in plugin constructor.");
+				warningText.Append("Delete control from plugin constructor immediately, otherwise your GUI layout will be messed up after next recompile.\n\n");
+				warningText.Append("If you want to add new control, just place it after last attached control in the plugin constructor.");
 
 				int dialog = pGraphics->ShowMessageBox(warningText.Get(), "Warning!!!", MB_OKCANCEL);
 
@@ -2567,6 +2573,7 @@ public:
 	
 private:
 	// Live editing stuff
+	IRECT IRECTLimit = IRECT(999999999, 999999999, 0, 0);
 	char* defaultFont = "Tahoma";
 	IColor EDIT_COLOR_BOTH = IColor(255, 255, 255, 255);
 	IColor EDIT_COLOR_DRAW = IColor(255, 50, 255, 50);
@@ -2579,8 +2586,8 @@ private:
 	IRECT liveSelectedTargetRECT = IRECT(0, 0, 0, 0);
 	IRECT liveClickedRECT = IRECT(0, 0, 0, 0);
 	IRECT liveClickedTargetRECT = IRECT(0, 0, 0, 0);
-	IRECT selectionRECT = IRECT(999999999, 999999999, 0, 0);
-	IRECT selectedControlsRECT = IRECT(999999999, 999999999, 0, 0);
+	IRECT selectionRECT = IRECTLimit;
+	IRECT selectedControlsRECT = IRECTLimit;
 	int liveControlNumber = -1;
 	int lastliveMouseCapture = -1;
 	int liveClickedX = 0, liveClickedY = 0;
