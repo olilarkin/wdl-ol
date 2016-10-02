@@ -46,7 +46,7 @@ public:
   void NegateDisplay() { mNegateDisplay = true; }
   bool DisplayIsNegated() const { return mNegateDisplay; }
 
-  //call this to make sure the param display text allways has a sign
+  //call this to make sure the param display text always has a sign
   void SignDisplay() { mSignDisplay = true; }
 
   // Accessors / converters.

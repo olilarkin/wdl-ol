@@ -131,11 +131,15 @@ void IParam::GetDisplayForHost(double value, bool normalized, char* rDisplay, bo
       return;
     }
   }
-
+    
   double displayValue = value;
 
   if (mNegateDisplay) displayValue = -displayValue;
 
+  // Squash all zeros to positive
+    
+  if (!displayValue) displayValue = 0.0;
+    
   if (mDisplayPrecision == 0)
   {
     sprintf(rDisplay, "%d", int(displayValue));
