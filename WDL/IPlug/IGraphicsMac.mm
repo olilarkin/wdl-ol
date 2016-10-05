@@ -529,7 +529,9 @@ void IGraphicsMac::ShowMouseCursor(bool restore)
       CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
     }
 
-    if (CGDisplayShowCursor(CGMainDisplayID()) == CGDisplayNoErr) mCursorHidden = false;
+    if (CGDisplayShowCursor(CGMainDisplayID()) == CGDisplayNoErr)
+        mCursorHidden = false;
+    CGAssociateMouseAndMouseCursorPosition(true);
   }
 }
 
@@ -548,7 +550,8 @@ void IGraphicsMac::MoveMouseCursor(int x, int y)
     }
     
     CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
-
+    CGAssociateMouseAndMouseCursorPosition(true);
+    
     IGraphics::MoveMouseCursor(x, y);
 }
 
