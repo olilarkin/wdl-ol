@@ -198,15 +198,18 @@ IGraphics::~IGraphics()
 
 void IGraphics::Resize(int w, int h)
 {
+  WDL_PtrList<IControl> oldControls(mControls);
+    
   mWidth = w;
   mHeight = h;
   ReleaseMouseCapture();
   mMouseOver = -1;
-  mControls.Empty(true);
+  mControls.Empty(false);   // Empty but don't free (in case we have pointers hanging around)
   DELETE_NULL(mDrawBitmap);
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
   mPlug->ResizeGraphics(Width(true), Height(true));
+  oldControls.Empty(true);  // Free the old controls after resizing (and hence updating any plugin references)
 }
 
 void IGraphics::SetFromStringAfterPrompt(IControl* pControl, IParam* pParam, char *txt)
