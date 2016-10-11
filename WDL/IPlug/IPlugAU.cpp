@@ -622,8 +622,23 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
             const char* label = pParam->GetLabelForHost();
             if (CSTR_NOT_EMPTY(label))
             {
-              pInfo->unit = kAudioUnitParameterUnit_CustomUnit;
-              pInfo->unitName = MakeCFString(label);
+              if (!strcasecmp("hz", label))
+                pInfo->unit = kAudioUnitParameterUnit_Hertz;
+              else if (!strcasecmp("db", label))
+                pInfo->unit = kAudioUnitParameterUnit_Decibels;
+              else if (!strcasecmp("%", label))
+                pInfo->unit = kAudioUnitParameterUnit_Percent;
+              else if (!strcasecmp("ms", label))
+                pInfo->unit = kAudioUnitParameterUnit_Milliseconds;
+              else if (!strcasecmp("s", label))
+                pInfo->unit = kAudioUnitParameterUnit_Seconds;
+              else if (!strcasecmp("secs", label))
+                pInfo->unit = kAudioUnitParameterUnit_Seconds;
+              else
+              {
+                pInfo->unit = kAudioUnitParameterUnit_CustomUnit;
+                pInfo->unitName = MakeCFString(label);
+              }
             }
             else
             {
