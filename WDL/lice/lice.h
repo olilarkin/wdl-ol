@@ -53,7 +53,7 @@
 
 typedef unsigned int LICE_pixel;
 typedef unsigned char LICE_pixel_chan;
-// FIX - temp
+
 #ifdef WIN32
 //#ifdef __APPLE__
 
