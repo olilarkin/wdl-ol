@@ -209,6 +209,9 @@ void IGraphics::Resize(int w, int h)
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
   mPlug->ResizeGraphics(Width(true), Height(true));
+  // Lock before deleting to make sure the pointers are no longer in use
+  IPlugBase::IMutexLock lock(mPlug);
+  lock.Destroy();
   oldControls.Empty(true);  // Free the old controls after resizing (and hence updating any plugin references)
 }
 
