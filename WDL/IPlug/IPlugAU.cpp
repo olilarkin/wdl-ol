@@ -1635,8 +1635,10 @@ inline ComponentResult RenderCallback(AURenderCallbackStruct* pCB, AudioUnitRend
 ComponentResult IPlugAU::RenderProc(void* pPlug, AudioUnitRenderActionFlags* pFlags, const AudioTimeStamp* pTimestamp,
                                     UInt32 outputBusIdx, UInt32 nFrames, AudioBufferList* pOutBufList)
 {
+#ifdef TRACER_BUILD
   TRACE_PROCESS(TRACELOC, "%d:%d:%d", outputBusIdx, pOutBufList->mNumberBuffers, nFrames);
-
+#endif
+    
   IPlugAU* _this = (IPlugAU*) pPlug;
 
   if (!(pTimestamp->mFlags & kAudioTimeStampSampleTimeValid) || outputBusIdx >= _this->mOutBuses.GetSize() || nFrames > _this->GetBlockSize())
