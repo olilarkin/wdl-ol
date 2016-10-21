@@ -713,8 +713,8 @@ bool IGraphics::DrawHorizontalLine(const IColor* pColor, IRECT* pR, float y)
 bool IGraphics::DrawRadialLine(const IColor* pColor, float cx, float cy, float angle, float rMin, float rMax,
                                const IChannelBlend* pBlend, bool antiAlias)
 {
-  float sinV = sin(angle);
-  float cosV = cos(angle);
+  float sinV = sinf(angle);
+  float cosV = cosf(angle);
   float xLo = cx + rMin * sinV;
   float xHi = cx + rMax * sinV;
   float yLo = cy - rMin * cosV;
@@ -1123,9 +1123,9 @@ bool IGraphics::DrawIText(IText* pTxt, const char* str, IRECT* pR, bool measure)
 
   LICE_IFont* font = pTxt->mCached;
   
-  if (!font || (pTxt->mCachedSize != (int) (GetScalingFactor() * pTxt->mSize)))
+  if (!font || (pTxt->mCachedSize != (int) round(GetScalingFactor() * pTxt->mSize)))
   {
-    pTxt->mCachedSize = GetScalingFactor() * pTxt->mSize;
+    pTxt->mCachedSize = (int) round(GetScalingFactor() * pTxt->mSize);
     font = CacheFont(pTxt);
     if (!font) return false;
   }
