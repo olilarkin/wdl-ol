@@ -208,6 +208,22 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
 	return pGraphics->GetMouseOver();
 }
 
+@implementation CustomNSTextField
+
+- (bool) becomeFirstResponder;
+{
+    bool success = [super becomeFirstResponder];
+    if (success)
+    {
+        NSTextView *textField = (NSTextView*) [self currentEditor];
+        if( [textField respondsToSelector: @selector(setInsertionPointColor:)] )
+            [textField setInsertionPointColor: [self textColor]];
+    }
+    return success;
+}
+
+@end
+
 @implementation IGRAPHICS_COCOA
 
 - (id) init
@@ -537,7 +553,7 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
 {
   if (!pControl || mTextFieldView) return;
 
-  mTextFieldView = [[NSTextField alloc] initWithFrame: areaRect];
+  mTextFieldView = [[CustomNSTextField alloc] initWithFrame: areaRect];
   NSString* font = [NSString stringWithUTF8String: pText->mFont];
   [mTextFieldView setFont: [NSFont fontWithName:font size: (float) AdjustFontSize(pText->mSize)]];
 

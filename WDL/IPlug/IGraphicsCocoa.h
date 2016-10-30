@@ -69,10 +69,17 @@ NSString* ToNSString(const char* cStr);
 - (NSMenuItem*) MenuItem;
 @end
 
+@interface CustomNSTextField : NSTextField
+{
+}
+- (bool) becomeFirstResponder;
+@end
+
+
 @interface IGRAPHICS_COCOA : NSView
 {
   NSTimer* mTimer;
-  NSTextField* mTextFieldView;
+  CustomNSTextField* mTextFieldView;
   IControl* mEdControl; // the control linked to the open text edit
   IParam* mEdParam; // the param linked to the open text edit (optional)
   int mPrevX, mPrevY;
