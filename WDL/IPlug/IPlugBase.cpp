@@ -236,6 +236,9 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
   if (pGraphics)
   {
 	  WDL_MutexLock lock(&mMutex);
+
+	  pGraphics->PrepDraw();
+
 	  if (GetGUIResize())
 	  {
 		  // Here we are attaching our GUI resize control.
@@ -249,7 +252,6 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
       pGraphics->SetParameterFromPlug(i, GetParam(i)->GetNormalized(), true);
     }
     
-    pGraphics->PrepDraw();
     mGraphics = pGraphics;
 
 	// Load control positions from file if user was live editing the GUI

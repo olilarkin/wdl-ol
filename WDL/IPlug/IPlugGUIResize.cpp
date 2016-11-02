@@ -832,7 +832,7 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 	if (!presets_loaded)
 	{
 		if (guiResizeParameters.Get(0)->Value() > -0.5)
-			current_view_mode = (int)guiResizeParameters.Get(0)->Value();
+			current_view_mode = IPMIN((int)guiResizeParameters.Get(0)->Value(), view_container.view_mode.size());
 
 		if (guiResizeParameters.Get(1)->Value() > -0.5)
 			window_width_normalized = guiResizeParameters.Get(1)->Value();
@@ -864,8 +864,8 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 		}
 		bitmaps_rescaled_at_load_skip = false;
 
-		InitializeGUIControls(mGraphics);
 		mGraphics->Resize(plugin_width, plugin_height);
+		InitializeGUIControls(mGraphics);
 
 		plugin_resized = false;
 		gui_should_be_closed = false;
@@ -912,25 +912,25 @@ void IPlugGUIResize::ResizeGraphics()
 				mGraphics->RescaleBitmaps(gui_scale_ratio);
 			}
 
-			InitializeGUIControls(mGraphics);
 			mGraphics->Resize(plugin_width, plugin_height);
+			InitializeGUIControls(mGraphics);
 		}
 		else
 		{
+			mGraphics->Resize(plugin_width, plugin_height);
+
 			if (!currentlyFastResizing)
 			{
 				InitializeGUIControls(mGraphics);
 			}
-
-			mGraphics->Resize(plugin_width, plugin_height);
 		}
 
 		plugin_resized = true;
 	}
 	else
 	{
-		InitializeGUIControls(mGraphics);
 		mGraphics->Resize(plugin_width, plugin_height);
+		InitializeGUIControls(mGraphics);
 	}
 
 	mGraphics->SetAllControlsDirty();
