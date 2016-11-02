@@ -170,7 +170,7 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mMouseX(0)
   , mMouseY(0)
   , mHandleMouseOver(false)
-  , mStrict(true)
+  , mStrict(false)
   , mDrawBitmap(0)
   , mTmpBitmap(0)
   , mLastClickedParam(-1)
@@ -768,67 +768,47 @@ bool IGraphics::Draw(IRECT* pR)
 //  WDL_MutexLock lock(&mMutex);
 
   int i, j, n = mControls.GetSize();
-  if (!n)
-  {
-    return true;
-  }
 
-  if (mStrict)
+    if (!n)
+    return true;
+
+  IControl* pBG = mControls.Get(0);
+    
+  if (mStrict || pBG->IsDirty())
   {
-    mDrawRECT = *pR;
-    int n = mControls.GetSize();
-    IControl** ppControl = mControls.GetList();
-    for (int i = 0; i < n; ++i, ++ppControl)
+    for (int i = 0; i < n; ++i)
     {
-      IControl* pControl = *ppControl;
-      if (!(pControl->IsHidden()) && pR->Intersects(pControl->GetRECT()))
+      IControl* pControl = mControls.Get(i);
+      if (pR->Intersects(pControl->GetRECT()))
       {
-        pControl->Draw(this);
+        if (pR->Contains(pControl->GetRECT()))
+            pControl->SetClean();
+        if (!pControl->IsHidden())
+          pControl->Draw(this);
       }
-      pControl->SetClean();
     }
   }
   else
   {
-    IControl* pBG = mControls.Get(0);
-    if (pBG->IsDirty())   // Special case when everything needs to be drawn.
+    // Loop through all non-background controls
+      
+    for (i = 1; i < n; ++i)
     {
-      mDrawRECT = *(pBG->GetRECT());
-      for (int j = 0; j < n; ++j)
+      IControl* pControl = mControls.Get(i);
+      mDrawRECT = *(pControl->GetRECT());
+        
+      if (pControl->IsDirty() && pR->Contains(&mDrawRECT))
       {
-        IControl* pControl2 = mControls.Get(j);
-        if (!j || !(pControl2->IsHidden()))
-        {
-          pControl2->Draw(this);
-          pControl2->SetClean();
-        }
-      }
-    }
-    else
-    {
-      for (i = 1; i < n; ++i)   // loop through all controls starting from one (not bg)
-      {
-        IControl* pControl = mControls.Get(i); // assign control i to pControl
-        if (pControl->IsDirty())   // if pControl is dirty
-        {
-
-          // printf("control %i is Dirty\n", i);
-
-          mDrawRECT = *(pControl->GetRECT()); // put the rect in the mDrawRect member variable
-          for (j = 0; j < n; ++j)   // loop through all controls
-          {
-            IControl* pControl2 = mControls.Get(j); // assign control j to pControl2
-
-            // if control1 == control2 OR control2 is not hidden AND control2's rect intersects mDrawRect
-            if (!pControl2->IsHidden() && (i == j || pControl2->GetRECT()->Intersects(&mDrawRECT)))
-            {
-              //if ((i == j) && (!pControl2->IsHidden())|| (!(pControl2->IsHidden()) && pControl2->GetRECT()->Intersects(&mDrawRECT))) {
-              //printf("control %i and %i \n", i, j);
-
-              pControl2->Draw(this);
-            }
-          }
           pControl->SetClean();
+
+        // Loop through all controls (incl background) to test for intersections with another control that is dirty
+          
+        for (j = 0; j < n; ++j)
+        {
+          IControl* pControl2 = mControls.Get(j);
+            
+          if (((i == j) || pControl2->GetRECT()->Intersects(&mDrawRECT)) && !pControl2->IsHidden())
+            pControl2->Draw(this);
         }
       }
     }
@@ -837,6 +817,8 @@ bool IGraphics::Draw(IRECT* pR)
 #ifndef NDEBUG
   if (mShowControlBounds) 
   {
+    mDrawRECT = *pR;
+      
     for (int j = 1; j < mControls.GetSize(); j++)
     {
       IControl* pControl = mControls.Get(j);

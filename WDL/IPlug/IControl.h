@@ -91,8 +91,9 @@ public:
 
   // Sometimes a control changes its state as part of its Draw method.
   // Redraw() prevents the control from being cleaned immediately after drawing.
-  void Redraw() { mRedraw = true; }
-
+  // N.b. - since changing the drawing routine to clean before drawing this is no longer necessary, but it is here to allow backwards compatibility
+    void Redraw() {}
+    
   // This is an idle call from the GUI thread, as opposed to
   // IPlugBase::OnIdle which is called from the audio processing thread.
   // Only active if USE_IDLE_CALLS is defined.
@@ -132,7 +133,7 @@ protected:
   
   WDL_TypedBuf<AuxParam> mAuxParams;
   double mValue, mDefaultValue, mClampLo, mClampHi;
-  bool mDirty, mHide, mGrayed, mRedraw, mDisablePrompt, mClamped, mDblAsSingleClick, mMOWhenGrayed, mMEWhenGrayed;
+  bool mDirty, mHide, mGrayed, mDisablePrompt, mClamped, mDblAsSingleClick, mMOWhenGrayed, mMEWhenGrayed;
   IChannelBlend mBlend;
   IControl* mValDisplayControl;
   IControl* mNameDisplayControl;
