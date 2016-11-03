@@ -52,7 +52,7 @@ public:
   inline const char* GetTooltip() const { return mTooltip.Get(); }
 
   int ParamIdx() { return mParamIdx; }
-  IParam *GetParam() { return mPlug->GetParam(mParamIdx); }
+  IParam *GetParam() { return (mParamIdx >= 0) ?mPlug->GetParam(mParamIdx) : NULL; }
   virtual void SetValueFromPlug(double value);
   virtual void SetValueFromUserInput(double value);
   double GetValue() { return mValue; }
