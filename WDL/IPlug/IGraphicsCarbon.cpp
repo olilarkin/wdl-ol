@@ -819,7 +819,7 @@ void IGraphicsCarbon::EndUserInput(bool commit)
   else
   {
     mEdControl->SetDirty(false);
-    mEdControl->Redraw();
+    //mEdControl->Redraw();
   }
 
   SetThemeCursor(kThemeArrowCursor);
@@ -1126,7 +1126,7 @@ void IGraphicsCarbon::EndUserInput(bool commit)
     if (mEdControl) 
     {
       mEdControl->SetDirty(false);
-      mEdControl->Redraw();
+      //mEdControl->Redraw();
     }
   }
   

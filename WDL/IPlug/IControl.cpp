@@ -15,7 +15,6 @@ void IControl::SetValueFromPlug(double value)
   {
     mValue = value;
     SetDirty(false);
-    Redraw();
   }
 }
 
@@ -25,7 +24,6 @@ void IControl::SetValueFromUserInput(double value)
   {
     mValue = value;
     SetDirty();
-    Redraw();
   }
 }
 
@@ -59,14 +57,12 @@ void IControl::SetDirty(bool pushParamToPlug)
 
 void IControl::SetClean()
 {
-  mDirty = mRedraw;
-  mRedraw = false;
+  mDirty = false;
 }
 
 void IControl::Hide(bool hide)
 {
   mHide = hide;
-  mRedraw = true;
   SetDirty(false);
 }
 
@@ -126,18 +122,13 @@ void IControl::PromptUserInput()
       IRECT txtRECT = IRECT(cX - halfW, cY - halfH, cX + halfW,cY + halfH);
       mPlug->GetGUI()->PromptUserInput(this, mPlug->GetParam(mParamIdx), &txtRECT );
     }
-
-    Redraw();
   }
 }
 
 void IControl::PromptUserInput(IRECT* pTextRect)
 {
   if (mParamIdx >= 0 && !mDisablePrompt)
-  {
     mPlug->GetGUI()->PromptUserInput(this, mPlug->GetParam(mParamIdx), pTextRect);
-    Redraw();
-  }
 }
 
 IControl::AuxParam* IControl::GetAuxParam(int idx)
@@ -170,7 +161,6 @@ void IControl::SetAuxParamValueFromPlug(int auxParamIdx, double value)
   {
     auxParam->mValue = value;
     SetDirty(false);
-    Redraw();
   }
 }
 
