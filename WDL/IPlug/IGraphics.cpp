@@ -781,6 +781,8 @@ bool IGraphics::Draw(IRECT* pR)
     
   if (mStrict || pBG->IsDirty())
   {
+    mDrawRECT = *pR;
+      
     for (int i = 0; i < n; ++i)
     {
       IControl* pControl = mControls.Get(i);
@@ -788,7 +790,7 @@ bool IGraphics::Draw(IRECT* pR)
       {
         if (pR->Contains(pControl->GetRECT()))
             pControl->SetClean();
-        if (!pControl->IsHidden())
+        if (!i || !pControl->IsHidden())
           pControl->Draw(this);
       }
     }
@@ -812,7 +814,7 @@ bool IGraphics::Draw(IRECT* pR)
         {
           IControl* pControl2 = mControls.Get(j);
             
-          if (((i == j) || pControl2->GetRECT()->Intersects(&mDrawRECT)) && !pControl2->IsHidden())
+          if (((i == j) || pControl2->GetRECT()->Intersects(&mDrawRECT)) && (!j || !pControl2->IsHidden()))
             pControl2->Draw(this);
         }
       }
