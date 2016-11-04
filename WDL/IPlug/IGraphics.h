@@ -239,7 +239,8 @@ public:
   LICE_pixel* GetBits();
   // For controls that need to interface directly with LICE.
   inline LICE_SysBitmap* GetDrawBitmap() const { return mDrawBitmap; }
-
+  inline IRECT GetDrawRECT() { return mDrawRECT; }
+    
   WDL_Mutex mMutex;
 
   struct IMutexLock
