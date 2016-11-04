@@ -163,7 +163,6 @@ public:
 
 protected:
   IPlugVST3* mPlug;
-  bool mExpectingNewSize;
 };
 
 #endif

@@ -986,7 +986,7 @@ void IPlugVST3::ResizeGraphics(int w, int h)
   if (GetGUI())
   {
     viewsArray.at(0)->resize(w, h);
-    OnWindowResize();
+    //OnWindowResize();
   }
 }
 
@@ -1052,7 +1052,6 @@ void IPlugVST3::PopupHostContextMenuForParam(int param, int x, int y)
 #pragma mark IPlugVST3View
 IPlugVST3View::IPlugVST3View(IPlugVST3* pPlug)
   : mPlug(pPlug)
-  , mExpectingNewSize(false)
 {
   if (mPlug)
     mPlug->addRef();
@@ -1091,15 +1090,7 @@ tresult PLUGIN_API IPlugVST3View::onSize(ViewRect* newSize)
   TRACE;
 
   if (newSize)
-  {
     rect = *newSize;
-
-    if (mExpectingNewSize)
-    {
-      mPlug->OnWindowResize();
-      mExpectingNewSize = false;
-    }
-  }
 
   return kResultTrue;
 }
@@ -1157,6 +1148,6 @@ void IPlugVST3View::resize(int w, int h)
   TRACE;
 
   ViewRect newSize = ViewRect(0, 0, w, h);
-  mExpectingNewSize = true;
   plugFrame->resizeView(this, &newSize);
+  mPlug->OnWindowResize();
 }
