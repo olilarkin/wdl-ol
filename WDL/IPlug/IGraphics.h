@@ -266,6 +266,7 @@ protected:
   virtual LICE_IBitmap* OSLoadBitmap(int ID, const char* name) = 0;
   
   LICE_SysBitmap* mDrawBitmap;
+  LICE_SysBitmap* mTextBitmap;
   LICE_IFont* CacheFont(IText* pTxt);
   
 #ifdef AAX_API

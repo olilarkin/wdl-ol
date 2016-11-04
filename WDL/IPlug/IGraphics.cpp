@@ -172,6 +172,7 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mHandleMouseOver(false)
   , mStrict(false)
   , mDrawBitmap(0)
+  , mTextBitmap(0)
   , mTmpBitmap(0)
   , mLastClickedParam(-1)
   , mKeyCatcher(0)
@@ -193,6 +194,7 @@ IGraphics::~IGraphics()
 
   mControls.Empty(true);
   DELETE_NULL(mDrawBitmap);
+  DELETE_NULL(mTextBitmap);
   DELETE_NULL(mTmpBitmap);
 }
 
@@ -206,6 +208,7 @@ void IGraphics::Resize(int w, int h)
   mMouseOver = -1;
   mControls.Empty(false);   // Empty but don't free (in case we have pointers hanging around)
   DELETE_NULL(mDrawBitmap);
+  DELETE_NULL(mTextBitmap);
   DELETE_NULL(mTmpBitmap);
   PrepDraw();
   mPlug->ResizeGraphics(Width(true), Height(true));
@@ -458,6 +461,7 @@ void IGraphics::ReleaseBitmap(IBitmap* pBitmap)
 void IGraphics::PrepDraw()
 {
   mDrawBitmap = new LICE_SysBitmap(Width(false), Height(false));
+  mTextBitmap = new LICE_SysBitmap(Width(false), Height(false));
   mTmpBitmap = new LICE_MemBitmap();
 }
 
@@ -599,7 +603,8 @@ bool IGraphics::FillRoundRect(const IColor* pColor, IRECT* pR, const IChannelBle
 
 bool IGraphics::FillIRect(const IColor* pColor, IRECT* pR, const IChannelBlend* pBlend)
 {
-  _LICE::LICE_FillRect(mDrawBitmap, pR->L, pR->T, pR->W(), pR->H(), LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
+  IRECT r = pR->Intersect(&mDrawRECT);
+  _LICE::LICE_FillRect(mDrawBitmap, r.L, r.T, r.W(), r.H(), LiceColor(pColor), LiceWeight(pBlend), LiceBlendMode(pBlend));
   return true;
 }
 
@@ -738,7 +743,7 @@ bool IGraphics::IsDirty(IRECT* pR)
   for (i = 0; i < n; ++i, ++ppControl)
   {
     IControl* pControl = *ppControl;
-    if (pControl->IsDirty())
+    if (pControl->IsDirty() && !pControl->GetRECT()->Empty())
     {
       *pR = pR->Union(pControl->GetRECT());
       dirty = true;
@@ -1128,7 +1133,7 @@ bool IGraphics::DrawIText(IText* pTxt, const char* str, IRECT* pR, bool measure)
   {
     fmt |= DT_CALCRECT;
     RECT R = {0,0,0,0};
-    font->DrawText(mDrawBitmap, str, -1, &R, fmt);
+    font->DrawText(mTextBitmap, str, -1, &R, fmt);
     
     if( pTxt->mAlign == IText::kAlignNear)
     {
@@ -1149,8 +1154,12 @@ bool IGraphics::DrawIText(IText* pTxt, const char* str, IRECT* pR, bool measure)
   }
   else 
   {
+    IRECT D = pR->Intersect(&mDrawRECT);
     RECT R = { pR->L, pR->T, pR->R, pR->B };
-    font->DrawText(mDrawBitmap, str, -1, &R, fmt);
+    
+    _LICE::LICE_Blit(mTextBitmap, mDrawBitmap, D.L, D.T, D.L, D.T, D.W(), D.H(), 1.f, LICE_BLIT_MODE_COPY);
+    font->DrawText(mTextBitmap, str, -1, &R, fmt);
+    _LICE::LICE_Blit(mDrawBitmap, mTextBitmap, D.L, D.T, D.L, D.T, D.W(), D.H(), 1.f, LICE_BLIT_MODE_COPY);
   }
 
   return true;
