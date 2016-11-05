@@ -186,13 +186,15 @@ public:
   void OnMouseDown(int x, int y, IMouseMod* pMod);
   void OnMouseUp(int x, int y, IMouseMod* pMod);
   void OnMouseDrag(int x, int y, IMouseMod* pMod);
+  void OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod);
+
   // Returns true if the control receiving the double click will treat it as a single click
   // (meaning the OS should capture the mouse).
   bool OnMouseDblClick(int x, int y, IMouseMod* pMod);
   void OnMouseWheel(int x, int y, IMouseMod* pMod, int d);
   bool OnKeyDown(int x, int y, int key);
 
-  virtual void HideMouseCursor() {};
+  virtual void HideMouseCursor(bool freeze = false) {};
   virtual void ShowMouseCursor(bool restore = true) {};
   virtual void MoveMouseCursor(int x, int y);
     

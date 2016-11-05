@@ -970,6 +970,17 @@ void IGraphics::OnMouseDrag(int x, int y, IMouseMod* pMod)
   }
 }
 
+void IGraphics::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod)
+{
+    int c = mMouseCapture;
+    if (c >= 0 && (dX != 0 || dY != 0))
+    {
+        mMouseX = x;
+        mMouseY = y;
+        mControls.Get(c)->OnMouseDrag(x, y, dX, dY, pMod);
+    }
+}
+
 bool IGraphics::OnMouseDblClick(int x, int y, IMouseMod* pMod)
 {
   ReleaseMouseCapture();

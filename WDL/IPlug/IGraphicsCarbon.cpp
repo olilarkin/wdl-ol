@@ -415,8 +415,11 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
     case kEventClassMouse:
     {
       HIPoint hp;
+      HIPoint dp;
+        
       GetEventParameter(pEvent, kEventParamWindowMouseLocation, typeHIPoint, 0, sizeof(HIPoint), 0, &hp);
-
+      GetEventParameter(pEvent, kEventParamMouseDelta, typeHIPoint, 0, sizeof(HIPoint), 0, &dp);
+        
       #ifdef RTAS_API
       // Header offset
       hp.x -= _this->GetLeftOffset();
@@ -526,7 +529,7 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
         case kEventMouseDragged:
         {
           if (!_this->mTextEntryView)
-            pGraphicsMac->OnMouseDrag(x, y, &mmod);
+            pGraphicsMac->OnMouseDrag(x, y, dp.x, dp.y, &mmod);
           return noErr;
         }
 

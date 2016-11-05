@@ -358,10 +358,13 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
     int x, y;
     [self getMouseXY:pEvent x:&x y:&y];
     IMouseMod ms = GetMouseMod(pEvent);
-
+      
+    double dX = [pEvent deltaX];
+    double dY = [pEvent deltaY];
+      
     if(!mTextFieldView)
     {
-      mGraphics->OnMouseDrag(x, y, &ms);
+      mGraphics->OnMouseDrag(x, y, dX, dY, &ms);
     }
   }
 }

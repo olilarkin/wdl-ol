@@ -508,7 +508,7 @@ void IGraphicsMac::Resize(int w, int h)
   }
 }
 
-void IGraphicsMac::HideMouseCursor()
+void IGraphicsMac::HideMouseCursor(bool freeze)
 {
   if (!mCursorHidden)
   {
@@ -516,6 +516,9 @@ void IGraphicsMac::HideMouseCursor()
     NSPoint mouse = [NSEvent mouseLocation];
     mHiddenMousePointX = mouse.x;
     mHiddenMousePointY = CGDisplayPixelsHigh(CGMainDisplayID())-mouse.y; //get current mouse position
+    
+    if (freeze)
+        CGAssociateMouseAndMouseCursorPosition(false);
   }
 }
 

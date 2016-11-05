@@ -83,8 +83,8 @@ public:
   bool WindowIsOpen();
   void Resize(int w, int h);
 
-  void HideMouseCursor();
-  void ShowMouseCursor(bool restore = true);
+  void HideMouseCursor(bool freeze = false);
+  void ShowMouseCursor(bool restore = false);
   void MoveMouseCursor(int x, int y);
 
   int ShowMessageBox(const char* pText, const char* pCaption, int type);
