@@ -512,7 +512,8 @@ void IGraphicsMac::HideMouseCursor(bool freeze)
 {
   if (!mCursorHidden)
   {
-    if (CGDisplayHideCursor(CGMainDisplayID()) == CGDisplayNoErr) mCursorHidden = true;
+    if (CGDisplayHideCursor(CGMainDisplayID()) == CGDisplayNoErr)
+        mCursorHidden = true;
     
     if (freeze)
         CGAssociateMouseAndMouseCursorPosition(false);

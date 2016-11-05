@@ -529,7 +529,7 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
         case kEventMouseDragged:
         {
           if (!_this->mTextEntryView)
-            pGraphicsMac->OnMouseDrag(x, y, dp.x, dp.y, &mmod);
+            pGraphicsMac->OnMouseDrag(x, y, ConvertMouseDeltaFromNative(dp.x), ConvertMouseDeltaFromNative(dp.y), &mmod);
           return noErr;
         }
 
@@ -545,7 +545,7 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
 
             if (_this->mTextEntryView) _this->EndUserInput(false);
 
-            pGraphicsMac->OnMouseWheel(x, y, &mmod, d);
+            pGraphicsMac->OnMouseWheel(x, y, &mmod, ConvertMouseDeltaFromNative(d));
             return noErr;
           }
         }

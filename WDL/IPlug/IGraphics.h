@@ -42,6 +42,14 @@ class IPlugBase;
 class IControl;
 class IParam;
 
+#if defined HI_RES_DELTA_MOUSING && defined __APPLE__
+static inline int ConvertMouseDeltaFromNative(double val) { return round(val * 1000.0); }
+static inline double ConvertMouseDeltaToNative(int val) { return val / 1000.0; }
+#else
+static inline int ConvertMouseDeltaFromNative(double val) { return round(val); }
+static inline int ConvertMouseDeltaToNative(int val) { return val; }
+#endif
+
 class IGraphics
 {
 public:

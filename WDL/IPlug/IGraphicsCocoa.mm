@@ -364,7 +364,7 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
       
     if(!mTextFieldView)
     {
-      mGraphics->OnMouseDrag(x, y, dX, dY, &ms);
+      mGraphics->OnMouseDrag(x, y, ConvertMouseDeltaFromNative(dX), ConvertMouseDeltaFromNative(dY), &ms);
     }
   }
 }
@@ -465,10 +465,10 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
 
     int x, y;
     [self getMouseXY:pEvent x:&x y:&y];
-    int d = [pEvent deltaY];
+    double d = [pEvent deltaY];
     
     IMouseMod ms = GetMouseMod(pEvent);
-    mGraphics->OnMouseWheel(x, y, &ms, d);
+    mGraphics->OnMouseWheel(x, y, &ms, ConvertMouseDeltaFromNative(d));
   }
 }
 
