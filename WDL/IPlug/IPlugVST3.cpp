@@ -984,10 +984,7 @@ int IPlugVST3::GetSamplePos()
 void IPlugVST3::ResizeGraphics(int w, int h)
 {
   if (GetGUI())
-  {
     viewsArray.at(0)->resize(w, h);
-    //OnWindowResize();
-  }
 }
 
 void IPlugVST3::SetLatency(int latency)
