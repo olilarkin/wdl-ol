@@ -630,10 +630,9 @@ void IGraphicsWin::MoveMouseCursor(int x, int y)
       mHiddenMousePointX = newX;
       mHiddenMousePointY = newY;
     }
-    
-    SetCursorPos(newX, newY);
-    
-    IGraphics::MoveMouseCursor(x, y);
+   
+	if (SetCursorPos(newX, newY))
+      IGraphics::MoveMouseCursor(x, y);
 }
 
 int IGraphicsWin::ShowMessageBox(const char* pText, const char* pCaption, int type)
