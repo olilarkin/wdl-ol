@@ -1011,6 +1011,9 @@ void IPlugVST3::PopupHostContextMenuForParam(int param, int x, int y)
 
   if (menu)
   {
+    x /= GetGUI()->GetScalingFactor();
+    y /= GetGUI()->GetScalingFactor();
+      
     menu->popup((UCoord) x,(UCoord) y);
     menu->release();
   }
