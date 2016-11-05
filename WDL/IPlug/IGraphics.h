@@ -195,7 +195,7 @@ public:
   bool OnKeyDown(int x, int y, int key);
 
   virtual void HideMouseCursor(bool freeze = false) {};
-  virtual void ShowMouseCursor(bool restore = true) {};
+  virtual void ShowMouseCursor() {};
   virtual void MoveMouseCursor(int x, int y);
     
   int GetParamIdxForPTAutomation(int x, int y);
@@ -258,7 +258,6 @@ protected:
   IRECT mDrawRECT;
   bool mCursorHidden, mAllowRetina;
   double mScalingFactor;
-  int mHiddenMousePointX, mHiddenMousePointY;
 
   bool CanHandleMouseOver() { return mHandleMouseOver; }
   inline int GetMouseOver() const { return mMouseOver; }

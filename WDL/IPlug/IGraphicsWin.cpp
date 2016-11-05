@@ -239,6 +239,9 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       {
         pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
       }
+    
+      if (mMousePositionFrozen)
+          MoveMouseCursor(mHiddenMousePointX, mHiddenMousePointY);
 
       return 0;
     }
@@ -487,8 +490,8 @@ IGraphicsWin::IGraphicsWin(IPlugBase* pPlug, int w, int h, int refreshFPS)
   : IGraphics(pPlug, w, h, refreshFPS), mPlugWnd(0), mParamEditWnd(0),
     mPID(0), mParentWnd(0), mMainWnd(0), mCustomColorStorage(0),
     mEdControl(0), mEdParam(0), mDefEditProc(0), mParamEditMsg(kNone),
-    mTooltipWnd(0), mShowingTooltip(false), mTooltipIdx(-1),
-    mHInstance(0)
+    mTooltipWnd(0), mShowingTooltip(false), mMousePositionFrozen(false), mTooltipIdx(-1),
+    mHiddenMousePointX(-1), mHiddenMousePointY(-1), mHInstance(0)
 {}
 
 IGraphicsWin::~IGraphicsWin()
@@ -590,7 +593,7 @@ void IGraphicsWin::Resize(int w, int h)
   }
 }
 
-void IGraphicsWin::HideMouseCursor()
+void IGraphicsWin::HideMouseCursor(bool freeze)
 {
   if (!mCursorHidden)
   {
@@ -601,18 +604,21 @@ void IGraphicsWin::HideMouseCursor()
     mHiddenMousePointY = p.y;
 
     ShowCursor(false);
-    mCursorHidden=true;
+    mCursorHidden = true;
+    mMousePositionFrozen = freeze;
   }
 }
 
-void IGraphicsWin::ShowMouseCursor(bool restore)
+void IGraphicsWin::ShowMouseCursor()
 {
   if (mCursorHidden)
   {
-    if (restore)
-        SetCursorPos(mHiddenMousePointX, mHiddenMousePointY);
+    if (mMousePositionFrozen)
+        MoveMouseCursor(mHiddenMousePointX, mHiddenMousePointY);
+
     ShowCursor(true);
-    mCursorHidden=false;
+    mCursorHidden = false;
+    mMousePositionFrozen = false;
   }
 }
 
@@ -625,14 +631,16 @@ void IGraphicsWin::MoveMouseCursor(int x, int y)
     newX = x / GetScalingFactor() + (p.x - GetMouseX() / GetScalingFactor());
     newY = y / GetScalingFactor() + (p.y - GetMouseY() / GetScalingFactor());
     
-    if (mCursorHidden)
-    {
-      mHiddenMousePointX = newX;
-      mHiddenMousePointY = newY;
-    }
-   
 	if (SetCursorPos(newX, newY))
+    {
+      if (mCursorHidden)
+      {
+        mHiddenMousePointX = newX;
+        mHiddenMousePointY = newY;
+      }
+        
       IGraphics::MoveMouseCursor(x, y);
+    }
 }
 
 int IGraphicsWin::ShowMessageBox(const char* pText, const char* pCaption, int type)

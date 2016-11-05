@@ -19,8 +19,8 @@ public:
 
   void Resize(int w, int h);
 
-  void HideMouseCursor();
-  void ShowMouseCursor(bool restore = true);
+  void HideMouseCursor(bool freeze = false);
+  void ShowMouseCursor();
   void MoveMouseCursor(int x, int y);
   int ShowMessageBox(const char* pText, const char* pCaption, int type);
 
@@ -77,7 +77,10 @@ private:
   WNDPROC mDefEditProc;
   int mParamEditMsg;
   bool mShowingTooltip;
+  bool mMousePositionFrozen;
   int mTooltipIdx;
+  int mHiddenMousePointX, mHiddenMousePointY;
+
   COLORREF* mCustomColorStorage;
 
   DWORD mPID;

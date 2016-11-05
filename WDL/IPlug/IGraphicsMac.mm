@@ -513,25 +513,16 @@ void IGraphicsMac::HideMouseCursor(bool freeze)
   if (!mCursorHidden)
   {
     if (CGDisplayHideCursor(CGMainDisplayID()) == CGDisplayNoErr) mCursorHidden = true;
-    NSPoint mouse = [NSEvent mouseLocation];
-    mHiddenMousePointX = mouse.x;
-    mHiddenMousePointY = CGDisplayPixelsHigh(CGMainDisplayID())-mouse.y; //get current mouse position
     
     if (freeze)
         CGAssociateMouseAndMouseCursorPosition(false);
   }
 }
 
-void IGraphicsMac::ShowMouseCursor(bool restore)
+void IGraphicsMac::ShowMouseCursor()
 {
   if (mCursorHidden)
   {
-    if (restore)
-    {
-      CGPoint point; point.x = mHiddenMousePointX; point.y = mHiddenMousePointY;
-      CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
-    }
-
     if (CGDisplayShowCursor(CGMainDisplayID()) == CGDisplayNoErr)
         mCursorHidden = false;
     CGAssociateMouseAndMouseCursorPosition(true);
@@ -543,19 +534,13 @@ void IGraphicsMac::MoveMouseCursor(int x, int y)
     CGPoint point;
     NSPoint mouse = [NSEvent mouseLocation];
     int mouseY = CGDisplayPixelsHigh(CGMainDisplayID()) - mouse.y;
-    point.x = x / GetScalingFactor() + (mouse.x - GetMouseX() / GetScalingFactor());
-    point.y = y / GetScalingFactor() + (mouseY - GetMouseY() / GetScalingFactor());
-
-    if (mCursorHidden)
-    {
-      mHiddenMousePointX = point.x;
-      mHiddenMousePointY = point.y;
-    }
+    point.x = round(x / GetScalingFactor() + (mouse.x - GetMouseX() / GetScalingFactor()));
+    point.y = round(y / GetScalingFactor() + (mouseY - GetMouseY() / GetScalingFactor()));
     
-    CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+    if (CGDisplayMoveCursorToPoint(CGMainDisplayID(), point) == CGDisplayNoErr)
+        IGraphics::MoveMouseCursor(x, y);
+    
     CGAssociateMouseAndMouseCursorPosition(true);
-    
-    IGraphics::MoveMouseCursor(x, y);
 }
 
 int IGraphicsMac::ShowMessageBox(const char* pText, const char* pCaption, int type)
