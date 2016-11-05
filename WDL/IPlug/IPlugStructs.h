@@ -461,12 +461,13 @@ const int MAX_PRESET_NAME_LEN = 256;
 struct IPreset
 {
   bool mInitialized;
+  bool mReadOnly;
   char mName[MAX_PRESET_NAME_LEN];
 
   ByteChunk mChunk;
 
   IPreset(int idx)
-    : mInitialized(false)
+    : mInitialized(false), mReadOnly(false)
   {
     sprintf(mName, "%s", UNUSED_PRESET_NAME);
   }

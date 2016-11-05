@@ -809,20 +809,30 @@ const char* IPlugBase::GetPresetName(int idx)
   return "";
 }
 
+void IPlugBase::SetPresetReadOnly(int idx)
+{
+    if (idx >= 0 && idx < mPresets.GetSize())
+        mPresets.Get(idx)->mReadOnly = true;
+}
+
 void IPlugBase::ModifyCurrentPreset(const char* name)
 {
   if (mCurrentPresetIdx >= 0 && mCurrentPresetIdx < mPresets.GetSize())
   {
     IPreset* pPreset = mPresets.Get(mCurrentPresetIdx);
-    pPreset->mChunk.Clear();
-
-    Trace(TRACELOC, "%d %s", mCurrentPresetIdx, pPreset->mName);
-
-    SerializeState(&(pPreset->mChunk));
-
-    if (CSTR_NOT_EMPTY(name))
+      
+    if (!pPreset->mReadOnly)
     {
-      strcpy(pPreset->mName, name);
+      pPreset->mChunk.Clear();
+        
+      Trace(TRACELOC, "%d %s", mCurrentPresetIdx, pPreset->mName);
+
+      SerializeState(&(pPreset->mChunk));
+
+      if (CSTR_NOT_EMPTY(name))
+      {
+        strcpy(pPreset->mName, name);
+      }
     }
   }
 }
@@ -842,6 +852,8 @@ bool IPlugBase::SerializePresets(ByteChunk* pChunk)
     pChunk->PutBool(pPreset->mInitialized);
     if (pPreset->mInitialized)
     {
+      int size = pPreset->mChunk.Size();
+      savedOK &= pChunk->Put(&size);
       savedOK &= (pChunk->PutChunk(&(pPreset->mChunk)) > 0);
     }
   }
@@ -856,23 +868,39 @@ int IPlugBase::UnserializePresets(ByteChunk* pChunk, int startPos)
   for (int i = 0; i < n && pos >= 0; ++i)
   {
     IPreset* pPreset = mPresets.Get(i);
+    bool initialised;
+      
     pos = pChunk->GetStr(&name, pos);
-    strcpy(pPreset->mName, name.Get());
+    if (!pPreset->mReadOnly)
+        strcpy(pPreset->mName, name.Get());
 
     Trace(TRACELOC, "%d %s", i, pPreset->mName);
 
-    pos = pChunk->GetBool(&(pPreset->mInitialized), pos);
-    if (pPreset->mInitialized)
+    pos = pChunk->GetBool(&initialised, pos);
+    
+    if (initialised)
     {
-      pos = UnserializeState(pChunk, pos);
-      if (pos > 0)
+      int size;
+      pos = pChunk->Get(&size, pos);
+        
+      // Check it is allowed/safe to load the preset
+          
+      if (!pPreset->mReadOnly && (pos > 0) && (pChunk->Size() >= (pos + size)))
       {
+        pPreset->mInitialized = true;
         pPreset->mChunk.Clear();
-        SerializeState(&(pPreset->mChunk));
+        pPreset->mChunk.PutBytes(pChunk->GetBytes() + pos, size);
+            
+        if (i == mCurrentPresetIdx)
+          RestorePreset(mCurrentPresetIdx);
       }
+        
+      // Advance the position
+          
+      pos += size;
     }
   }
-  RestorePreset(mCurrentPresetIdx);
+    
   return pos;
 }
 

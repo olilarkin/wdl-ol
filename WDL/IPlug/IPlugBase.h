@@ -258,6 +258,7 @@ protected:
   void ZeroScratchBuffers();
   
 public:
+  void SetPresetReadOnly(int idx);
   void ModifyCurrentPreset(const char* name = 0);     // Sets the currently active preset to whatever current params are.
   int NPresets() { return mPresets.GetSize(); }
   int GetCurrentPresetIdx() { return mCurrentPresetIdx; }
