@@ -240,7 +240,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
         pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
       }
     
-      if (mMousePositionFrozen)
+      if (mMousePositionFrozen && (pGraphics->GetMouseX != mHiddenMousePointX) && (pGraphics->GetMouseY != mHiddenMousePointY))
           MoveMouseCursor(mHiddenMousePointX, mHiddenMousePointY);
 
       return 0;
