@@ -202,9 +202,9 @@ public:
   void OnMouseWheel(int x, int y, IMouseMod* pMod, int d);
   bool OnKeyDown(int x, int y, int key);
 
-  virtual void HideMouseCursor(bool freeze = false) {};
-  virtual void ShowMouseCursor() {};
-  virtual void MoveMouseCursor(int x, int y);
+  virtual void HideMouseCursor(bool freeze = false) = 0;
+  virtual void ShowMouseCursor() = 0;
+  virtual void MoveMouseCursor(int x, int y) = 0;
     
   int GetParamIdxForPTAutomation(int x, int y);
   int GetLastClickedParamForPTAutomation();
