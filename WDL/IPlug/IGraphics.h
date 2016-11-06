@@ -205,6 +205,7 @@ public:
   virtual void HideMouseCursor(bool freeze = false) = 0;
   virtual void ShowMouseCursor() = 0;
   virtual void MoveMouseCursor(int x, int y);
+  virtual void AllowMouseCursorFreeze(bool allow) { mAllowMouseCursorFreeze = allow; }
     
   int GetParamIdxForPTAutomation(int x, int y);
   int GetLastClickedParamForPTAutomation();
@@ -272,6 +273,7 @@ protected:
   inline int GetMouseX() const { return mMouseX; }
   inline int GetMouseY() const { return mMouseY; }
   inline bool TooltipsEnabled() const { return mEnableTooltips; }
+  inline bool GetAllowMouseCursorFreeze() const { return mAllowMouseCursorFreeze; }
   
   virtual LICE_IBitmap* OSLoadBitmap(int ID, const char* name) = 0;
   
@@ -289,6 +291,7 @@ private:
   int GetMouseControlIdx(int x, int y, bool mo = false);
   int mMouseCapture, mMouseOver, mMouseX, mMouseY, mLastClickedParam;
   bool mHandleMouseOver, mStrict, mEnableTooltips, mShowControlBounds;
+  bool mAllowMouseCursorFreeze;
   IControl* mKeyCatcher;
 };
 
