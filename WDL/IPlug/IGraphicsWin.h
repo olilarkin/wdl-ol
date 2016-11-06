@@ -81,7 +81,6 @@ private:
   bool mMousePositionFrozen;
   int mTooltipIdx;
   int mHiddenMousePointX, mHiddenMousePointY;
-  int mMovePointX, mMovePointY;
 
   COLORREF* mCustomColorStorage;
 
