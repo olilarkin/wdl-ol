@@ -853,7 +853,7 @@ bool IPlugBase::SerializePresets(ByteChunk* pChunk)
     if (pPreset->mInitialized)
     {
       int size = pPreset->mChunk.Size();
-      savedOK &= pChunk->Put(&size);
+      pChunk->Put(&size);
       savedOK &= (pChunk->PutChunk(&(pPreset->mChunk)) > 0);
     }
   }
