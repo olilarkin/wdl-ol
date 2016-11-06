@@ -19,7 +19,7 @@ public:
 
   void Resize(int w, int h);
 
-  void HideMouseCursor(bool freeze = false);
+  void HideMouseCursor(bool freeze = true);
   void ShowMouseCursor();
   void MoveMouseCursor(int x, int y);
 

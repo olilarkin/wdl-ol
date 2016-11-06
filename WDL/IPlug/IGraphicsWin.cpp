@@ -597,7 +597,7 @@ void IGraphicsWin::Resize(int w, int h)
 
 void IGraphicsWin::HideMouseCursor(bool freeze)
 {
-  if (!mCursorHidden && GetAllowMouseCursorFreeze())
+  if (!mCursorHidden  && (!freeze || GetAllowMouseCursorFreeze()))
   {
     POINT p;
     GetCursorPos(&p);

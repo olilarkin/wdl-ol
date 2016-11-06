@@ -510,7 +510,7 @@ void IGraphicsMac::Resize(int w, int h)
 
 void IGraphicsMac::HideMouseCursor(bool freeze)
 {
-  if (!mCursorHidden  && GetAllowMouseCursorFreeze())
+  if (!mCursorHidden  && (!freeze || GetAllowMouseCursorFreeze()))
   {
     if (CGDisplayHideCursor(CGMainDisplayID()) == CGDisplayNoErr)
         mCursorHidden = true;
