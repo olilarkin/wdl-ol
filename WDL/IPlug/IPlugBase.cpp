@@ -809,30 +809,21 @@ const char* IPlugBase::GetPresetName(int idx)
   return "";
 }
 
-void IPlugBase::SetPresetReadOnly(int idx)
-{
-    if (idx >= 0 && idx < mPresets.GetSize())
-        mPresets.Get(idx)->mReadOnly = true;
-}
-
 void IPlugBase::ModifyCurrentPreset(const char* name)
 {
   if (mCurrentPresetIdx >= 0 && mCurrentPresetIdx < mPresets.GetSize())
   {
     IPreset* pPreset = mPresets.Get(mCurrentPresetIdx);
       
-    if (!pPreset->mReadOnly)
-    {
-      pPreset->mChunk.Clear();
+    pPreset->mChunk.Clear();
         
-      Trace(TRACELOC, "%d %s", mCurrentPresetIdx, pPreset->mName);
+    Trace(TRACELOC, "%d %s", mCurrentPresetIdx, pPreset->mName);
 
-      SerializeState(&(pPreset->mChunk));
+    SerializeState(&(pPreset->mChunk));
 
-      if (CSTR_NOT_EMPTY(name))
-      {
-        strcpy(pPreset->mName, name);
-      }
+    if (CSTR_NOT_EMPTY(name))
+    {
+      strcpy(pPreset->mName, name);
     }
   }
 }
@@ -871,8 +862,7 @@ int IPlugBase::UnserializePresets(ByteChunk* pChunk, int startPos)
     bool initialised;
       
     pos = pChunk->GetStr(&name, pos);
-    if (!pPreset->mReadOnly)
-        strcpy(pPreset->mName, name.Get());
+    strcpy(pPreset->mName, name.Get());
 
     Trace(TRACELOC, "%d %s", i, pPreset->mName);
 
@@ -885,7 +875,7 @@ int IPlugBase::UnserializePresets(ByteChunk* pChunk, int startPos)
         
       // Check it is allowed/safe to load the preset
           
-      if (!pPreset->mReadOnly && (pos > 0) && (pChunk->Size() >= (pos + size)))
+      if ((pos > 0) && (pChunk->Size() >= (pos + size)))
       {
         pPreset->mInitialized = true;
         pPreset->mChunk.Clear();
