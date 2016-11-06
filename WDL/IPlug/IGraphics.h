@@ -204,7 +204,7 @@ public:
 
   virtual void HideMouseCursor(bool freeze = false) = 0;
   virtual void ShowMouseCursor() = 0;
-  virtual void MoveMouseCursor(int x, int y) = 0;
+  virtual void MoveMouseCursor(int x, int y);
     
   int GetParamIdxForPTAutomation(int x, int y);
   int GetLastClickedParamForPTAutomation();
