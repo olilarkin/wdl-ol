@@ -511,7 +511,6 @@ VstIntPtr VSTCALLBACK IPlugVST::VSTDispatcher(AEffect *pEffect, VstInt32 opCode,
         {
           _this->ModifyCurrentPreset();
           savedOK = _this->SerializePresets(pChunk);
-          savedOK &= _this->SerializeState(pChunk);
         }
         else
         {
@@ -541,7 +540,6 @@ VstIntPtr VSTCALLBACK IPlugVST::VSTDispatcher(AEffect *pEffect, VstInt32 opCode,
         if (isBank)
         {
           pos = _this->UnserializePresets(pChunk, pos);
-          pos = _this->UnserializeState(pChunk, pos);
         }
         else
         {
