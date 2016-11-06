@@ -216,7 +216,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 
     case WM_MOUSEMOVE:
     {
-      if (!(wParam & (MK_LBUTTON | MK_RBUTTON)))
+	  if (!(wParam & (MK_LBUTTON | MK_RBUTTON)))
       {
         if (pGraphics->OnMouseOver(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam)))
         {
@@ -237,14 +237,13 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       }
       else if (GetCapture() == hWnd && !pGraphics->mParamEditWnd)
       {
-		int mouseX = pGraphics->GetMouseX();
-		int mouseY = pGraphics->GetMouseY();
-
-        pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
-
-		if (pGraphics->mMousePositionFrozen && (GET_X_LPARAM(lParam) != mouseX || GET_Y_LPARAM(lParam) != mouseY))
-			pGraphics->MoveMouseCursor(pGraphics->mHiddenMousePointX, pGraphics->mHiddenMousePointY, false);
-      }	
+		  if (pGraphics->GetMouseX() != GET_X_LPARAM(lParam) || pGraphics->GetMouseY() != GET_Y_LPARAM(lParam))
+		  {
+	    	pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
+		    if (pGraphics->mMousePositionFrozen)
+			  pGraphics->MoveMouseCursor(pGraphics->mHiddenMousePointX, pGraphics->mHiddenMousePointY, false);
+		  }
+	  }
 
       return 0;
     }
@@ -606,7 +605,7 @@ void IGraphicsWin::HideMouseCursor(bool freeze)
 	mHiddenMousePointX = GetMouseX();
 	mHiddenMousePointY = GetMouseY();
 
-    ShowCursor(false);
+    //ShowCursor(false);
     mCursorHidden = true;
     mMousePositionFrozen = freeze;
   }
@@ -642,7 +641,7 @@ void IGraphicsWin::MoveMouseCursor(int x, int y, bool updateFrozen)
         mHiddenMousePointY = y;
       }
 
-      IGraphics::MoveMouseCursor(x, y);
+	  IGraphics::MoveMouseCursor(x, y);
     }
 }
 
