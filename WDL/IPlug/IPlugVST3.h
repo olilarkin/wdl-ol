@@ -49,9 +49,9 @@ public:
   Steinberg::tresult PLUGIN_API setActive(Steinberg::TBool state);
   Steinberg::tresult PLUGIN_API setupProcessing (Steinberg::Vst::ProcessSetup& newSetup);
   Steinberg::tresult PLUGIN_API process(Steinberg::Vst::ProcessData& data);
-//  Steinberg::tresult PLUGIN_API setState(IBStream* state);
-//  Steinberg::tresult PLUGIN_API getState(IBStream* state);
-//  Steinberg::tresult PLUGIN_API setComponentState(IBStream *state);
+  Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state);
+  Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state);
+  Steinberg::tresult PLUGIN_API setComponentState(Steinberg::IBStream *state);
   Steinberg::tresult PLUGIN_API canProcessSampleSize(Steinberg::int32 symbolicSampleSize);
   Steinberg::uint32 PLUGIN_API getLatencySamples ();
   Steinberg::uint32 PLUGIN_API getTailSamples() { return GetTailSize(); }
@@ -62,6 +62,8 @@ public:
   Steinberg::tresult PLUGIN_API setParamNormalized (Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue value);
   Steinberg::Vst::ParamValue PLUGIN_API getParamNormalized(Steinberg::Vst::ParamID tag);
   Steinberg::Vst::ParamValue PLUGIN_API plainParamToNormalized(Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue plainValue);
+  Steinberg::Vst::ParamValue PLUGIN_API normalizedParamToPlain(Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue valueNormalized);
+
   Steinberg::tresult PLUGIN_API getParamStringByValue (Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue valueNormalized, Steinberg::Vst::String128 string);
   Steinberg::tresult PLUGIN_API getParamValueByString (Steinberg::Vst::ParamID tag, Steinberg::Vst::TChar* string, Steinberg::Vst::ParamValue& valueNormalized);
 
@@ -124,6 +126,8 @@ protected:
   virtual bool SendMidiMsg(IMidiMsg* pMsg) {return false;}  //TODO
 
 private:
+    
+  Steinberg::int32 getPresetCount();
   void addDependentView (IPlugVST3View* view);
   void removeDependentView (IPlugVST3View* view);
   virtual Steinberg::tresult beginEdit(Steinberg::Vst::ParamID tag);

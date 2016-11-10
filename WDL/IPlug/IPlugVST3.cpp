@@ -21,6 +21,7 @@ public:
   : mIPlugParam(pParam)
   {
     UString (info.title, str16BufferSize (String128)).assign (pParam->GetNameForHost());
+    UString (info.shortTitle, str16BufferSize (String128)).assign (pParam->GetNameForHost());
     UString (info.units, str16BufferSize (String128)).assign (pParam->GetLabelForHost());
     
     precision = pParam->GetPrecision();
@@ -35,6 +36,12 @@ public:
     if (pParam->GetCanAutomate())
     {
       flags |= ParameterInfo::kCanAutomate;
+    }
+      
+      // FIX - check
+    if (pParam->Type() == IParam::kTypeEnum)
+    {
+      flags |= ParameterInfo::kIsList;
     }
     
     info.defaultNormalizedValue = valueNormalized = pParam->GetDefaultNormalized();
@@ -206,13 +213,13 @@ tresult PLUGIN_API IPlugVST3::initialize (FUnknown* context)
       //addEventOutput(STR16("MIDI Output"), 1);
     }
 
-    if (NPresets())
+    if (getProgramListCount())
     {
       parameters.addParameter(new Parameter(STR16("Preset"),
                                             kPresetParam,
                                             STR16(""),
                                             0,
-                                            NPresets(),
+                                            getPresetCount(),
                                             ParameterInfo::kIsProgramChange));
     }
 
@@ -400,7 +407,7 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
               break;
             }
             case kPresetParam:
-              RestorePreset(round(FromNormalizedParam(value, 0, NPresets(), 1.)));
+              RestorePreset(round(FromNormalizedParam(value, 0, getPresetCount(), 1.)));
               break;
               //TODO pitch bend, modwheel etc
             default:
@@ -577,59 +584,86 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
   return kResultOk;
 }
 
-//tresult PLUGIN_API IPlugVST3::setState(IBStream* state)
-//{
-//  TRACE;
-//  WDL_MutexLock lock(&mMutex);
-//
-//  ByteChunk chunk;
-//  SerializeState(&chunk); // to get the size
-//
-//  if (chunk.Size() > 0)
-//  {
-//    state->read(chunk.GetBytes(), chunk.Size());
-//    UnserializeState(&chunk, 0);
-//    RedrawParamControls();
-//    return kResultOk;
-//  }
-//
-//  return kResultFalse;
-//}
-//
-//tresult PLUGIN_API IPlugVST3::getState(IBStream* state)
-//{
-//  TRACE;
-//  WDL_MutexLock lock(&mMutex);
-//
-//  ByteChunk chunk;
-//
-//  if (SerializeState(&chunk))
-//  {
-//    state->write(chunk.GetBytes(), chunk.Size());
-//    return kResultOk;
-//  }
-//
-//  return kResultFalse;
-//}
+tresult PLUGIN_API IPlugVST3::setState(IBStream* state)
+{
+  TRACE;
+  WDL_MutexLock lock(&mMutex);
+    
+  int32 savedBypass = 0;
+  int32 savedPresetNum = 0;
+  int32 stateSize = 0;
+  ByteChunk chunk;
+  
+  if (state->read(&savedBypass, sizeof (int32)) != kResultOk)
+    return kResultFalse;
+      
+  mIsBypassed = (bool) savedBypass;
+    
+  if (state->read(&savedPresetNum, sizeof (int32)) != kResultOk)
+    return kResultFalse;
+    
+#ifdef VST3_PRESET_LIST
+  RestorePreset(savedPresetNum);
+#endif
 
-//tresult PLUGIN_API IPlugVST3::setComponentState(IBStream *state)
-//{
-//  TRACE;
-//  WDL_MutexLock lock(&mMutex);
-//
-//  ByteChunk chunk;
-//  SerializeState(&chunk); // to get the size
-//
-//  if (chunk.Size() > 0)
-//  {
-//    state->read(chunk.GetBytes(), chunk.Size());
-//    UnserializeState(&chunk, 0);
-//    RedrawParamControls();
-//    return kResultOk;
-//  }
-//
-//  return kResultFalse;
-//}
+  if (state->read(&stateSize, sizeof (int32)) != kResultOk)
+    return kResultFalse;
+
+  if (stateSize > 0)
+  {
+    chunk.Resize(stateSize);
+    if (state->read(chunk.GetBytes(), stateSize) != kResultOk)
+      return kResultFalse;
+        
+    UnserializeState(&chunk, 0);
+    
+    RedrawParamControls();
+  }
+    
+  return kResultOk;
+}
+
+tresult PLUGIN_API IPlugVST3::getState(IBStream* state)
+{
+  TRACE;
+  WDL_MutexLock lock(&mMutex);
+
+  ByteChunk chunk;
+    
+  if (!SerializeState(&chunk))
+        return kResultFalse;
+    
+  int32 toSaveBypass = mIsBypassed ? 1 : 0;
+  int32 stateSize = chunk.Size();
+  int32 toSavePresetNum = mCurrentPresetIdx;
+    
+  if (state->write(&toSaveBypass, sizeof (int32)) != kResultOk)
+    return kResultFalse;
+    
+  if (state->write(&toSavePresetNum, sizeof (int32)) != kResultOk)
+    return kResultFalse;
+    
+  if (state->write(&stateSize, sizeof (int32)) != kResultOk)
+    return kResultFalse;
+    
+  if (stateSize > 0)
+  {
+    if (state->write(chunk.GetBytes(), stateSize) != kResultOk)
+      return kResultFalse;
+  }
+  
+  return kResultOk;
+}
+
+tresult PLUGIN_API IPlugVST3::setComponentState(IBStream *state)
+{
+  TRACE;
+  WDL_MutexLock lock(&mMutex);
+
+  RedrawParamControls();
+    
+  return kResultOk;
+}
 
 tresult PLUGIN_API IPlugVST3::canProcessSampleSize(int32 symbolicSampleSize)
 {
@@ -657,7 +691,7 @@ Steinberg::uint32 PLUGIN_API IPlugVST3::getLatencySamples ()
 #pragma mark -
 #pragma mark IEditController overrides
 
-IPlugView* PLUGIN_API IPlugVST3::createView (const char* name)
+IPlugView* PLUGIN_API IPlugVST3::createView(const char* name)
 {
   if (name && strcmp (name, "editor") == 0)
   {
@@ -671,51 +705,14 @@ IPlugView* PLUGIN_API IPlugVST3::createView (const char* name)
 
 tresult PLUGIN_API IPlugVST3::setEditorState(IBStream* state)
 {
-  TRACE;
-  WDL_MutexLock lock(&mMutex);
-
-  ByteChunk chunk;
-  SerializeState(&chunk); // to get the size
-
-  if (chunk.Size() > 0)
-  {
-    state->read(chunk.GetBytes(), chunk.Size());
-    UnserializeState(&chunk, 0);
+  // Nothing to load
     
-    int32 savedBypass = 0;
-    
-    if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
-    {
-      return kResultFalse;
-    }
-    
-    mIsBypassed = (bool) savedBypass;
-    
-    RedrawParamControls();
-    return kResultOk;
-  }
-
-  return kResultFalse;
+  return kResultOk;
 }
 
 tresult PLUGIN_API IPlugVST3::getEditorState(IBStream* state)
 {
-  TRACE;
-  WDL_MutexLock lock(&mMutex);
-
-  ByteChunk chunk;
-
-  if (SerializeState(&chunk))
-  {
-    state->write(chunk.GetBytes(), chunk.Size());
-  }
-  else
-  {
-    return kResultFalse;
-  }  
-  
-  int32 toSaveBypass = mIsBypassed ? 1 : 0;
-  state->write(&toSaveBypass, sizeof (int32));  
+  // Nothing to save
 
   return kResultOk;
 }
@@ -732,6 +729,18 @@ ParamValue PLUGIN_API IPlugVST3::plainParamToNormalized(ParamID tag, ParamValue 
   return plainValue;
 }
 
+ParamValue PLUGIN_API IPlugVST3::normalizedParamToPlain (ParamID tag, ParamValue valueNormalized)
+{
+    IParam* param = GetParam(tag);
+    
+    if (param)
+    {
+        return param->GetNonNormalized(valueNormalized);
+    }
+    
+    return valueNormalized;
+}
+
 ParamValue PLUGIN_API IPlugVST3::getParamNormalized(ParamID tag)
 {
   if (tag == kBypassParam) 
@@ -740,7 +749,7 @@ ParamValue PLUGIN_API IPlugVST3::getParamNormalized(ParamID tag)
   }
 //   else if (tag == kPresetParam) 
 //   {
-//     return (ParamValue) ToNormalizedParam(mCurrentPresetIdx, 0, NPresets(), 1.);
+//     return (ParamValue) ToNormalizedParam(mCurrentPresetIdx, 0, getPresetCount(), 1.);
 //   }
 
   IParam* param = GetParam(tag);
@@ -910,12 +919,21 @@ int32 PLUGIN_API IPlugVST3::getProgramListCount()
 #endif
 }
 
+int32 PLUGIN_API IPlugVST3::getPresetCount()
+{
+#ifdef VST3_PRESET_LIST
+    return NPresets();
+#else
+    return 0;
+#endif
+}
+
 tresult PLUGIN_API IPlugVST3::getProgramListInfo(int32 listIndex, ProgramListInfo& info /*out*/)
 {
   if (listIndex == 0)
   {
     info.id = kPresetParam;
-    info.programCount = (int32) NPresets();
+    info.programCount = getPresetCount();
     UString name(info.name, 128);
     name.fromAscii("Factory Presets");
     return kResultTrue;
