@@ -346,7 +346,7 @@ tresult PLUGIN_API IPlugVST3::setActive(TBool state)
   return SingleComponentEffect::setActive(state);
 }
 
-tresult PLUGIN_API IPlugVST3::setupProcessing (ProcessSetup& newSetup)
+tresult PLUGIN_API IPlugVST3::setupProcessing(ProcessSetup& newSetup)
 {
   TRACE;
 
