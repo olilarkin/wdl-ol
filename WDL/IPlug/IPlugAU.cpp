@@ -593,9 +593,20 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
         
         IParam* pParam = GetParam(element);
         
+        double shape = pParam->GetShape();
+          
+        if (shape > 2.5)
+            pInfo->flags |= kAudioUnitParameterFlag_DisplayCubeRoot;
+        else if (shape > 1.5)
+            pInfo->flags |= kAudioUnitParameterFlag_DisplaySquareRoot;
+        else if (shape < (2.0 / 5.0))
+            pInfo->flags |= kAudioUnitParameterFlag_DisplayCubed;
+        else if (shape < (2.0 / 3.0))
+            pInfo->flags |= kAudioUnitParameterFlag_DisplaySquared;
+                      
         if (pParam->GetCanAutomate()) 
         {
-          pInfo->flags = pInfo->flags | kAudioUnitParameterFlag_IsWritable;
+          pInfo->flags |= kAudioUnitParameterFlag_IsWritable;
         }
         
         if (pParam->GetIsMeta()) 
@@ -634,6 +645,8 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
                 pInfo->unit = kAudioUnitParameterUnit_Seconds;
               else if (!strcasecmp("secs", label))
                 pInfo->unit = kAudioUnitParameterUnit_Seconds;
+              else if (!strcasecmp("bpm", label))
+                  pInfo->unit = kAudioUnitParameterUnit_BPM;
               else
               {
                 pInfo->unit = kAudioUnitParameterUnit_CustomUnit;
@@ -650,7 +663,7 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
         pParam->GetBounds(&vMin, &vMax);
         pInfo->minValue = vMin;
         pInfo->maxValue = vMax;
-        pInfo->defaultValue = pParam->Value();
+        pInfo->defaultValue = pParam->GetDefault();
         
         const char* paramGroupName = pParam->GetParamGroupForHost();
 
