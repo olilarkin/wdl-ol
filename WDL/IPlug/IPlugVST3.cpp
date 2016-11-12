@@ -789,9 +789,9 @@ tresult PLUGIN_API IPlugVST3::getParamStringByValue(ParamID tag, ParamValue valu
   return kResultFalse;
 }
 
-tresult PLUGIN_API IPlugVST3::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
+tresult PLUGIN_API IPlugVST3::getParamValueByString(ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-  return SingleComponentEffect::getParamValueByString (tag, string, valueNormalized);
+  return SingleComponentEffect::getParamValueByString(tag, string, valueNormalized);
 }
 
 void IPlugVST3::addDependentView(IPlugVST3View* view)
@@ -832,13 +832,13 @@ tresult IPlugVST3::endEdit(ParamID tag)
   return kResultFalse;
 }
 
-AudioBus* IPlugVST3::getAudioInput (int32 index)
+AudioBus* IPlugVST3::getAudioInput(int32 index)
 {
   AudioBus* bus = FCast<AudioBus> (audioInputs.at(index));
   return bus;
 }
 
-AudioBus* IPlugVST3::getAudioOutput (int32 index)
+AudioBus* IPlugVST3::getAudioOutput(int32 index)
 {
   AudioBus* bus = FCast<AudioBus> (audioOutputs.at(index));
   return bus;
