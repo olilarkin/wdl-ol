@@ -382,20 +382,60 @@ VstIntPtr VSTCALLBACK IPlugVST::VSTDispatcher(AEffect *pEffect, VstInt32 opCode,
       }
       return 0;
     }
-      //could implement effGetParameterProperties to group parameters, but can't find a host that supports it
-//    case effGetParameterProperties:
-//    {
-//      if (idx >= 0 && idx < _this->NParams())
-//      {
-//        VstParameterProperties* props = (VstParameterProperties*) ptr;
-//        
-//        props->flags = kVstParameterSupportsDisplayCategory;
-//        props->category = idx+1;
-//        props->numParametersInCategory = 1;
-//        strcpy(props->categoryLabel, "test");
-//      }
-//      return 1;
-//    }
+    case effGetParameterProperties:
+    {
+      /*
+      if (idx >= 0 && idx < _this->NParams())
+      {
+        if (ptr)
+        {
+          IParam* pParam = _this->GetParam(idx);
+          VstParameterProperties* props = (VstParameterProperties*) ptr;
+           
+          // FIX - short label
+            
+          strcpy(props->label, pParam->GetNameForHost());
+          strcpy(props->shortLabel, "");
+          props->stepFloat = pParam->GetStep();
+          props->smallStepFloat = pParam->GetStep();
+          props->largeStepFloat = pParam->GetStep();
+          props->minInteger = pParam->GetMin();
+          props->maxInteger = pParam->GetMax();
+          props->stepInteger = 1;
+          props->largeStepInteger = 1;
+          props->flags = 0;
+           
+          switch (pParam->Type())
+          {
+            case IParam::kTypeBool:
+              props->flags = kVstParameterIsSwitch;
+              break;
+            case IParam::kTypeInt:
+              props->flags = kVstParameterUsesIntStep;
+              // fallthrough
+            case IParam::kTypeEnum:
+              props->flags = kVstParameterUsesIntegerMinMax;
+              break;
+            case IParam::kTypeDouble:
+              props->flags = kVstParameterUsesFloatStep;
+             break;
+            
+            default:
+              props->flags = 0;
+          }
+            
+          // TODO - add category support (currently flags not set to support it)
+            
+          props->displayIndex = idx;
+          props->category = 0;
+          props->numParametersInCategory = 0;
+          strcpy(props->categoryLabel, "");
+        }
+        return 1;
+      }
+      */
+      return 0;
+    }
     case effString2Parameter:
     {
       if (idx >= 0 && idx < _this->NParams())
