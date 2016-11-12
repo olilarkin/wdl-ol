@@ -880,7 +880,11 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
       *pDataSize = sizeof(CFArrayRef);
       if (pData)
       {
+#ifdef AU_PRESET_LIST
         int i, n = NPresets();
+#else
+        int i, n = 0;
+#endif
         CFMutableArrayRef presetArray = CFArrayCreateMutable(kCFAllocatorDefault, n, &kCFAUPresetArrayCallBacks);
 
         if (presetArray == NULL)
