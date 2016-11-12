@@ -56,8 +56,9 @@ IGraphicsCarbon::IGraphicsCarbon(IGraphicsMac* pGraphicsMac,
 
   Rect r;   // Client.
   r.left = r.top = 0;
-  r.right = pGraphicsMac->Width(false);
-  r.bottom = pGraphicsMac->Height(false);
+
+  r.right = pGraphicsMac->Width(true);
+  r.bottom = pGraphicsMac->Height(true);
 
   WindowAttributes winAttrs = 0;
   GetWindowAttributes(pWindow, &winAttrs);
