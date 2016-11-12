@@ -392,7 +392,7 @@ VstIntPtr VSTCALLBACK IPlugVST::VSTDispatcher(AEffect *pEffect, VstInt32 opCode,
           IParam* pParam = _this->GetParam(idx);
           VstParameterProperties* props = (VstParameterProperties*) ptr;
            
-          // FIX - short label
+          // TODO - short label
             
           strcpy(props->label, pParam->GetNameForHost());
           strcpy(props->shortLabel, "");
