@@ -38,7 +38,6 @@ public:
       flags |= ParameterInfo::kCanAutomate;
     }
       
-      // FIX - check
     if (pParam->Type() == IParam::kTypeEnum)
     {
       flags |= ParameterInfo::kIsList;
