@@ -412,9 +412,12 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
             default:
               if (idx >= 0 && idx < NParams())
               {
+                double currentValue = GetParam(idx)->GetNormalized();
+                int32 size = data.symbolicSampleSize;
+           
                 // Filter repeat values
                 
-                if (GetParam(idx)->GetNormalized() != value)
+                if ((currentValue != value) && !(size == kSample32 && ((float) currentValue) == value))
                 {
                     GetParam(idx)->SetNormalized(value);
                     if (GetGUI()) GetGUI()->SetParameterFromPlug(idx, value, true);
