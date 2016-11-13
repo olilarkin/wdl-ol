@@ -590,6 +590,7 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
         pInfo->flags = kAudioUnitParameterFlag_CFNameRelease |
                        kAudioUnitParameterFlag_HasCFNameString |
                        kAudioUnitParameterFlag_IsReadable |
+                       kAudioUnitParameterFlag_IsWritable |
                        kAudioUnitParameterFlag_IsHighResolution;
         
         IParam* pParam = GetParam(element);
@@ -605,9 +606,9 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
         else if (shape < (2.0 / 3.0))
           pInfo->flags |= kAudioUnitParameterFlag_DisplaySquared;
           
-        if (pParam->GetCanAutomate()) 
+        if (!pParam->GetCanAutomate())
         {
-          pInfo->flags |= kAudioUnitParameterFlag_IsWritable;
+          pInfo->flags |= kAudioUnitParameterFlag_NonRealTime;
         }
         
         if (pParam->GetIsMeta()) 
