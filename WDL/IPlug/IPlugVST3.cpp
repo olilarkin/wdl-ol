@@ -776,17 +776,7 @@ tresult PLUGIN_API IPlugVST3::setParamNormalized(ParamID tag, ParamValue value)
 
 tresult PLUGIN_API IPlugVST3::getParamStringByValue(ParamID tag, ParamValue valueNormalized, String128 string)
 {
-  IParam* param = GetParam(tag);
-
-  if (param)
-  {
-    char disp[MAX_PARAM_NAME_LEN];
-    param->GetDisplayForHost(valueNormalized, true, disp);
-    Steinberg::UString(string, 128).fromAscii(disp);
-    return kResultTrue;
-  }
-
-  return kResultFalse;
+  return SingleComponentEffect::getParamStringByValue(tag, valueNormalized, string);  
 }
 
 tresult PLUGIN_API IPlugVST3::getParamValueByString(ParamID tag, TChar* string, ParamValue& valueNormalized)
