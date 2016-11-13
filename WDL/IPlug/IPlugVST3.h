@@ -127,7 +127,7 @@ protected:
 
 private:
     
-  Steinberg::int32 getPresetCount();
+  Steinberg::int32 PLUGIN_API getPresetCount();
   void addDependentView (IPlugVST3View* view);
   void removeDependentView (IPlugVST3View* view);
   virtual Steinberg::tresult beginEdit(Steinberg::Vst::ParamID tag);
