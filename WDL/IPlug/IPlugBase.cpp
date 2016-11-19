@@ -534,9 +534,11 @@ void IPlugBase::SetLatency(int samples)
 void IPlugBase::SetParameterFromGUI(int idx, double normalizedValue)
 {
   Trace(TRACELOC, "%d:%f", idx, normalizedValue);
-  WDL_MutexLock lock(&mMutex);
-  GetParam(idx)->SetNormalized(normalizedValue);
-  InformHostOfParamChange(idx, normalizedValue);
+  { // exclude lock from OnParamChange
+    WDL_MutexLock lock(&mMutex);
+    GetParam(idx)->SetNormalized(normalizedValue);
+    InformHostOfParamChange(idx, normalizedValue);
+  }
   OnParamChange(idx);
 }
 
@@ -910,15 +912,17 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
 {
   TRACE;
 
-  WDL_MutexLock lock(&mMutex);
   int i, n = mParams.GetSize(), pos = startPos;
-  for (i = 0; i < n && pos >= 0; ++i)
-  {
-    IParam* pParam = mParams.Get(i);
-    double v = 0.0;
-    Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
-    pos = pChunk->Get(&v, pos);
-    pParam->Set(v);
+  { // exclude lock from OnParamReset
+    WDL_MutexLock lock(&mMutex);
+    for (i = 0; i < n && pos >= 0; ++i)
+    {
+      IParam* pParam = mParams.Get(i);
+      double v = 0.0;
+      Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
+      pos = pChunk->Get(&v, pos);
+      pParam->Set(v);
+    }
   }
   OnParamReset();
   return pos;
