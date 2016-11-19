@@ -277,13 +277,15 @@ AAX_Result IPlugAAX::UpdateParameterNormalizedValue(AAX_CParamID iParameterID, d
   
   if ((paramIdx >= 0) && (paramIdx < NParams())) 
   {
-    IMutexLock lock(this);
+    { // exclude lock from OnParamChange
+      IMutexLock lock(this);
     
-    GetParam(paramIdx)->SetNormalized(iValue);
+      GetParam(paramIdx)->SetNormalized(iValue);
     
-    if (GetGUI())
-    {
-      GetGUI()->SetParameterFromPlug(paramIdx, iValue, true);
+      if (GetGUI())
+      {
+          GetGUI()->SetParameterFromPlug(paramIdx, iValue, true);
+      }
     }
     
     OnParamChange(paramIdx);      
