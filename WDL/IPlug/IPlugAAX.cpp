@@ -477,6 +477,14 @@ void IPlugAAX::EndInformHostOfParamChange(int idx)
   ReleaseParameter(mParamIDs.Get(idx)->Get());
 }
 
+void IPlugAAX::AddShortenedName(int paramIdx, const AAX_CString &shortName)
+{
+  TRACE;
+
+  AAX_IParameter* parameter = mParameterManager.GetParameterByID(mParamIDs.Get(paramIdx)->Get());
+  parameter->AddShortenedName(shortName);
+}
+
 int IPlugAAX::GetSamplePos()
 { 
   int64_t samplePos;
