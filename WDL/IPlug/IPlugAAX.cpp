@@ -208,7 +208,7 @@ AAX_Result IPlugAAX::EffectInit()
         param = new AAX_CParameter<int>(paramID->Get(), 
                                         AAX_CString(p->GetNameForHost()), 
                                         (int)p->GetDefault(), 
-                                        AAX_CLinearTaperDelegate<int>((int)p->GetMin(), (int)p->GetMax()), 
+                                        AAX_CLinearTaperDelegate<int,1>((int)p->GetMin(), (int)p->GetMax()),
                                         AAX_CUnitDisplayDelegateDecorator<int>( AAX_CNumberDisplayDelegate<int>(), AAX_CString(p->GetLabelForHost())), 
                                         p->GetCanAutomate());
         
