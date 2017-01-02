@@ -12,7 +12,7 @@ template <typename T>
 class AAX_CIPlugTaperDelegate : public AAX_ITaperDelegate<T>
 {
 public: 
-	AAX_CIPlugTaperDelegate(T minValue=0, T maxValue=1, double shape = 1.);
+	AAX_CIPlugTaperDelegate(IParam * pParam, T minValue=0, T maxValue=1, double shape = 1.);
 	
 	//Virtual AAX_ITaperDelegate Overrides
 	AAX_CIPlugTaperDelegate<T>*	Clone() const;
@@ -26,13 +26,15 @@ private:
 	T	mMinValue;
 	T	mMaxValue;
 	double mShape;
+    IParam *mParam;
 };
 
 template <typename T>
-AAX_CIPlugTaperDelegate<T>::AAX_CIPlugTaperDelegate(T minValue, T maxValue, double shape)  :  AAX_ITaperDelegate<T>(),
+AAX_CIPlugTaperDelegate<T>::AAX_CIPlugTaperDelegate(IParam *pParam, T minValue, T maxValue, double shape)  :  AAX_ITaperDelegate<T>(),
 	mMinValue(minValue),
 	mMaxValue(maxValue),
-	mShape(shape)
+	mShape(shape),
+    mParam(pParam)
 {
 
 }
@@ -56,7 +58,7 @@ T		AAX_CIPlugTaperDelegate<T>::ConstrainRealValue(T value)	const
 template <typename T>
 T		AAX_CIPlugTaperDelegate<T>::NormalizedToReal(double normalizedValue) const
 {  
-  double doubleRealValue = FromNormalizedParam(normalizedValue, mMinValue, mMaxValue, mShape);
+  double doubleRealValue = mParam->FromNormalizedParam(normalizedValue, mMinValue, mMaxValue, mShape);
   
 	T realValue = (T)doubleRealValue;
 	
@@ -68,7 +70,7 @@ double	AAX_CIPlugTaperDelegate<T>::RealToNormalized(T realValue) const
 {
 	realValue = ConstrainRealValue(realValue);
   
-  return ToNormalizedParam(realValue, mMinValue, mMaxValue, mShape);
+  return mParam->ToNormalizedParam(realValue, mMinValue, mMaxValue, mShape);
 }
 
 #endif //AAX_CIPlugTAPERDELEGATE_H

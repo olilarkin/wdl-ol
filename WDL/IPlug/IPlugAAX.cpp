@@ -4,6 +4,7 @@
 #include "AAX_CBinaryDisplayDelegate.h"
 #include "AAX_CStringDisplayDelegate.h"
 #include "AAX_CLinearTaperDelegate.h"
+#include "AAX_CStateTaperDelegate.h"
 
 // custom taper for IParam::kTypeDouble
 #include "AAX/AAX_CIPlugTaperDelegate.h"
@@ -50,6 +51,25 @@ void AAX_CEffectGUI_IPLUG::DeleteViewContainer()
   {
     mGraphics->CloseWindow();
   }
+}
+
+AAX_Result AAX_CEffectGUI_IPLUG::SetControlHighlightInfo (AAX_CParamID iParameterID, AAX_CBoolean iIsHighlighted, AAX_EHighlightColor iColor)
+{
+  // dispatch to control
+  int paramIdx = atoi(iParameterID) - kAAXParamIdxOffset;
+  
+  if (paramIdx >= 0)
+  {
+    for (int idx = 0; idx < mGraphics->GetNControls(); ++idx)
+    {
+      IControl *theControl = mGraphics->GetControl(idx);
+      if (theControl->ParamIdx() == paramIdx)
+      {
+        theControl->SetControlHighlightInfo(iParameterID, iIsHighlighted, iColor);
+      }
+    }
+  }
+  return AAX_SUCCESS;
 }
 
 AAX_Result AAX_CEffectGUI_IPLUG::GetViewSize(AAX_Point *oEffectViewSize) const
@@ -121,7 +141,6 @@ IPlugAAX::IPlugAAX(IPlugInstanceInfo instanceInfo,
             kAPIAAX)
 
 , AAX_CIPlugParameters()
-, mTransport(0)
 {
   Trace(TRACELOC, "%s%s", effectName, channelIOStr);
 
@@ -175,7 +194,7 @@ AAX_Result IPlugAAX::EffectInit()
         param = new AAX_CParameter<double>(paramID->Get(), 
                                           AAX_CString(p->GetNameForHost()), 
                                           p->GetDefault(), 
-                                          AAX_CIPlugTaperDelegate<double>(p->GetMin(), p->GetMax(), p->GetShape()),
+                                          AAX_CIPlugTaperDelegate<double>(p, p->GetMin(), p->GetMax(), p->GetShape()),
                                           AAX_CUnitDisplayDelegateDecorator<double>( AAX_CNumberDisplayDelegate<double>(), AAX_CString(p->GetLabelForHost())), 
                                           p->GetCanAutomate());
         
@@ -189,7 +208,7 @@ AAX_Result IPlugAAX::EffectInit()
         param = new AAX_CParameter<int>(paramID->Get(), 
                                         AAX_CString(p->GetNameForHost()), 
                                         (int)p->GetDefault(), 
-                                        AAX_CLinearTaperDelegate<int>((int)p->GetMin(), (int)p->GetMax()), 
+                                        AAX_CLinearTaperDelegate<int,1>((int)p->GetMin(), (int)p->GetMax()),
                                         AAX_CUnitDisplayDelegateDecorator<int>( AAX_CNumberDisplayDelegate<int>(), AAX_CString(p->GetLabelForHost())), 
                                         p->GetCanAutomate());
         
@@ -213,10 +232,10 @@ AAX_Result IPlugAAX::EffectInit()
           displayTexts.insert(std::pair<int, AAX_CString>(value, AAX_CString(text)) );
         }
         
-        param = new AAX_CParameter<int>(paramID->Get(), 
-                                        AAX_CString(p->GetNameForHost()), 
-                                        (int)p->GetDefault(), 
-                                        AAX_CLinearTaperDelegate<int>((int)p->GetMin(), (int)p->GetMax()), 
+        param = new AAX_CParameter<int>(paramID->Get(),
+                                        AAX_CString(p->GetNameForHost()),
+                                        (int)p->GetDefault(),
+                                        AAX_CStateTaperDelegate<int>((int)p->GetMin(), (int)p->GetMax()),
                                         AAX_CStringDisplayDelegate<int>(displayTexts),
                                         p->GetCanAutomate());
         
@@ -258,13 +277,15 @@ AAX_Result IPlugAAX::UpdateParameterNormalizedValue(AAX_CParamID iParameterID, d
   
   if ((paramIdx >= 0) && (paramIdx < NParams())) 
   {
-    IMutexLock lock(this);
+    { // exclude lock from OnParamChange
+      IMutexLock lock(this);
     
-    GetParam(paramIdx)->SetNormalized(iValue);
+      GetParam(paramIdx)->SetNormalized(iValue);
     
-    if (GetGUI())
-    {
-      GetGUI()->SetParameterFromPlug(paramIdx, iValue, true);
+      if (GetGUI())
+      {
+          GetGUI()->SetParameterFromPlug(paramIdx, iValue, true);
+      }
     }
     
     OnParamChange(paramIdx);      
@@ -311,9 +332,6 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
     }
   }
   
-  AAX_IMIDINode* transportNode = ioRenderInfo->mTransportNode;
-  mTransport = transportNode->GetTransport();
-
   int32_t numSamples = *(ioRenderInfo->mNumSamples);
   int32_t numInChannels = AAX_STEM_FORMAT_CHANNEL_COUNT(inFormat);
   int32_t numOutChannels = AAX_STEM_FORMAT_CHANNEL_COUNT(outFormat);
@@ -461,17 +479,25 @@ void IPlugAAX::EndInformHostOfParamChange(int idx)
   ReleaseParameter(mParamIDs.Get(idx)->Get());
 }
 
+void IPlugAAX::AddShortenedName(int paramIdx, const AAX_CString &shortName)
+{
+  TRACE;
+
+  AAX_IParameter* parameter = mParameterManager.GetParameterByID(mParamIDs.Get(paramIdx)->Get());
+  parameter->AddShortenedName(shortName);
+}
+
 int IPlugAAX::GetSamplePos()
 { 
   int64_t samplePos;
-  mTransport->GetCurrentNativeSampleLocation(&samplePos);
+  Transport()->GetCurrentNativeSampleLocation(&samplePos);
   return (int) samplePos;
 }
 
 double IPlugAAX::GetTempo()
 {
   double tempo;
-  mTransport->GetCurrentTempo(&tempo);
+  Transport()->GetCurrentTempo(&tempo);
   return tempo;
 }
 
@@ -480,20 +506,20 @@ void IPlugAAX::GetTime(ITimeInfo* pTimeInfo)
   int32_t num, denom;
   int64_t ppqPos, samplePos, cStart, cEnd;
 
-  mTransport->GetCurrentTempo(&pTimeInfo->mTempo);
-  mTransport->IsTransportPlaying(&pTimeInfo->mTransportIsRunning);
+  Transport()->GetCurrentTempo(&pTimeInfo->mTempo);
+  Transport()->IsTransportPlaying(&pTimeInfo->mTransportIsRunning);
   
-  mTransport->GetCurrentMeter(&num, &denom);
+  Transport()->GetCurrentMeter(&num, &denom);
   pTimeInfo->mNumerator = (int) num;
   pTimeInfo->mDenominator = (int) denom;
   
-  mTransport->GetCurrentTickPosition(&ppqPos);
+  Transport()->GetCurrentTickPosition(&ppqPos);
   pTimeInfo->mPPQPos = (double) ppqPos / 960000.0;
   
-  mTransport->GetCurrentNativeSampleLocation(&samplePos);
+  Transport()->GetCurrentNativeSampleLocation(&samplePos);
   pTimeInfo->mSamplePos = (double) samplePos;
   
-  mTransport->GetCurrentLoopPosition(&pTimeInfo->mTransportLoopEnabled, &cStart, &cEnd);
+  Transport()->GetCurrentLoopPosition(&pTimeInfo->mTransportLoopEnabled, &cStart, &cEnd);
   pTimeInfo->mCycleStart = (double) cStart / 960000.0;
   pTimeInfo->mCycleEnd = (double) cEnd / 960000.0;
   
@@ -503,7 +529,7 @@ void IPlugAAX::GetTime(ITimeInfo* pTimeInfo)
 void IPlugAAX::GetTimeSig(int* pNum, int* pDenom)
 {
   int32_t num, denom;
-  mTransport->GetCurrentMeter(&num, &denom);
+  Transport()->GetCurrentMeter(&num, &denom);
   *pNum = (int) num;
   *pDenom = (int) denom;
 }

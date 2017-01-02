@@ -23,6 +23,7 @@ public:
   AAX_CEffectGUI_IPLUG() {}
   ~AAX_CEffectGUI_IPLUG() {}
   static AAX_IEffectGUI* AAX_CALLBACK Create();
+  AAX_Result SetControlHighlightInfo (AAX_CParamID iParameterID, AAX_CBoolean iIsHighlighted, AAX_EHighlightColor iColor);
   
 private:
   void CreateViewContents();
@@ -59,7 +60,8 @@ public:
   ~IPlugAAX();
   
   AAX_Result UpdateParameterNormalizedValue(AAX_CParamID iParameterID, double iValue, AAX_EUpdateSource iSource );
-  
+    void AddShortenedName(int idx, const AAX_CString &shortName);
+
   // AAX_CIPlugParameters Overrides
   static AAX_CEffectParameters *AAX_CALLBACK Create();
   AAX_Result EffectInit();
@@ -71,7 +73,10 @@ public:
   AAX_Result GetChunk(AAX_CTypeID chunkID, AAX_SPlugInChunk * oChunk ) const ;   
   AAX_Result SetChunk(AAX_CTypeID chunkID, const AAX_SPlugInChunk * iChunk );
   AAX_Result CompareActiveChunk(const AAX_SPlugInChunk * iChunk, AAX_CBoolean * oIsEqual )  const ;
-  
+#ifdef USE_IDLE_CALLS
+  AAX_Result TimerWakeup() { OnIdle(); return AAX_SUCCESS; }
+#endif
+
   // IPlugBase Overrides
   void BeginInformHostOfParamChange(int idx);
   void InformHostOfParamChange(int idx, double normalizedValue);
@@ -93,7 +98,6 @@ protected:
 
 private:
   AAX_CParameter<bool>* mBypassParameter;
-  AAX_ITransport* mTransport;
   WDL_PtrList<WDL_String> mParamIDs;
 };
 

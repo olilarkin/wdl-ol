@@ -13,6 +13,7 @@ IParam::IParam()
   , mCanAutomate(true)
   , mDefault(0.)
   , mIsMeta(false)
+  , mSignDisplay(false)
 {
   memset(mName, 0, MAX_PARAM_NAME_LEN * sizeof(char));
   memset(mLabel, 0, MAX_PARAM_LABEL_LEN * sizeof(char));
@@ -122,8 +123,8 @@ void IParam::GetDisplayForHost(double value, bool normalized, char* rDisplay, bo
 
   if (withDisplayText)
   {
-    const char* displayText = GetDisplayText( (int) value);
-
+    const char* displayText = GetDisplayText(floor(value + 0.5));
+  
     if (CSTR_NOT_EMPTY(displayText))
     {
       strcpy(rDisplay, displayText);
@@ -131,24 +132,12 @@ void IParam::GetDisplayForHost(double value, bool normalized, char* rDisplay, bo
     }
   }
 
-  double displayValue = value;
-
-  if (mNegateDisplay) displayValue = -displayValue;
-
   if (mDisplayPrecision == 0)
-  {
-    sprintf(rDisplay, "%d", int(displayValue));
-  }
-//   else if(mSignDisplay)
-//   {
-//     char fmt[16];
-//     sprintf(fmt, "%%+.%df", mDisplayPrecision);
-//     sprintf(rDisplay, fmt, displayValue);
-//   }
-  else
-  {
-    sprintf(rDisplay, "%.*f", mDisplayPrecision, displayValue);
-  }
+    value = floor(value + 0.5);	// avoid round-to-even in sprintf, for consistency
+
+  if (mNegateDisplay) value = -value;
+
+  sprintf(rDisplay, mSignDisplay ? "%+.*f" : "%.*f", mDisplayPrecision, value);
 }
 
 const char* IParam::GetNameForHost()

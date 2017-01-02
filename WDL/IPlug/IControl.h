@@ -4,6 +4,10 @@
 #include "IPlugBase.h"
 #include "IGraphics.h"
 
+#if defined (AAX_API)
+#include "AAX.h"
+#endif
+
 // A control is anything on the GUI, it could be a static bitmap, or
 // something that moves or changes.  The control could manipulate
 // bitmaps or do run-time vector drawing, or whatever.
@@ -121,6 +125,10 @@ public:
   
   IPlugBase* GetPlug() { return mPlug; }
   IGraphics* GetGUI() { return mPlug->GetGUI(); }
+
+#if defined (AAX_API)
+  virtual AAX_Result SetControlHighlightInfo (AAX_CParamID iParameterID, AAX_CBoolean iIsHighlighted, AAX_EHighlightColor iColor) { return AAX_SUCCESS; }
+#endif
 
 protected:
   int mTextEntryLength;
