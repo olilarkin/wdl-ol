@@ -458,17 +458,17 @@ void IFaderControl::OnMouseWheel(int x, int y, IMouseMod* pMod, int d)
 #ifdef PROTOOLS
   if (pMod->C)
   {
-    mValue += 0.001 * d;
+    mValue += 0.001 * ConvertMouseDeltaToNative(d);
   }
 #else
   if (pMod->C || pMod->S)
   {
-    mValue += 0.001 * d;
+    mValue += 0.001 * ConvertMouseDeltaToNative(d);
   }
 #endif
   else
   {
-    mValue += 0.01 * d;
+    mValue += 0.01 * ConvertMouseDeltaToNative(d);
   }
   
   SetDirty();
@@ -522,11 +522,11 @@ void IKnobControl::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod)
   
   if (mDirection == kVertical)
   {
-    mValue += (double) dY / (double) (mRECT.T - mRECT.B) / gearing;
+    mValue += (double) ConvertMouseDeltaToNative(dY) / (double) (mRECT.T - mRECT.B) / gearing;
   }
   else
   {
-    mValue += (double) dX / (double) (mRECT.R - mRECT.L) / gearing;
+    mValue += (double) ConvertMouseDeltaToNative(dX) / (double) (mRECT.R - mRECT.L) / gearing;
   }
 
   SetDirty();
@@ -537,17 +537,17 @@ void IKnobControl::OnMouseWheel(int x, int y, IMouseMod* pMod, int d)
 #ifdef PROTOOLS
   if (pMod->C)
   {
-    mValue += 0.001 * d;
+    mValue += 0.001 * ConvertMouseDeltaToNative(d);
   }
 #else
   if (pMod->C || pMod->S)
   {
-    mValue += 0.001 * d;
+    mValue += 0.001 * ConvertMouseDeltaToNative(d);
   }
 #endif
   else
   {
-    mValue += 0.01 * d;
+    mValue += 0.01 * ConvertMouseDeltaToNative(d);
   }
   
   SetDirty();
