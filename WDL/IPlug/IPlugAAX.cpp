@@ -561,3 +561,12 @@ bool IPlugAAX::SendMidiMsg(IMidiMsg* pMsg)
 {
   return false;
 }
+
+// The AAX host echoes the parameter change, so this override eliminates OnParamChange
+void IPlugAAX::SetParameterFromGUI(int idx, double normalizedValue)
+{
+  Trace(TRACELOC, "%d:%f", idx, normalizedValue);
+  WDL_MutexLock lock(&mMutex);
+  GetParam(idx)->SetNormalized(normalizedValue);
+  InformHostOfParamChange(idx, normalizedValue);
+}
