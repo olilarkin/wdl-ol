@@ -55,6 +55,7 @@ public:
   // Mutex is already locked.
   virtual void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
   virtual void ProcessSingleReplacing(float** inputs, float** outputs, int nFrames);
+  virtual void ProcessBypass(double** inputs, double** outputs, int nFrames);
 
   // In case the audio processing thread needs to do anything when the GUI opens
   // (like for example, set some state dependent initial values for controls).

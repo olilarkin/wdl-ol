@@ -436,7 +436,7 @@ void IPlugBase::PassThroughBuffers(double sampleType, int nFrames)
   }
   else 
   {
-    IPlugBase::ProcessDoubleReplacing(mInData.Get(), mOutData.Get(), nFrames);
+    ProcessBypass(mInData.Get(), mOutData.Get(), nFrames);
   }
 }
 
@@ -456,6 +456,11 @@ void IPlugBase::PassThroughBuffers(float sampleType, int nFrames)
       CastCopy(pOutChannel->mFDest, *(pOutChannel->mDest), nFrames);
     }
   }
+}
+
+void IPlugBase::ProcessBypass(double** inputs, double** outputs, int nFrames) // njr
+{
+  IPlugBase::ProcessDoubleReplacing(inputs, outputs, nFrames);
 }
 
 void IPlugBase::ProcessBuffers(double sampleType, int nFrames)
@@ -554,6 +559,7 @@ void IPlugBase::OnParamReset()
 // Default passthrough.
 void IPlugBase::ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames)
 {
+#if 0 //#### njr
   // Mutex is already locked.
   int i, nIn = mInChannels.GetSize(), nOut = mOutChannels.GetSize();
   int j = 0;
@@ -565,11 +571,18 @@ void IPlugBase::ProcessDoubleReplacing(double** inputs, double** outputs, int nF
       j++;
     }
   }
+  
   // zero remaining outs
   for (/* same j */; j < nOut; ++j)
   {
     memset(outputs[j], 0, nFrames * sizeof(double));
   }
+#else
+  // Mutex is already locked.
+  int i, nOut = mOutChannels.GetSize();
+  for (i = 0; i < nOut; ++i)
+    memcpy(outputs[i], inputs[mInChannels.Get(i)->mConnected ? i : 0], nFrames * sizeof(double));
+#endif
 }
 
 // Default passthrough ONLY USED BY IOS.
