@@ -587,9 +587,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = lice;
 				SKIP_INSTALL = YES;
 				SYMROOT = "build-mac";
+                MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 			};
 			name = Debug;
 		};
@@ -606,11 +608,13 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = lice;
 				SKIP_INSTALL = YES;
 				STRIP_INSTALLED_PRODUCT = YES;
 				STRIP_STYLE = "non-global";
 				SYMROOT = "build-mac";
+                MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 			};
 			name = Release;
 		};
@@ -631,6 +635,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
 				SDKROOT = "$(BASE_SDK)";
+                MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 			};
 			name = Debug;
 		};
@@ -649,6 +654,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
 				SDKROOT = "$(BASE_SDK)";
+                MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 			};
 			name = Release;
 		};
@@ -668,9 +674,11 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = lice32;
 				SKIP_INSTALL = YES;
 				SYMROOT = "build-mac";
+                MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 			};
 			name = Debug;
 		};
@@ -688,11 +696,13 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				INSTALL_PATH = /usr/local/lib;
+				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = lice32;
 				SKIP_INSTALL = YES;
 				STRIP_INSTALLED_PRODUCT = YES;
 				STRIP_STYLE = "non-global";
 				SYMROOT = "build-mac";
+                MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 			};
 			name = Release;
 		};
