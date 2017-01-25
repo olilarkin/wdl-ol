@@ -102,9 +102,9 @@ public:
   virtual void PluginPath(WDL_String* pPath) = 0; // Full path to plugin dll.
   virtual void DesktopPath(WDL_String* pPath) = 0; // Full path to user's desktop.
 
-  //Windows7: %LOCALAPPDATA%\
-  //Windows XP/Vista: %USERPROFILE%\Local Settings\Application Data\
-  //OSX: ~/Library/Application Support/
+  /* Windows7: %LOCALAPPDATA%\
+   * Windows XP/Vista: %USERPROFILE%\Local Settings\Application Data\
+   * OSX: ~/Library/Application Support/ */
   virtual void AppSupportPath(WDL_String* pPath, bool isSystem = false) = 0;
   virtual void SandboxSafeAppSupportPath(WDL_String* pPath) = 0;
 

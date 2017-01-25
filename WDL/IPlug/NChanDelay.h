@@ -12,9 +12,9 @@ private:
   
 public:
   NChanDelayLine(int maxInputChans = 2, int maxOutputChans = 2)
-  : mNumInChans(maxInputChans)
+  : mWriteAddress(0)
+  , mNumInChans(maxInputChans)
   , mNumOutChans(maxOutputChans) 
-  , mWriteAddress(0)
   , mDTSamples(0) {}
   
   ~NChanDelayLine() {}
@@ -41,7 +41,7 @@ public:
       signed long readAddress = mWriteAddress - mDTSamples;
       readAddress %= mDTSamples;
       
-      for (int chan = 0; chan < mNumInChans; chan++) 
+      for (unsigned int chan = 0; chan < mNumInChans; chan++)
       {
         if (chan < mNumOutChans)
         {

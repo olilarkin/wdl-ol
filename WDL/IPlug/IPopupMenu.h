@@ -27,15 +27,15 @@ public:
   };
 
   IPopupMenuItem(const char* text, int flags = kNoFlags)
-    : mFlags(flags)
-    , mSubmenu(0)
+    : mSubmenu(0)
+    , mFlags(flags)
   {
     SetText(text);
   }
 
   IPopupMenuItem (const char* text, IPopupMenu *pSubMenu)
-    : mFlags(kNoFlags)
-    , mSubmenu(pSubMenu)
+    : mSubmenu(pSubMenu)
+    , mFlags(kNoFlags)
   {
     SetText(text);
   }
@@ -68,8 +68,8 @@ class IPopupMenu
 public:
 
   IPopupMenu(int prefix = 0, bool multicheck = false)
-    : mChosenItemIdx(-1)
-    , mPrefix(prefix)
+    : mPrefix(prefix)
+    , mChosenItemIdx(-1)
     , mCanMultiCheck(multicheck)
   {}
 
