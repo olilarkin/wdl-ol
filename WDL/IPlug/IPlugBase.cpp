@@ -1026,6 +1026,27 @@ void IPlugBase::DumpBankBlob(const char* filename)
   fclose(fp);
 }
 
+void IPlugBase::DumpCurrentSettingsAsBlob(const char* filename, const char* presetname)
+{
+  FILE* fp = fopen(filename, "w");
+  WDL_String txt;
+  txt.Set("MakePresetFromBlob(\"");
+  txt.Append(presetname);
+  txt.Append("\", \"");
+  fprintf(fp, txt.Get());
+
+  char buf[MAX_BLOB_LENGTH];
+
+  ByteChunk pPresetChunk;
+  SerializeState(&pPresetChunk);
+  BYTE* byteStart = pPresetChunk.GetBytes();
+
+  base64encode(byteStart, buf, pPresetChunk.Size());
+
+  fprintf(fp, "%s\", %i);\n", buf, pPresetChunk.Size());
+  fclose(fp);
+}
+
 void IPlugBase::SetInputLabel(int idx, const char* pLabel)
 {
   if (idx >= 0 && idx < NInChannels())

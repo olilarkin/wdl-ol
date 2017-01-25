@@ -267,7 +267,8 @@ public:
   void DumpPresetSrcCode(const char* filename, const char* paramEnumNames[]);
   void DumpPresetBlob(const char* filename);
   void DumpBankBlob(const char* filename);
-  
+  void DumpCurrentSettingsAsBlob(const char* filename, const char* presetname = "name");
+	
   virtual void PresetsChangedByHost() {} // does nothing by default
   void DirtyParameters(); // hack to tell the host to dirty file state, when a preset is recalled
   
