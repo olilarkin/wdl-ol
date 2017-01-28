@@ -1,10 +1,10 @@
 #include "IGraphics.h"
 
-#define DEFAULT_FPS 25
+#define DEFAULT_FPS 120
 
 // If not dirty for this many timer ticks, we call OnGUIIDle.
 // Only looked at if USE_IDLE_CALLS is defined.
-#define IDLE_TICKS 20
+#define IDLE_TICKS 120
 
 #ifndef CONTROL_BOUNDS_COLOR
   #define CONTROL_BOUNDS_COLOR COLOR_GREEN
@@ -1196,4 +1196,18 @@ LICE_IFont* IGraphics::CacheFont(IText* pTxt)
   }
   pTxt->mCached = font;
   return font;
+}
+
+bool IGraphics::BlurBitmap(IBitmap* pISrc, int dstx, int dsty, IRECT x)
+{
+	LICE_IBitmap* pSrc = (LICE_IBitmap*)pISrc->mData;
+	LICE_Blur(mDrawBitmap, pSrc, dstx, dsty, x.L, x.T, x.W(), x.H());
+	return true;
+}
+
+bool IGraphics::FillCBezier(IColor* pColor, float xstart, float ystart, float xctl1, float yctl1,
+	float xctl2, float yctl2, float xend, float yend, int yfill, float alpha, int mode, float tol)
+{
+	LICE_FillCBezier(mDrawBitmap, xstart, ystart, xctl1, yctl1, xctl2, yctl2, xend, yend, yfill, LiceColor(pColor), alpha, mode, tol);
+	return true;
 }
