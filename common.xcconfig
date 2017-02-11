@@ -3,7 +3,7 @@
 // along with some other global build variables
 
 // this is used for Developer ID / Appstore code-signing and is used in the makedist-mac shell script
-CERTIFICATE_ID = Oliver Larkin
+CERTIFICATE_ID = Youlean
 
 // Which compiler to use
 //COMPILER = com.apple.compilers.gcc.4_2 // use this with xcode3
@@ -20,8 +20,8 @@ COMPILER = com.apple.compilers.llvm.clang.1_0 // or this with xcode4+/10.7+
 //BASE_SDK = macosx10.10
 BASE_SDK = macosx10.11
 
-//CLANG_CXX_LANGUAGE_STANDARD = c++0x
-//CLANG_CXX_LIBRARY = libc++
+CLANG_CXX_LANGUAGE_STANDARD = c++11
+CLANG_CXX_LIBRARY = libc++
 
 // the minimum OS to support
 DEPLOYMENT_TARGET = 10.7
