@@ -18,7 +18,7 @@ IRECT IPlugGUIResize::DRECT_to_IRECT(DRECT *dRECT)
 
 IRECT IPlugGUIResize::ResizeIRECT(DRECT *old_IRECT, double width_ratio, double height_ratio)
 {
-	return IRECT((int)((old_IRECT->L + 0.4999)* width_ratio), (int)((old_IRECT->T + 0.4999) * height_ratio), (int)((old_IRECT->R + 0.4999)* width_ratio), (int)((old_IRECT->B + 0.4999) * height_ratio));
+	return IRECT((int)((old_IRECT->L)* width_ratio), (int)((old_IRECT->T) * height_ratio), (int)((old_IRECT->R)* width_ratio), (int)((old_IRECT->B) * height_ratio));
 }
 
 DRECT * IPlugGUIResize::GetLayoutContainerDrawRECT(int viewMode, IControl * pControl)
@@ -176,11 +176,11 @@ void IPlugGUIResize::DrawReopenPluginInterface(IGraphics * pGraphics, IRECT * pR
 	pGraphics->FillIRect(&backgroundColor, &mRECT);
 
 
-	IColor textColor = IColor(255, 255, 255, 255);
+	IColor color = IColor(255, 255, 255, 255);
 
 	int textSize = int(77.0 * (double)pGraphics->Width() / (double)default_gui_width);
 
-	IText textProps = IText(textSize, &textColor, "Arial", IText::kStyleItalic, IText::kAlignNear);
+	IText textProps = IText(textSize, &color, "Arial", IText::kStyleItalic, IText::kAlignNear);
 
 	IRECT textPosition = IRECT(0, (pGraphics->Height() / 2) - textSize, mRECT.R, mRECT.B);
 	int position_correction = 0;
@@ -320,6 +320,11 @@ void IPlugGUIResize::LiveRemoveLayer(IControl * pControl)
 void IPlugGUIResize::UseHandleForGUIScaling(bool statement)
 {
 	handle_controls_gui_scaling = statement;
+}
+
+void IPlugGUIResize::UseControlAndClickOnHandleForGUIScaling(bool statement)
+{
+	control_and_click_on_handle_controls_gui_scaling = statement;
 }
 
 void IPlugGUIResize::AddNewView(int viewMode, int viewWidth, int viewHeight)
@@ -474,26 +479,161 @@ void IPlugGUIResize::DisableFastBitmapResizing()
 void IPlugGUIResize::HideControl(int index)
 {
 	IControl* pControl = mGraphics->GetControl(index);
+
+	int position = FindLayoutPointerPosition(current_view_mode, pControl);
+	if (position >= 0) layout_container[current_view_mode].org_is_hidden[position] = true;
+
 	pControl->Hide(true);
 }
 
 void IPlugGUIResize::ShowControl(int index)
 {
 	IControl* pControl = mGraphics->GetControl(index);
+
+	int position = FindLayoutPointerPosition(current_view_mode, pControl);
+	if (position >= 0) layout_container[current_view_mode].org_is_hidden[position] = false;
+
 	pControl->Hide(false);
+}
+
+
+
+
+void IPlugGUIResize::MoveControlRelativeToControlDrawRect(int moveControlIndex, int relativeToControlIndex, double xRatio, double yRatio, resizeFlag flag)
+{
+	IControl* moveControl = mGraphics->GetControl(moveControlIndex);
+	IControl* relativeToControl = mGraphics->GetControl(relativeToControlIndex);
+
+	MoveControlRelativeToControlDrawRect(moveControl, relativeToControl, xRatio, yRatio, flag);
+}
+
+void IPlugGUIResize::MoveControlRelativeToControlDrawRect(IControl* moveControl, IControl* relativeToControl, double xRatio, double yRatio, resizeFlag flag)
+{
+	IRECT relativeTo = *relativeToControl->GetNonScaledDrawRECT();
+
+	// Get control width and height
+	double nonScaledControlWidth = moveControl->GetRECT()->W() / gui_scale_ratio;
+	double nonScaledControlHeight = moveControl->GetRECT()->H() / gui_scale_ratio;
+
+	// Make x and y relative to IRECT
+	double x = relativeTo.L + (relativeTo.W() - nonScaledControlWidth) * xRatio;
+	double y = relativeTo.T + (relativeTo.H() - nonScaledControlHeight) * yRatio;
+
+	MoveControl(moveControl, x, y, flag);
+}
+
+void IPlugGUIResize::MoveControlHorizontallyRelativeToControlDrawRect(int moveControlIndex, int relativeToControlIndex, double xRatio, resizeFlag flag)
+{
+	IControl* moveControl = mGraphics->GetControl(moveControlIndex);
+	IControl* relativeToControl = mGraphics->GetControl(relativeToControlIndex);
+
+	MoveControlHorizontallyRelativeToControlDrawRect(moveControl, relativeToControl, xRatio, flag);
+}
+
+void IPlugGUIResize::MoveControlHorizontallyRelativeToControlDrawRect(IControl* moveControl, IControl* relativeToControl, double xRatio, resizeFlag flag)
+{
+	IRECT relativeTo = *relativeToControl->GetNonScaledDrawRECT();
+
+	// Get control width and height
+	double nonScaledControlWidth = moveControl->GetRECT()->W() / gui_scale_ratio;
+
+	// Make x and y relative to IRECT
+	double x = relativeTo.L + (relativeTo.W() - nonScaledControlWidth) * xRatio;
+
+	MoveControlHorizontally(moveControl, x, flag);
+}
+
+void IPlugGUIResize::MoveControlVerticallyRelativeToControlDrawRect(int moveControlIndex, int relativeToControlIndex, double yRatio, resizeFlag flag)
+{
+	IControl* moveControl = mGraphics->GetControl(moveControlIndex);
+	IControl* relativeToControl = mGraphics->GetControl(relativeToControlIndex);
+
+	MoveControlVerticallyRelativeToControlDrawRect(moveControl, relativeToControl,  yRatio, flag);
+}
+
+void IPlugGUIResize::MoveControlVerticallyRelativeToControlDrawRect(IControl* moveControl, IControl* relativeToControl, double yRatio, resizeFlag flag)
+{
+	IRECT relativeTo = *relativeToControl->GetNonScaledDrawRECT();
+
+	// Get control width and height
+	double nonScaledControlHeight = moveControl->GetRECT()->H() / gui_scale_ratio;
+
+	// Make x and y relative to IRECT
+	double y = relativeTo.T + (relativeTo.H() - nonScaledControlHeight) * yRatio;
+
+	MoveControlVertically(moveControl, y, flag);
+}
+
+void IPlugGUIResize::MoveControlRelativeToNonScaledDRECT(int index, DRECT relativeTo, double xRatio, double yRatio, resizeFlag flag)
+{
+	IControl* pControl = mGraphics->GetControl(index);
+
+	MoveControlRelativeToNonScaledDRECT(pControl, relativeTo, xRatio, yRatio, flag);
+}
+
+void IPlugGUIResize::MoveControlRelativeToNonScaledDRECT(IControl* pControl, DRECT relativeTo, double xRatio, double yRatio, resizeFlag flag)
+{
+	// Get control width and height
+	double nonScaledControlWidth = pControl->GetRECT()->W() / gui_scale_ratio;
+	double nonScaledControlHeight = pControl->GetRECT()->H() / gui_scale_ratio;
+
+	// Make x and y relative to IRECT
+	double x = relativeTo.L + (relativeTo.W() - nonScaledControlWidth) * xRatio;
+	double y = relativeTo.T + (relativeTo.H() - nonScaledControlHeight) * yRatio;
+
+	MoveControl(pControl, x, y, flag);
+}
+
+void IPlugGUIResize::MoveControlHorizontallyRelativeToNonScaledDRECT(int index, DRECT relativeTo, double xRatio, resizeFlag flag)
+{
+	IControl* pControl = mGraphics->GetControl(index);
+
+	MoveControlHorizontallyRelativeToNonScaledDRECT(pControl, relativeTo, xRatio, flag);
+}
+
+void IPlugGUIResize::MoveControlHorizontallyRelativeToNonScaledDRECT(IControl* pControl, DRECT relativeTo, double xRatio, resizeFlag flag)
+{
+	// Get control width and height
+	double nonScaledControlWidth = pControl->GetRECT()->W() / gui_scale_ratio;
+
+	// Make x and y relative to IRECT
+	double x = relativeTo.L + (relativeTo.W() - nonScaledControlWidth) * xRatio;
+
+	MoveControlHorizontally(pControl, x, flag);
+}
+
+void IPlugGUIResize::MoveControlVerticallyRelativeToNonScaledDRECT(int index, DRECT relativeTo, double yRatio, resizeFlag flag)
+{
+	IControl* pControl = mGraphics->GetControl(index);
+
+	MoveControlVerticallyRelativeToNonScaledDRECT(pControl, relativeTo, yRatio, flag);
+}
+
+void IPlugGUIResize::MoveControlVerticallyRelativeToNonScaledDRECT(IControl* pControl, DRECT relativeTo, double yRatio, resizeFlag flag)
+{
+	// Get control width and height
+	double nonScaledControlHeight = pControl->GetRECT()->H() / gui_scale_ratio;
+
+	// Make x and y relative to IRECT
+	double y = relativeTo.T + (relativeTo.H() - nonScaledControlHeight) * yRatio;
+
+	MoveControlVertically(pControl, y, flag);
 }
 
 void IPlugGUIResize::MoveControl(int index, double x, double y, resizeFlag flag)
 {
 	IControl* pControl = mGraphics->GetControl(index);
+	MoveControl(pControl, x, y, flag);
+}
 
+void IPlugGUIResize::MoveControl(IControl* pControl, double x, double y, resizeFlag flag)
+{
 	double x_relative = x * gui_scale_ratio;
 	double y_relative = y * gui_scale_ratio;
 
-	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL; int* isHidden = NULL;
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL;
 	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
 	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
-	isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
 
 	if (flag == drawAndTargetArea || flag == drawAreaOnly)
 	{
@@ -502,7 +642,7 @@ void IPlugGUIResize::MoveControl(int index, double x, double y, resizeFlag flag)
 		
 		DRECT drawArea = DRECT(x_relative, y_relative, x_relative + drawAreaW, y_relative + drawAreaH);
 		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
-
+		
 		double org_draw_width = orgDrawArea->W();
 		double org_draw_height = orgDrawArea->H();
 
@@ -511,6 +651,7 @@ void IPlugGUIResize::MoveControl(int index, double x, double y, resizeFlag flag)
 		orgDrawArea->R = x + org_draw_width;
 		orgDrawArea->B = y + org_draw_height;
 
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
 	}
 
 	if (flag == drawAndTargetArea || flag == targetAreaOnly)
@@ -531,14 +672,111 @@ void IPlugGUIResize::MoveControl(int index, double x, double y, resizeFlag flag)
 	}
 }
 
+void IPlugGUIResize::MoveControlHorizontally(int index, double x, resizeFlag flag)
+{
+	IControl* pControl = mGraphics->GetControl(index);
+	MoveControlHorizontally(pControl, x, flag);
+}
+
+void IPlugGUIResize::MoveControlHorizontally(IControl* pControl, double x, resizeFlag flag)
+{
+	double x_relative = x * gui_scale_ratio;
+
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL;
+	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
+	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
+
+	if (flag == drawAndTargetArea || flag == drawAreaOnly)
+	{
+		double drawAreaT = (double)pControl->GetRECT()->T;
+		double drawAreaB = (double)pControl->GetRECT()->B;
+		double drawAreaW = (double)pControl->GetRECT()->W();
+
+		DRECT drawArea = DRECT(x_relative, drawAreaT, x_relative + drawAreaW, drawAreaB);
+		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
+
+		double org_draw_width = orgDrawArea->W();
+
+		orgDrawArea->L = x;
+		orgDrawArea->R = x + org_draw_width;
+
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
+	}
+
+	if (flag == drawAndTargetArea || flag == targetAreaOnly)
+	{
+		double targetAreaT = (double)pControl->GetTargetRECT()->T;
+		double targetAreaB = (double)pControl->GetTargetRECT()->B;
+		double targetAreaW = (double)pControl->GetTargetRECT()->W();
+
+		DRECT targetArea = DRECT(x_relative, targetAreaT, x_relative + targetAreaW, targetAreaB);
+		pControl->SetTargetRECT(DRECT_to_IRECT(&targetArea));
+
+		double org_target_width = orgTargetArea->W();
+
+		orgTargetArea->L = x;
+		orgTargetArea->R = x + org_target_width;
+	}
+}
+
+void IPlugGUIResize::MoveControlVertically(int index, double y, resizeFlag flag)
+{
+	IControl* pControl = mGraphics->GetControl(index);
+	MoveControlVertically(pControl, y, flag);
+}
+
+void IPlugGUIResize::MoveControlVertically(IControl* pControl, double y, resizeFlag flag)
+{
+	double y_relative = y * gui_scale_ratio;
+
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL;
+	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
+	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
+
+	if (flag == drawAndTargetArea || flag == drawAreaOnly)
+	{
+		double drawAreaL = (double)pControl->GetRECT()->L;
+		double drawAreaR = (double)pControl->GetRECT()->R;
+		double drawAreaH = (double)pControl->GetRECT()->H();
+
+		DRECT drawArea = DRECT(drawAreaL, y_relative, drawAreaR, y_relative + drawAreaH);
+		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
+
+		double org_draw_height = orgDrawArea->H();
+
+		orgDrawArea->T = y;
+		orgDrawArea->B = y + org_draw_height;
+
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
+	}
+
+	if (flag == drawAndTargetArea || flag == targetAreaOnly)
+	{
+		double targetAreaL = (double)pControl->GetTargetRECT()->L;
+		double targetAreaR = (double)pControl->GetTargetRECT()->R;
+		double targetAreaH = (double)pControl->GetTargetRECT()->H();
+
+		DRECT targetArea = DRECT(targetAreaL, y_relative, targetAreaR, y_relative + targetAreaH);
+		pControl->SetTargetRECT(DRECT_to_IRECT(&targetArea));
+
+		double org_target_height = orgTargetArea->H();
+
+		orgTargetArea->T = y;
+		orgTargetArea->B = y + org_target_height;
+	}
+}
+
 void IPlugGUIResize::MoveControlTopEdge(int index, double T, resizeFlag flag)
 {
 	IControl* pControl = mGraphics->GetControl(index);
+	MoveControlTopEdge(pControl, T, flag);
+}
 
-	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL; int* isHidden = NULL;
+void IPlugGUIResize::MoveControlTopEdge(IControl* pControl, double T, resizeFlag flag)
+{
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL;
 	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
 	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
-	isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
 
 	double T_relative = T * gui_scale_ratio;
 
@@ -552,6 +790,8 @@ void IPlugGUIResize::MoveControlTopEdge(int index, double T, resizeFlag flag)
 		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
 
 		orgDrawArea->T = T;
+
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
 	}
 
 	if (flag == drawAndTargetArea || flag == targetAreaOnly)
@@ -570,11 +810,14 @@ void IPlugGUIResize::MoveControlTopEdge(int index, double T, resizeFlag flag)
 void IPlugGUIResize::MoveControlLeftEdge(int index, double L, resizeFlag flag)
 {
 	IControl* pControl = mGraphics->GetControl(index);
+	MoveControlLeftEdge(pControl, L, flag);
+}
 
-	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL; int* isHidden = NULL;
+void IPlugGUIResize::MoveControlLeftEdge(IControl* pControl, double L, resizeFlag flag)
+{
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL;
 	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
 	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
-	isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
 
 	double L_relative = L * gui_scale_ratio;
 
@@ -588,6 +831,8 @@ void IPlugGUIResize::MoveControlLeftEdge(int index, double L, resizeFlag flag)
 		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
 
 		orgDrawArea->L = L;
+
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
 	}
 
 	if (flag == drawAndTargetArea || flag == targetAreaOnly)
@@ -606,11 +851,14 @@ void IPlugGUIResize::MoveControlLeftEdge(int index, double L, resizeFlag flag)
 void IPlugGUIResize::MoveControlRightEdge(int index, double R, resizeFlag flag)
 {
 	IControl* pControl = mGraphics->GetControl(index);
+	MoveControlRightEdge(pControl, R, flag);
+}
 
-	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL; int* isHidden = NULL;
+void IPlugGUIResize::MoveControlRightEdge(IControl* pControl, double R, resizeFlag flag)
+{
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL;
 	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
 	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
-	isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
 
 	double R_relative = R * gui_scale_ratio;
 
@@ -624,6 +872,8 @@ void IPlugGUIResize::MoveControlRightEdge(int index, double R, resizeFlag flag)
 		pControl->SetDrawRECT(DRECT_to_IRECT(&drawArea));
 
 		orgDrawArea->R = R;
+
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
 	}
 
 	if (flag == drawAndTargetArea || flag == targetAreaOnly)
@@ -642,11 +892,14 @@ void IPlugGUIResize::MoveControlRightEdge(int index, double R, resizeFlag flag)
 void IPlugGUIResize::MoveControlBottomEdge(int index, double B, resizeFlag flag)
 {
 	IControl* pControl = mGraphics->GetControl(index);
+	MoveControlBottomEdge(pControl, B, flag);
+}
 
-	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL; int* isHidden = NULL;
+void IPlugGUIResize::MoveControlBottomEdge(IControl* pControl, double B, resizeFlag flag)
+{
+	DRECT *orgDrawArea = NULL, *orgTargetArea = NULL;
 	orgDrawArea = GetLayoutContainerDrawRECT(current_view_mode, pControl);
 	orgTargetArea = GetLayoutContainerTargetRECT(current_view_mode, pControl);
-	isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
 
 	double B_relative = B * gui_scale_ratio;
 
@@ -661,6 +914,7 @@ void IPlugGUIResize::MoveControlBottomEdge(int index, double B, resizeFlag flag)
 
 		orgDrawArea->B = B;
 
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
 	}
 
 	if (flag == drawAndTargetArea || flag == targetAreaOnly)
@@ -675,6 +929,10 @@ void IPlugGUIResize::MoveControlBottomEdge(int index, double B, resizeFlag flag)
 		orgTargetArea->B = B;
 	}
 }
+
+
+
+
 void IPlugGUIResize::SetNormalizedDrawRect(int index, double L, double T, double R, double B)
 {
 	IControl *tmpControl = mGraphics->GetControl(index);
@@ -751,6 +1009,7 @@ void IPlugGUIResize::ResizeControlRects()
 		isHidden = GetLayoutContainerIsHidden(current_view_mode, pControl);
 
 		// This updates draw and control rect
+		pControl->SetNonScaledDrawRECT(DRECT_to_IRECT(orgDrawArea));
 		pControl->SetDrawRECT(ResizeIRECT(orgDrawArea, gui_scale_ratio, gui_scale_ratio));
 		pControl->SetTargetRECT(ResizeIRECT(orgTargetArea, gui_scale_ratio, gui_scale_ratio));
 		pControl->Hide((bool)*isHidden);
@@ -852,7 +1111,7 @@ void IPlugGUIResize::ResizeAtGUIOpen()
 	RearrangeLayers();
 	MoveHandle();
 	ResizeBackground();
-	ResizeControlRects();
+    ResizeControlRects();
 	mPlug->SetGUILayout(current_view_mode, window_width_normalized, window_height_normalized);
 
 	// Prevent resizing if it is not needed
@@ -983,12 +1242,12 @@ void IPlugGUIResize::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
 	{
 		SetCursor(LoadCursor(NULL, IDC_SIZENWSE));
 
-		if (handle_controls_gui_scaling)
+		if (handle_controls_gui_scaling || (control_and_click_on_handle_controls_gui_scaling && pMod->C))
 		{
 			// Sets GUI scale
 			gui_scale_ratio = (((double)x + (double)y) / 2.0) / ((window_width_normalized + window_height_normalized) / 2.0);
 			gui_scale_ratio = BOUNDED(gui_scale_ratio, min_gui_scale_ratio, max_gui_scale_ratio);
-
+			
 			global_gui_scale_ratio = gui_scale_ratio;
 			plugin_width = (int)(window_width_normalized * gui_scale_ratio);
 			plugin_height = (int)(window_height_normalized * gui_scale_ratio);
@@ -1003,7 +1262,7 @@ void IPlugGUIResize::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod * pMod)
 		}
 
 
-		if (using_bitmaps && fast_bitmap_resizing && handle_controls_gui_scaling)
+		if ((using_bitmaps && fast_bitmap_resizing && handle_controls_gui_scaling) || (control_and_click_on_handle_controls_gui_scaling && pMod->C))
 		{
 			mTargetRECT = mRECT = IRECT(0, 0, plugin_width, plugin_height);
 		}
@@ -1050,11 +1309,21 @@ void IPlugGUIResize::OnMouseDown(int x, int y, IMouseMod * pMod)
 	}
 }
 
+void IPlugGUIResize::OnMouseDblClick(int x, int y, IMouseMod* pMod)
+{
+	gui_scale_ratio = 1.0;
+	ResizeGraphics();
+}
+
 void IPlugGUIResize::ResizeBackground()
 {
 	// Resize background to plugin width/height
-	mGraphics->GetControl(0)->SetDrawRECT(IRECT(0, 0, (int)((window_width_normalized + 0.4999) * gui_scale_ratio), (int)((window_height_normalized + 0.4999) * gui_scale_ratio)));
-	mGraphics->GetControl(0)->SetTargetRECT(IRECT(0, 0, (int)((window_width_normalized + 0.4999) * gui_scale_ratio), (int)((window_height_normalized + 0.4999) * gui_scale_ratio)));
+	DRECT nonScaledDrawRect = DRECT(0, 0, window_width_normalized, window_height_normalized);
+
+	mGraphics->GetControl(0)->SetNonScaledDrawRECT(DRECT_to_IRECT(&nonScaledDrawRect));
+
+	mGraphics->GetControl(0)->SetDrawRECT(ResizeIRECT(&nonScaledDrawRect, gui_scale_ratio, gui_scale_ratio));
+	mGraphics->GetControl(0)->SetTargetRECT(ResizeIRECT(&nonScaledDrawRect, gui_scale_ratio, gui_scale_ratio));
 }
 
 void IPlugGUIResize::OnMouseUp(int x, int y, IMouseMod * pMod)

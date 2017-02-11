@@ -79,6 +79,7 @@ Normal View:               Normal View - Scaled 2X:
 */
 
 #include <vector>
+#include <math.h> 
 #include "IGraphics.h"
 #include "IControl.h"
 
@@ -141,6 +142,7 @@ public:
 	
 	// These can be called from your custom controls -----------------------------------------------------------------------------------------------
 	void UseHandleForGUIScaling(bool statement = false);
+	void UseControlAndClickOnHandleForGUIScaling(bool statement = false);
 
 	void EnableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
 	void DisableOneSideResizing(resizeOneSide flag = horisontalAndVerticalResizing);
@@ -157,19 +159,44 @@ public:
 	void HideControl(int index);
 	void ShowControl(int index);
 
+	void MoveControlRelativeToControlDrawRect(int moveControlIndex, int relativeToControlIndex, double xRatio, double yRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlRelativeToControlDrawRect(IControl * moveControl, IControl * relativeToControl, double xRatio, double yRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlHorizontallyRelativeToControlDrawRect(int moveControlIndex, int relativeToControlIndex, double xRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlHorizontallyRelativeToControlDrawRect(IControl * moveControl, IControl * relativeToControl, double xRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlVerticallyRelativeToControlDrawRect(int moveControlIndex, int relativeToControlIndex, double yRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlVerticallyRelativeToControlDrawRect(IControl * moveControl, IControl * relativeToControl, double yRatio, resizeFlag flag = drawAndTargetArea);
+
+	void MoveControlRelativeToNonScaledDRECT(int index, DRECT relativeTo, double xRatio, double yRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlRelativeToNonScaledDRECT(IControl * pControl, DRECT relativeTo, double xRatio, double yRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlHorizontallyRelativeToNonScaledDRECT(int index, DRECT relativeTo, double xRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlHorizontallyRelativeToNonScaledDRECT(IControl * pControl, DRECT relativeTo, double xRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlVerticallyRelativeToNonScaledDRECT(int index, DRECT relativeTo, double yRatio, resizeFlag flag = drawAndTargetArea);
+	void MoveControlVerticallyRelativeToNonScaledDRECT(IControl * pControl, DRECT relativeTo, double yRatio, resizeFlag flag = drawAndTargetArea);
+	
 	void MoveControl(int index, double x, double y, resizeFlag flag = drawAndTargetArea);
+	void MoveControl(IControl * pControl, double x, double y, resizeFlag flag);
+	void MoveControlHorizontally(int index, double x, resizeFlag flag);
+	void MoveControlHorizontally(IControl * pControl, double x, resizeFlag flag);
+	void MoveControlVertically(int index, double y, resizeFlag flag);
+	void MoveControlVertically(IControl * pControl, double y, resizeFlag flag);
+
 	void MoveControlTopEdge(int index, double T, resizeFlag flag = drawAndTargetArea);
+	void MoveControlTopEdge(IControl * pControl, double T, resizeFlag flag);
 	void MoveControlLeftEdge(int index, double L, resizeFlag flag = drawAndTargetArea);
+	void MoveControlLeftEdge(IControl * pControl, double L, resizeFlag flag);
 	void MoveControlRightEdge(int index, double R, resizeFlag flag = drawAndTargetArea);
+	void MoveControlRightEdge(IControl * pControl, double R, resizeFlag flag);
 	void MoveControlBottomEdge(int index, double B, resizeFlag flag = drawAndTargetArea);
+	void MoveControlBottomEdge(IControl * pControl, double B, resizeFlag flag);
 
 	void SetNormalizedDrawRect(int index, double L, double T, double R, double B);
-	void SetNormalizedDrawRect(int index, DRECT r);
 	void SetNormalizedDrawRect(IControl *pControl, double L, double T, double R, double B);
+	void SetNormalizedDrawRect(int index, DRECT r);
 	void SetNormalizedDrawRect(IControl *pControl, DRECT r);
+
 	void SetNormalizedTargetRect(int index, double L, double T, double R, double B);
-	void SetNormalizedTargetRect(int index, DRECT r);
 	void SetNormalizedTargetRect(IControl *pControl, double L, double T, double R, double B);
+	void SetNormalizedTargetRect(int index, DRECT r);
 	void SetNormalizedTargetRect(IControl *pControl, DRECT r);
 	
 	// Get values
@@ -189,7 +216,7 @@ public:
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 
-	// Used by the framework ---------------------------------------------------------------------------------------------------------------------------
+	// Used by the framework -----------------------------------------------------------------------------------------------------------------------
 	IParam* GetGUIResizeParameter(int index);
 	int GetGUIResizeParameterSize();
 	void ResizeAtGUIOpen();
@@ -202,7 +229,7 @@ public:
 	// ---------------------------------------------------------------------------------------------------------------------------------------------
 		
 private:
-	// Functions that are used internally -----------------------------------------------------------------------------------------------
+	// Functions that are used internally ----------------------------------------------------------------------------------------------------------
 	bool double_equals(double a, double b, double epsilon = 0.0000000001);
 	DRECT IRECT_to_DRECT(IRECT * iRECT);
 	IRECT DRECT_to_IRECT(DRECT * dRECT);
@@ -230,8 +257,9 @@ private:
 	void OnMouseOver(int x, int y, IMouseMod* pMod);
 	void OnMouseOut();
 	void OnMouseDown(int x, int y, IMouseMod* pMod);
+	void OnMouseDblClick(int x, int y, IMouseMod * pMod);
 	void OnMouseUp(int x, int y, IMouseMod* pMod);
-	// ---------------------------------------------------------------------------------------------------------------------------------
+	// ---------------------------------------------------------------------------------------------------------------------------------------------
 
 	int current_view_mode;
 
@@ -242,6 +270,7 @@ private:
 
 	bool use_handle = true;
 	bool handle_controls_gui_scaling = false;
+	bool control_and_click_on_handle_controls_gui_scaling = false;
 
 	// Parameters set
 	int viewMode = 0,
