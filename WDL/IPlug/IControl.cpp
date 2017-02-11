@@ -561,11 +561,11 @@ void IKnobControl::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod)
   
   if (mDirection == kVertical)
   {
-    mValue += (double) dY / (double) (mRECT.T - mRECT.B) / gearing;
+    mValue += (double) dY / (double) (mTargetRECT.T - mTargetRECT.B) / gearing;
   }
   else
   {
-    mValue += (double) dX / (double) (mRECT.R - mRECT.L) / gearing;
+    mValue += (double) dX / (double) (mTargetRECT.R - mTargetRECT.L) / gearing;
   }
 
   SetDirty();
