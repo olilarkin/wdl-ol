@@ -35,7 +35,11 @@ struct IColor
   bool operator==(const IColor& rhs) { return (rhs.A == A && rhs.R == R && rhs.G == G && rhs.B == B); }
   bool operator!=(const IColor& rhs) { return !operator==(rhs); }
   bool Empty() const { return A == 0 && R == 0 && G == 0 && B == 0; }
-  void Clamp() { A = IPMIN(A, 255); R = IPMIN(R, 255); G = IPMIN(G, 255); B = IPMIN(B, 255); }
+  void Clamp() 
+  { 
+	  A = IPMIN(A, 255); R = IPMIN(R, 255); G = IPMIN(G, 255); B = IPMIN(B, 255); 
+	  nA = IPMIN(nA, 1.0); nR = IPMIN(nR, 1.0); nG = IPMIN(nG, 1.0); nB = IPMIN(nB, 1.0);
+  }
 };
 
 const IColor COLOR_TRANSPARENT(0, 0, 0, 0);
