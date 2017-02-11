@@ -1082,14 +1082,35 @@ bool IGraphics::IsDirty(IRECT* pR)
 	bool dirty = false;
 	int i, n = mControls.GetSize();
 	IControl** ppControl = mControls.GetList();
+
 	for (i = 0; i < n; ++i, ++ppControl)
 	{
 		IControl* pControl = *ppControl;
 		if (pControl->GetAnimation()->AnimationRequestDirty()) pControl->SetDirty();
-		if (pControl->IsDirty())
+
+		if (mPlug->GetGUIResize())
 		{
-			*pR = pR->Union(pControl->GetRECT());
-			dirty = true;
+			if (pControl->IsDirty())
+			{
+					double guiScaleRatio = mPlug->GetGUIResize()->GetGUIScaleRatio();
+					IRECT tmpRECT = *pControl->GetNonScaledDrawRECT();
+
+					tmpRECT.L = int(tmpRECT.L * guiScaleRatio);
+					tmpRECT.T = int(tmpRECT.T * guiScaleRatio);
+					tmpRECT.R = int(tmpRECT.R * guiScaleRatio + 0.9999999);
+					tmpRECT.B = int(tmpRECT.B * guiScaleRatio + 0.9999999);
+
+				*pR = pR->Union(&tmpRECT);
+				dirty = true;
+			}
+		}
+		else
+		{
+			if (pControl->IsDirty())
+			{
+				*pR = pR->Union(pControl->GetRECT());
+				dirty = true;
+			}
 		}
 	}
 
