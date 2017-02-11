@@ -118,6 +118,7 @@
     <ClInclude Include="..\..\WDL\IPlug\RTAS\IPlugProcessAS.h">
       <Filter>IPlug\RTAS</Filter>
     </ClInclude>
+    <ClInclude Include="LiveEditLayout.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\WDL\IPlug\Hosts.cpp">

@@ -30,6 +30,7 @@
     if (pGraphics) {
       IGRAPHICS_COCOA* pView = (IGRAPHICS_COCOA*) pGraphics->OpenWindow(0);
       mPlug->OnGUIOpen();
+	  mPlug->ResizeAtGUIOpen(pGraphics);
       return pView;
     }
   }

@@ -192,19 +192,19 @@ bool IPanelControl::Draw(IGraphics* pGraphics)
 bool IBitmapControl::Draw(IGraphics* pGraphics)
 {
   int i = 1;
-  if (mBitmap.N > 1)
+  if (mBitmap->N > 1)
   {
-    i = 1 + int(0.5 + mValue * (double) (mBitmap.N - 1));
-    i = BOUNDED(i, 1, mBitmap.N);
+    i = 1 + int(0.5 + mValue * (double) (mBitmap->N - 1));
+    i = BOUNDED(i, 1, mBitmap->N);
   }
-  return pGraphics->DrawBitmap(&mBitmap, &mRECT, i, &mBlend);
+  return pGraphics->DrawBitmap(mBitmap, &mRECT, i, &mBlend);
 }
 
 void ISwitchControl::OnMouseDown(int x, int y, IMouseMod* pMod)
 {
-  if (mBitmap.N > 1)
+  if (mBitmap->N > 1)
   {
-    mValue += 1.0 / (double) (mBitmap.N - 1);
+    mValue += 1.0 / (double) (mBitmap->N - 1);
   }
   else
   {
@@ -238,9 +238,9 @@ ISwitchFramesControl::ISwitchFramesControl(IPlugBase* pPlug, int x, int y, int p
   for(int i = 0; i < pBitmap->N; i++)
   {
     if (imagesAreHorizontal)
-      mRECTs.Add(mRECT.SubRectHorizontal(pBitmap->N, i)); 
+      mRECTs.Add(mRECT.SubRectHorizontal(pBitmap->N, i));
     else
-      mRECTs.Add(mRECT.SubRectVertical(pBitmap->N, i)); 
+      mRECTs.Add(mRECT.SubRectVertical(pBitmap->N, i));
   }
 }
 
@@ -281,62 +281,80 @@ void IInvisibleSwitchControl::OnMouseDown(int x, int y, IMouseMod* pMod)
 
 IRadioButtonsControl::IRadioButtonsControl(IPlugBase* pPlug, IRECT pR, int paramIdx, int nButtons,
     IBitmap* pBitmap, EDirection direction, bool reverse)
-  :   IControl(pPlug, pR, paramIdx), mBitmap(*pBitmap)
+  :   IControl(pPlug, pR, paramIdx)
 {
+  mDefaultRECT = pR;
+  mBitmap = pBitmap;
   mRECTs.Resize(nButtons);
-  int h = int((double) pBitmap->H / (double) pBitmap->N);
-  
-  if (reverse) 
-  {
-    if (direction == kHorizontal)
-    {
-      int dX = int((double) (pR.W() - nButtons * pBitmap->W) / (double) (nButtons - 1));
-      int x = mRECT.R - pBitmap->W - dX;
-      int y = mRECT.T;
-      
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        x -= pBitmap->W + dX;
-      }
-    }
-    else
-    {
-      int dY = int((double) (pR.H() - nButtons * h) /  (double) (nButtons - 1));
-      int x = mRECT.L;
-      int y = mRECT.B - h - dY;
-      
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        y -= h + dY;
-      }
-    }
-    
-  }
-  else
-  {
-    int x = mRECT.L, y = mRECT.T;
-    
-    if (direction == kHorizontal)
-    {
-      int dX = int((double) (pR.W() - nButtons * pBitmap->W) / (double) (nButtons - 1));
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        x += pBitmap->W + dX;
-      }
-    }
-    else
-    {
-      int dY = int((double) (pR.H() - nButtons * h) /  (double) (nButtons - 1));
-      for (int i = 0; i < nButtons; ++i)
-      {
-        mRECTs.Get()[i] = IRECT(x, y, x + pBitmap->W, y + h);
-        y += h + dY;
-      }
-    }
-  }
+  mDirection = direction;
+  mReverse = reverse;
+  mNButtons = nButtons;
+
+  AfterGUIResize(1.0);
+}
+
+void IRadioButtonsControl::AfterGUIResize(double guiScaleRatio)
+{
+	IRECT scaledDefaultRECT;
+
+	scaledDefaultRECT.L = int((double)mDefaultRECT.L * guiScaleRatio);
+	scaledDefaultRECT.T = int((double)mDefaultRECT.T * guiScaleRatio);
+	scaledDefaultRECT.R = int((double)mDefaultRECT.R * guiScaleRatio);
+	scaledDefaultRECT.B = int((double)mDefaultRECT.B * guiScaleRatio);
+
+	int h = int((double)mBitmap->H / (double)mBitmap->N);
+
+	if (mDirection)
+	{
+		if (mDirection == kHorizontal)
+		{
+			int dX = int((double)(scaledDefaultRECT.W() - mNButtons * mBitmap->W) / (double)(mNButtons - 1));
+			int x = scaledDefaultRECT.R - mBitmap->W - dX;
+			int y = scaledDefaultRECT.T;
+
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				x -= mBitmap->W + dX;
+			}
+		}
+		else
+		{
+			int dY = int((double)(scaledDefaultRECT.H() - mNButtons * h) / (double)(mNButtons - 1));
+			int x = scaledDefaultRECT.L;
+			int y = scaledDefaultRECT.B - h - dY;
+
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				y -= h + dY;
+			}
+		}
+
+	}
+	else
+	{
+		int x = mRECT.L, y = mRECT.T;
+
+		if (mDirection == kHorizontal)
+		{
+			int dX = int((double)(scaledDefaultRECT.W() - mNButtons * mBitmap->W) / (double)(mNButtons - 1));
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				x += mBitmap->W + dX;
+			}
+		}
+		else
+		{
+			int dY = int((double)(scaledDefaultRECT.H() - mNButtons * h) / (double)(mNButtons - 1));
+			for (int i = 0; i < mNButtons; ++i)
+			{
+				mRECTs.Get()[i] = IRECT(x, y, x + mBitmap->W, y + h);
+				y += h + dY;
+			}
+		}
+	}
 }
 
 void IRadioButtonsControl::OnMouseDown(int x, int y, IMouseMod* pMod)
@@ -382,11 +400,11 @@ bool IRadioButtonsControl::Draw(IGraphics* pGraphics)
   {
     if (i == active)
     {
-      pGraphics->DrawBitmap(&mBitmap, &mRECTs.Get()[i], 2, &mBlend);
+      pGraphics->DrawBitmap(mBitmap, &mRECTs.Get()[i], 2, &mBlend);
     }
     else
     {
-      pGraphics->DrawBitmap(&mBitmap, &mRECTs.Get()[i], 1, &mBlend);
+      pGraphics->DrawBitmap(mBitmap, &mRECTs.Get()[i], 1, &mBlend);
     }
   }
   return true;
@@ -399,18 +417,29 @@ void IContactControl::OnMouseUp(int x, int y, IMouseMod* pMod)
 }
 
 IFaderControl::IFaderControl(IPlugBase* pPlug, int x, int y, int len, int paramIdx, IBitmap* pBitmap, EDirection direction, bool onlyHandle)
-  : IControl(pPlug, IRECT(), paramIdx), mLen(len), mBitmap(*pBitmap), mDirection(direction), mOnlyHandle(onlyHandle)
+  : IControl(pPlug, IRECT(), paramIdx), mLen(len), mDirection(direction), mOnlyHandle(onlyHandle)
 {
-  if (direction == kVertical)
-  {
-    mHandleHeadroom = mBitmap.H;
-    mRECT = mTargetRECT = IRECT(x, y, x + mBitmap.W, y + len);
-  }
-  else
-  {
-    mHandleHeadroom = mBitmap.W;
-    mRECT = mTargetRECT = IRECT(x, y, x + len, y + mBitmap.H);
-  }
+	mBitmap = pBitmap;
+	if (direction == kVertical)
+	{
+		mHandleHeadroom = mBitmap->H;
+		mRECT = mTargetRECT = IRECT(x, y, x + mBitmap->W, y + len);
+	}
+	else
+	{
+		mHandleHeadroom = mBitmap->W;
+		mRECT = mTargetRECT = IRECT(x, y, x + len, y + mBitmap->H);
+	}
+	defaultLen = mLen;
+	defaultHandleHeadroom = mHandleHeadroom;
+
+	AfterGUIResize(1.0);
+}
+
+void IFaderControl::AfterGUIResize(double guiScaleRatio)
+{
+	mHandleHeadroom = int((double)defaultHandleHeadroom * guiScaleRatio);
+	mLen = int((double)defaultLen * guiScaleRatio);
 }
 
 IRECT IFaderControl::GetHandleRECT(double value) const
@@ -419,7 +448,7 @@ IRECT IFaderControl::GetHandleRECT(double value) const
   {
     value = mValue;
   }
-  IRECT r(mRECT.L, mRECT.T, mRECT.L + mBitmap.W, mRECT.T + mBitmap.H);
+  IRECT r(mRECT.L, mRECT.T, mRECT.L + mBitmap->W, mRECT.T + mBitmap->H);
   if (mDirection == kVertical)
   {
     int offs = int((1.0 - value) * (double) (mLen - mHandleHeadroom));
@@ -500,7 +529,7 @@ void IFaderControl::SnapToMouse(int x, int y)
 bool IFaderControl::Draw(IGraphics* pGraphics)
 {
   IRECT r = GetHandleRECT();
-  return pGraphics->DrawBitmap(&mBitmap, &r, 1, &mBlend);
+  return pGraphics->DrawBitmap(mBitmap, &r, 1, &mBlend);
 }
 
 bool IFaderControl::IsHit(int x, int y) 
@@ -532,11 +561,11 @@ void IKnobControl::OnMouseDrag(int x, int y, int dX, int dY, IMouseMod* pMod)
   
   if (mDirection == kVertical)
   {
-    mValue += (double) dY / (double) (mRECT.T - mRECT.B) / gearing;
+    mValue += (double) dY / (double) (mTargetRECT.T - mTargetRECT.B) / gearing;
   }
   else
   {
-    mValue += (double) dX / (double) (mRECT.R - mRECT.L) / gearing;
+    mValue += (double) dX / (double) (mTargetRECT.R - mTargetRECT.L) / gearing;
   }
 
   SetDirty();
@@ -578,6 +607,13 @@ IKnobLineControl::IKnobLineControl(IPlugBase* pPlug, IRECT pR, int paramIdx,
     mOuterRadius = 0.5f * (float) pR.W();
   }
   mBlend = IChannelBlend(IChannelBlend::kBlendClobber);
+
+  AfterGUIResize(1.0);
+}
+
+void IKnobLineControl::AfterGUIResize(double guiScaleRatio)
+{
+	mGUIScaleRatio = guiScaleRatio;
 }
 
 bool IKnobLineControl::Draw(IGraphics* pGraphics)
@@ -586,8 +622,18 @@ bool IKnobLineControl::Draw(IGraphics* pGraphics)
   float sinV = (float) sin(v);
   float cosV = (float) cos(v);
   float cx = mRECT.MW(), cy = mRECT.MH();
-  float x1 = cx + mInnerRadius * sinV, y1 = cy - mInnerRadius * cosV;
-  float x2 = cx + mOuterRadius * sinV, y2 = cy - mOuterRadius * cosV;
+
+  float scaledInnerRadius = mInnerRadius;
+  float scaledOuterRadius = mOuterRadius;
+
+  if (mPlug->GetGUIResize())
+  {
+	  scaledInnerRadius = scaledInnerRadius * (float)mGUIScaleRatio;
+	  scaledOuterRadius = scaledOuterRadius * (float)mGUIScaleRatio;
+  }
+
+  float x1 = cx + scaledInnerRadius * sinV, y1 = cy - scaledInnerRadius * cosV;
+  float x2 = cx + scaledOuterRadius * sinV, y2 = cy - scaledOuterRadius * cosV;
   return pGraphics->DrawLine(&mColor, x1, y1, x2, y2, &mBlend, true);
 }
 
@@ -596,21 +642,29 @@ bool IKnobRotaterControl::Draw(IGraphics* pGraphics)
   int cX = (mRECT.L + mRECT.R) / 2;
   int cY = (mRECT.T + mRECT.B) / 2;
   double angle = mMinAngle + mValue * (mMaxAngle - mMinAngle);
-  return pGraphics->DrawRotatedBitmap(&mBitmap, cX, cY, angle, mYOffset, &mBlend);
+  return pGraphics->DrawRotatedBitmap(mBitmap, cX, cY, angle, mYOffset, &mBlend);
 }
 
 // Same as IBitmapControl::Draw.
 bool IKnobMultiControl::Draw(IGraphics* pGraphics)
 {
-  int i = 1 + int(0.5 + mValue * (double) (mBitmap.N - 1));
-  i = BOUNDED(i, 1, mBitmap.N);
-  return pGraphics->DrawBitmap(&mBitmap, &mRECT, i, &mBlend);
+  int i = 1 + int(0.5 + mValue * (double) (mBitmap->N - 1));
+  i = BOUNDED(i, 1, mBitmap->N);
+  return pGraphics->DrawBitmap(mBitmap, &mRECT, i, &mBlend);
 }
 
 bool IKnobRotatingMaskControl::Draw(IGraphics* pGraphics)
 {
   double angle = mMinAngle + mValue * (mMaxAngle - mMinAngle);
-  return pGraphics->DrawRotatedMask(&mBase, &mMask, &mTop, mRECT.L, mRECT.T, angle, &mBlend);
+  return pGraphics->DrawRotatedMask(mBase, mMask, mTop, mRECT.L, mRECT.T, angle, &mBlend);
+}
+
+void IBitmapOverlayControl::AfterGUIResize(double guiScaleRatio)
+{
+	mTargetArea.L = int((double)defaultTargetArea.L * guiScaleRatio);
+	mTargetArea.T = int((double)defaultTargetArea.T * guiScaleRatio);
+	mTargetArea.R = int((double)defaultTargetArea.R * guiScaleRatio);
+	mTargetArea.B = int((double)defaultTargetArea.B * guiScaleRatio);
 }
 
 bool IBitmapOverlayControl::Draw(IGraphics* pGraphics)
@@ -625,6 +679,13 @@ bool IBitmapOverlayControl::Draw(IGraphics* pGraphics)
     mTargetRECT = mRECT;
     return IBitmapControl::Draw(pGraphics);
   }
+}
+
+void ITextControl::AfterGUIResize(double guiScaleRatio)
+{
+	mText = IText((int)((double)defaultText.mSize * guiScaleRatio), &mText.mColor,
+		mText.mFont, mText.mStyle, mText.mAlign, mText.mOrientation,
+		mText.mQuality, &mText.mTextEntryBGColor, &mText.mTextEntryFGColor);
 }
 
 void ITextControl::SetTextFromPlug(char* str)
@@ -739,7 +800,7 @@ bool IFileSelectorControl::Draw(IGraphics* pGraphics)
 {
   if (mState == kFSSelecting)
   {
-    pGraphics->DrawBitmap(&mBitmap, &mRECT, 0, 0);
+    pGraphics->DrawBitmap(mBitmap, &mRECT, 0, 0);
   }
   return true;
 }

@@ -12,9 +12,9 @@
 
  App settings are stored in a .ini file. The location is as follows:
 
- Windows7: C:\Users\USERNAME\AppData\Local\IPlugControls\settings.ini
- Windows XP/Vista: C:\Documents and Settings\USERNAME\Local Settings\Application Data\IPlugControls\settings.ini
- OSX: /Users/USERNAME/Library/Application\ Support/IPlugControls/settings.ini
+ Windows7: C:\Users\USERNAME\AppData\Local\IPlugBetterGUIResize\settings.ini
+ Windows XP/Vista: C:\Documents and Settings\USERNAME\Local Settings\Application Data\IPlugBetterGUIResize\settings.ini
+ OSX: /Users/USERNAME/Library/Application\ Support/IPlugBetterGUIResize/settings.ini
 
 */
 

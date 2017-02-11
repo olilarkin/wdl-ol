@@ -56,7 +56,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     SetWindowLongPtr(hWnd, GWLP_USERDATA, (LPARAM) (lpcs->lpCreateParams));
     int mSec = int(1000.0 / sFPS);
     SetTimer(hWnd, IPLUG_TIMER_ID, mSec, NULL);
-    SetFocus(hWnd); // gets scroll wheel working straight away
+    //SetFocus(hWnd); // gets scroll wheel working straight away
     return 0;
   }
 
@@ -254,6 +254,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       return 0;
     }
     case WM_LBUTTONUP:
+	case WM_MBUTTONUP:
     case WM_RBUTTONUP:
     {
       ReleaseCapture();
@@ -325,6 +326,12 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       SendMessage(rootHWnd, msg, wParam, lParam);
       return DefWindowProc(hWnd, msg, wParam, lParam);
     }
+	case WM_SIZE:
+	{
+		InvalidateRect(hWnd, NULL, FALSE);
+		//UpdateWindow(hWnd);
+		return 0;
+	}
     case WM_PAINT:
     {
       RECT r;
@@ -547,9 +554,10 @@ void IGraphicsWin::ForceEndUserEdit()
 void IGraphicsWin::Resize(int w, int h)
 {
   if (w == Width() && h == Height()) return;
-
+   
   int dw = w - Width(), dh = h - Height();
   IGraphics::Resize(w, h);
+  
 
   if (WindowIsOpen())
   {
@@ -568,8 +576,11 @@ void IGraphicsWin::Resize(int w, int h)
         GetWindowSize(pGrandparent, &grandparentW, &grandparentH);
       }
     }
-
-    SetWindowPos(mPlugWnd, 0, 0, 0, plugW + dw, plugH + dh, SETPOS_FLAGS);
+	
+	if (mPlug->GetAPI() == kAPIAAX)
+		SetWindowPos(mPlugWnd, 0, 0, 0, plugW + 0, plugH + 0, SETPOS_FLAGS);
+	else
+	SetWindowPos(mPlugWnd, 0, 0, 0, plugW + dw, plugH + dh, SETPOS_FLAGS);
 
     // don't want to touch the host window in VST3 or RTAS
     if(mPlug->GetAPI() != kAPIVST3 && mPlug->GetAPI() != kAPIRTAS)
@@ -584,9 +595,11 @@ void IGraphicsWin::Resize(int w, int h)
         SetWindowPos(pGrandparent, 0, 0, 0, grandparentW + dw, grandparentH + dh, SETPOS_FLAGS);
       }
     }
+	
+	RECT r = { 0, 0, Width(), Height() };
 
-    RECT r = { 0, 0, Width(), Height() };
-    InvalidateRect(mPlugWnd, &r, FALSE);
+	InvalidateRect(mPlugWnd, &r, FALSE);
+	UpdateWindow(mPlugWnd);
   }
 }
 
@@ -1026,6 +1039,17 @@ void IGraphicsWin::DesktopPath(WDL_String* pPath)
   SHGetSpecialFolderPath( 0, strPath, CSIDL_DESKTOP, FALSE );
   pPath->Set(strPath, MAX_PATH_LEN);
   #endif
+}
+
+void IGraphicsWin::DocumentsPath(WDL_String* pPath)
+{
+#ifndef __MINGW_H // TODO: alternative for gcc?
+	TCHAR strPath[MAX_PATH_LEN];
+
+	SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, strPath);
+
+	pPath->Set(strPath, MAX_PATH_LEN);
+#endif
 }
 
 void IGraphicsWin::AppSupportPath(WDL_String* pPath, bool isSystem)

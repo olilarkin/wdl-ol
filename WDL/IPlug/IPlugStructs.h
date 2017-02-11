@@ -28,11 +28,17 @@ struct IBitmap
 struct IColor
 {
   int A, R, G, B;
-  IColor(int a = 255, int r = 0, int g = 0, int b = 0) : A(a), R(r), G(g), B(b) {}
+  double nA, nR, nG, nB;
+  IColor(int a = 255, int r = 0, int g = 0, int b = 0) : A(a), R(r), G(g), B(b), 
+	  nA(double(a) / 255), nR(double(r) / 255), nG(double(g) / 255), nB(double(b) / 255) {}
   bool operator==(const IColor& rhs) { return (rhs.A == A && rhs.R == R && rhs.G == G && rhs.B == B); }
   bool operator!=(const IColor& rhs) { return !operator==(rhs); }
   bool Empty() const { return A == 0 && R == 0 && G == 0 && B == 0; }
-  void Clamp() { A = IPMIN(A, 255); R = IPMIN(R, 255); G = IPMIN(G, 255); B = IPMIN(B, 255); }
+  void Clamp() 
+  { 
+	  A = IPMIN(A, 255); R = IPMIN(R, 255); G = IPMIN(G, 255); B = IPMIN(B, 255); 
+	  nA = IPMIN(nA, 1.0); nR = IPMIN(nR, 1.0); nG = IPMIN(nG, 1.0); nB = IPMIN(nB, 1.0);
+  }
 };
 
 const IColor COLOR_TRANSPARENT(0, 0, 0, 0);
@@ -138,7 +144,17 @@ struct IRECT
 
   IRECT() { L = T = R = B = 0; }
   IRECT(int l, int t, int r, int b) : L(l), R(r), T(t), B(b) {}
-  IRECT(int x, int y, IBitmap* pBitmap) : L(x), T(y), R(x + pBitmap->W), B(y + pBitmap->H / pBitmap->N) {}
+  IRECT(int x, int y, IBitmap* pBitmap)
+  {
+	  if (pBitmap->mFramesAreHorizontal)
+	  {
+		  L = x, T = y, R = (x + pBitmap->W / pBitmap->N), B = (y + pBitmap->H);
+	  }
+	  else
+	  {
+		  L = x, T = y, R = (x + pBitmap->W), B = (y + pBitmap->H / pBitmap->N);
+	  }
+  }
 
   bool Empty() const
   {

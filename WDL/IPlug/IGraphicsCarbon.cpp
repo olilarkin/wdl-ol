@@ -21,7 +21,12 @@ void ResizeWindow(WindowRef pWindow, int w, int h)
   GetWindowBounds(pWindow, kWindowContentRgn, &gr);
   gr.right = gr.left + w;
   gr.bottom = gr.top + h;
-  SetWindowBounds(pWindow, kWindowContentRgn, &gr);
+  //SetWindowBounds(pWindow, kWindowContentRgn, &gr); // Is this needed to resize carbon window?
+    
+   // Some tests
+  //InvalWindowRect(pWindow,&gr);
+  //QDFlushPortBuffer(GetWindowPort(pWindow), NULL);
+  //HIWindowFlush(pWindow);
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4

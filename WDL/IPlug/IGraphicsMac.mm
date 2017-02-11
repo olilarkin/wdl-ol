@@ -302,7 +302,7 @@ bool IGraphicsMac::DrawScreen(IRECT* pR)
   
   CGDataProviderRef provider = CGDataProviderCreateWithData(NULL,retina_buf ? retina_buf : p,4*sw*h,NULL);
   img = CGImageCreate(w,h,8,32,4*sw,(CGColorSpaceRef)mColorSpace,
-                                 kCGImageAlphaNoneSkipFirst,
+                      (kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little),
                                  provider,NULL,NO,kCGRenderingIntentDefault);
   CGDataProviderRelease(provider);
 #endif
@@ -342,7 +342,7 @@ void* IGraphicsMac::OpenCocoaWindow(void* pParentView)
   TRACE;
   CloseWindow();
   mGraphicsCocoa = (IGRAPHICS_COCOA*) [[IGRAPHICS_COCOA alloc] initWithIGraphics: this];
-  
+    
   if (pParentView) // Cocoa VST host.
   {
     [(NSView*) pParentView addSubview: (IGRAPHICS_COCOA*) mGraphicsCocoa];
@@ -405,6 +405,7 @@ void IGraphicsMac::AttachSubWindow(void* hostWindowRef)
   [childWindow performSelector:@selector(orderFront:) withObject :(id) nil afterDelay :0.05];
 
   mHostNSWindow = (void*) hostWindow;
+  mChildNSWindow = (void*) childWindow;
 }
 
 void IGraphicsMac::RemoveSubWindow()
@@ -460,6 +461,9 @@ bool IGraphicsMac::WindowIsOpen()
 void IGraphicsMac::Resize(int w, int h)
 {
   if (w == Width() && h == Height()) return;
+    
+  int oldHeight = Height();
+  int oldWidth = Width();
 
   IGraphics::Resize(w, h);
 
@@ -472,8 +476,24 @@ void IGraphicsMac::Resize(int w, int h)
   #endif
   if (mGraphicsCocoa)
   {
+    [NSAnimationContext beginGrouping]; // Prevent animated resizing
+    [[NSAnimationContext currentContext] setDuration:0.0f];
+    
     NSSize size = { static_cast<CGFloat>(w), static_cast<CGFloat>(h) };
+    NSSize superviewSize = [(NSView*) mGraphicsCocoa superview].frame.size;
     [(IGRAPHICS_COCOA*) mGraphicsCocoa setFrameSize: size ];
+      
+    // Here we are inluding host part of the window.
+    size.height += superviewSize.height - oldHeight;
+    size.width += superviewSize.width - oldWidth;
+    
+    [[(IGRAPHICS_COCOA*) mGraphicsCocoa superview] setFrameSize: size ];
+    
+    [NSAnimationContext endGrouping];
+    
+    // Ask display to redraw
+    [(IGRAPHICS_COCOA*)mGraphicsCocoa  setNeedsDisplay:YES];
+
   }
 }
 
@@ -658,6 +678,14 @@ void IGraphicsMac::DesktopPath(WDL_String* pPath)
 //                      GetController()->GetMfrNameStr(),
 //                      GetController()->GetPluginNameStr());
 //}
+
+void IGraphicsMac::DocumentsPath(WDL_String* pPath)
+{
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  
+  NSString *documentsDirectory = [paths objectAtIndex:0];
+  pPath->Set([documentsDirectory UTF8String]);
+}
 
 void IGraphicsMac::AppSupportPath(WDL_String* pPath, bool isSystem)
 {

@@ -21,7 +21,8 @@
 // All version ints are stored as 0xVVVVRRMM: V = version, R = revision, M = minor revision.
 
 class IGraphics;
-
+class IPlugGUIResize;
+class IPlugGUILiveEdit;
 class IPlugBase
 {
 public:
@@ -84,6 +85,9 @@ public:
   virtual bool CompareState(const unsigned char* incomingState, int startPos);
   
   virtual void OnWindowResize() {}
+
+  virtual void SetGUILayout(int viewMode = 0, double windowWidth = 1.0, double windowHeight = 1.0) {}
+
   // implement this and return true to trigger your custom about box, when someone clicks about in the menu of a standalone
   virtual bool HostRequestingAboutBox() { return false; }
 
@@ -99,6 +103,13 @@ public:
   int NParams() { return mParams.GetSize(); }
   IParam* GetParam(int idx) { return mParams.Get(idx); }
   IGraphics* GetGUI() { return mGraphics; }
+
+  // GUI resize functions ------------------------------------------------------------------------------------------------------
+  void AttachGUIResize(IPlugGUIResize* pGUIResize) { mGUIResize = pGUIResize; }
+  void ResizeAtGUIOpen(IGraphics* pGraphics);
+  IPlugGUIResize* GetGUIResize() { return mGUIResize; }
+  // ---------------------------------------------------------------------------------------------------------------------------
+  IPlugGUILiveEdit* GetGUILiveEdit();
 
   const char* GetEffectName() { return mEffectName; }
   int GetEffectVersion(bool decimal);   // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
@@ -325,6 +336,8 @@ protected:
 
 private:
   IGraphics* mGraphics;
+  IPlugGUIResize* mGUIResize = NULL;
+  IPlugGUILiveEdit* mGUILiveEdit = NULL;
   WDL_PtrList<IParam> mParams;
   WDL_PtrList<IPreset> mPresets;
   WDL_TypedBuf<double*> mInData, mOutData;

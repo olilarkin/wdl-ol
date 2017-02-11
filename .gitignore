@@ -20,6 +20,8 @@
 *.xcschememanagement.plist
 build-*
 /IPlugExamples/*/*.vcxproj.user
+/.git
+/.sync
 
 PCH/*
 VST3_SDK/*
@@ -48,3 +50,8 @@ IPlugExamples/build_errors.log
 /ReaperExtensions/
 
 /IPlugExamples/duplicate.pyc
+
+/IPlugExamples/*/LiveEditLayout.h
+/IPlugExamples/IPlugBetterGUIResize/IPlugBetterGUIResize.VC.VC.opendb
+/IPlugExamples/IPlugCairo
+/IPlugExamples/Cairo_Teaser_001

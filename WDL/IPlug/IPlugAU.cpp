@@ -900,7 +900,7 @@ ComponentResult IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope 
           }
           case kAudioUnitScope_Output:
           {
-            *(CFStringRef *)pData = MakeCFString(GetOutputBusLabel(element)->Get());
+            *(CFStringRef *)pData = MakeCFString(GetOutputBusLabel(0)->Get()); // TODO This is tmp fix for AU Ableton
             return noErr;
           }
           default:

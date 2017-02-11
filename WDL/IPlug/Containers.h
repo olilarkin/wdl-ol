@@ -13,6 +13,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <vector>
 #include <stdio.h>
 #include <assert.h>
 #include "../mutex.h"
@@ -205,6 +206,77 @@ public:
       return strEndPos;
     }
     return -1;
+  }
+
+  template <typename T>
+  inline int PutArray(const T* data, const int numItems)
+  {
+	  Put(&numItems);
+	  int n = mBytes.GetSize();
+	  mBytes.Resize(n + numItems * sizeof(T));
+	  memcpy(mBytes.Get() + n, (BYTE*)data, numItems * sizeof(T));
+	  return mBytes.GetSize();
+  }
+
+  template <typename T>
+  inline int GetArray(T* data, int startPos)
+  {
+	  int len;
+	  int dStartPos = Get(&len, startPos);
+	  if (dStartPos >= 0)
+	  {
+		  int dEndPos = dStartPos + len;
+		  if (dEndPos <= mBytes.GetSize() && len > 0)
+		  {
+			  memcpy((BYTE*)data, mBytes.Get() + dStartPos, len * sizeof(T));
+		  }
+		  return dEndPos;
+	  }
+	  return -1;
+  }
+
+  template <typename T>
+  inline int PutStdVector(const std::vector<T> *data)
+  {
+	  int numItems = data->size();
+	  Put(&numItems);
+
+	  // If vector is 0, return
+	  if (numItems == 0)  return mBytes.GetSize();
+	  	  
+	  for (int i = 0; i < numItems; i++)
+	  {
+		  T value = (*data)[i];
+		  Put(&value);
+	  }
+
+	  return mBytes.GetSize();
+  }
+
+  template <typename T>
+  inline int GetStdVector(std::vector<T> *data, int startPos)
+  {
+	  int size;
+	  startPos = Get(&size, startPos);
+	  
+	  if (size > 0)
+	  {
+		  data->resize(size);
+
+		  for (int i = 0; i < size; i++)
+		  {
+			  T value;
+			  startPos = Get(&value, startPos);
+
+			  if (i == 58)
+			  {
+				   int a =0;
+			  }
+
+			  (*data)[i] = value;
+		  }
+	  }
+	  return startPos;
   }
 
   inline int PutDoubleArray(const double* data, const int numItems)

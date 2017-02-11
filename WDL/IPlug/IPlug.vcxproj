@@ -30,6 +30,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{33958832-2FFD-49D8-9C13-5F0B26739E81}</ProjectGuid>
     <RootNamespace>IPlug</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -248,7 +249,9 @@
     <ClCompile Include="IGraphics.cpp" />
     <ClCompile Include="IGraphicsWin.cpp" />
     <ClCompile Include="IParam.cpp" />
+    <ClCompile Include="IPlugAnimation.cpp" />
     <ClCompile Include="IPlugBase.cpp" />
+    <ClCompile Include="IPlugGUIResize.cpp" />
     <ClCompile Include="IPlugStructs.cpp" />
     <ClCompile Include="IPopupMenu.cpp" />
     <ClCompile Include="Log.cpp" />
@@ -261,7 +264,10 @@
     <ClInclude Include="IGraphics.h" />
     <ClInclude Include="IGraphicsWin.h" />
     <ClInclude Include="IParam.h" />
+    <ClInclude Include="IPlugAnimation.h" />
     <ClInclude Include="IPlugBase.h" />
+    <ClInclude Include="IPlugGUILiveEdit.h" />
+    <ClInclude Include="IPlugGUIResize.h" />
     <ClInclude Include="IPlugOSDetect.h" />
     <ClInclude Include="IPlugStructs.h" />
     <ClInclude Include="IPopupMenu.h" />

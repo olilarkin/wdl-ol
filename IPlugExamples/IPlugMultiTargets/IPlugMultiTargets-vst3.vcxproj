@@ -324,6 +324,7 @@ if exist "%programfiles(x86)%" (copy /y "$(TargetPath)" "$(VST3_64_PATH)\IPlugMu
     <ClInclude Include="..\..\VST3_SDK\public.sdk\source\vst\vstsinglecomponenteffect.h" />
     <ClInclude Include="..\..\WDL\IPlug\IPlugVST3.h" />
     <ClInclude Include="IPlugMultiTargets.h" />
+    <ClInclude Include="LiveEditLayout.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

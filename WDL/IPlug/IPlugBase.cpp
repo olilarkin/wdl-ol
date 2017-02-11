@@ -1,6 +1,8 @@
 #include "IPlugBase.h"
 #include "IGraphics.h"
 #include "IControl.h"
+#include "IPlugGUIResize.h"
+#include "IPlugGUILiveEdit.h"
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
@@ -145,6 +147,8 @@ IPlugBase::IPlugBase(int nParams,
     pOutChannel->mFDest = 0;
     mOutChannels.Add(pOutChannel);
   }
+
+  mGUILiveEdit = new IPlugGUILiveEdit;
 }
 
 IPlugBase::~IPlugBase()
@@ -163,6 +167,8 @@ IPlugBase::~IPlugBase()
   {
     DELETE_NULL(mDelay);
   }
+
+  if (mGUILiveEdit) delete mGUILiveEdit;
 }
 
 int IPlugBase::GetHostVersion(bool decimal)
@@ -225,7 +231,16 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 {
   if (pGraphics)
   {
-    WDL_MutexLock lock(&mMutex);
+	  WDL_MutexLock lock(&mMutex);
+
+	  pGraphics->PrepDraw();
+
+	  if (GetGUIResize())
+	  {
+		  // Here we are attaching our GUI resize control.
+		  pGraphics->AttachControl(GetGUIResize()->AttachGUIResize());
+	  }
+
     int i, n = mParams.GetSize();
     
     for (i = 0; i < n; ++i)
@@ -233,9 +248,26 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
       pGraphics->SetParameterFromPlug(i, GetParam(i)->GetNormalized(), true);
     }
     
-    pGraphics->PrepDraw();
     mGraphics = pGraphics;
+
+	// Load control positions from file if user was live editing the GUI
+	GetGUILiveEdit()->StoreDefaults(pGraphics);
   }
+}
+
+void IPlugBase::ResizeAtGUIOpen(IGraphics * pGraphics)
+{
+	if (GetGUIResize())
+	{
+		GetGUIResize()->ResizeAtGUIOpen();
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+
+IPlugGUILiveEdit * IPlugBase::GetGUILiveEdit() 
+{ 
+	return mGUILiveEdit; 
 }
 
 // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
@@ -874,6 +906,22 @@ bool IPlugBase::SerializeParams(ByteChunk* pChunk)
   WDL_MutexLock lock(&mMutex);
   bool savedOK = true;
   int i, n = mParams.GetSize();
+
+  // Save number of parameters. Do this so you can add parameters in the future versions without braking the plugin. 
+  // NOTE: Add new parameters at the end.
+  pChunk->Put(&n);
+
+  // Save parameters for GUIResize
+  if (GetGUIResize())
+  {
+	  for (i = 0; i < GetGUIResize()->GetGUIResizeParameterSize(); i++)
+	  {
+		  IParam* pParam = GetGUIResize()->GetGUIResizeParameter(i);
+		  double v = pParam->Value();
+		  pChunk->Put(&v);
+	  }
+  }
+
   for (i = 0; i < n && savedOK; ++i)
   {
     IParam* pParam = mParams.Get(i);
@@ -881,6 +929,7 @@ bool IPlugBase::SerializeParams(ByteChunk* pChunk)
     double v = pParam->Value();
     savedOK &= (pChunk->Put(&v) > 0);
   }
+
   return savedOK;
 }
 
@@ -890,7 +939,25 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
 
   WDL_MutexLock lock(&mMutex);
   int i, n = mParams.GetSize(), pos = startPos;
-  for (i = 0; i < n && pos >= 0; ++i)
+
+  // Use last saved parameter number.
+  pos = pChunk->Get(&n, pos);
+  n = IPMIN(n, mParams.GetSize());
+
+  // Save parameters for GUIResize
+  if (GetGUIResize())
+  {
+	  for (i = 0; i < GetGUIResize()->GetGUIResizeParameterSize(); i++)
+	  {
+		  IParam* pParam = GetGUIResize()->GetGUIResizeParameter(i);
+		  double v = 0.0;
+
+		  pos = pChunk->Get(&v, pos);
+		  pParam->Set(v);
+	  }
+  }
+
+  for (int i = 0; i < n && pos >= 0; ++i)
   {
     IParam* pParam = mParams.Get(i);
     double v = 0.0;
@@ -898,6 +965,7 @@ int IPlugBase::UnserializeParams(ByteChunk* pChunk, int startPos)
     pos = pChunk->Get(&v, pos);
     pParam->Set(v);
   }
+
   OnParamReset();
   return pos;
 }
@@ -941,7 +1009,7 @@ void IPlugBase::DirtyParameters()
   for (int p = 0; p < NParams(); p++)
   {
     double normalizedValue = GetParam(p)->GetNormalized();
-    InformHostOfParamChange(p, normalizedValue);
+	InformHostOfParamChange(p, normalizedValue);
   }
 }
 

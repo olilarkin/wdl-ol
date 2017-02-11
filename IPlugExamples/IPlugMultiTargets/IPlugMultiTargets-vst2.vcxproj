@@ -237,6 +237,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\WDL\IPlug\IPlugVST.h" />
     <ClInclude Include="IPlugMultiTargets.h" />
+    <ClInclude Include="LiveEditLayout.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
