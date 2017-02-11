@@ -1,10 +1,8 @@
 #include "IPlugBase.h"
-#ifndef OS_IOS
 #include "IGraphics.h"
 #include "IControl.h"
 #include "IPlugGUIResize.h"
 #include "IPlugGUILiveEdit.h"
-#endif
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
@@ -156,9 +154,7 @@ IPlugBase::IPlugBase(int nParams,
 IPlugBase::~IPlugBase()
 {
   TRACE;
-  #ifndef OS_IOS
   DELETE_NULL(mGraphics);
-  #endif
   mParams.Empty(true);
   mPresets.Empty(true);
   mInChannels.Empty(true);
@@ -230,7 +226,7 @@ void IPlugBase::SetHost(const char* host, int version)
   GetVersionStr(version, vStr);
   Trace(TRACELOC, "host_%sknown:%s:%s", (mHost == kHostUnknown ? "un" : ""), host, vStr);
 }
-#ifndef OS_IOS
+
 void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 {
   if (pGraphics)
@@ -258,7 +254,6 @@ void IPlugBase::AttachGraphics(IGraphics* pGraphics)
 	GetGUILiveEdit()->StoreDefaults(pGraphics);
   }
 }
-#endif
 
 void IPlugBase::ResizeAtGUIOpen(IGraphics * pGraphics)
 {
@@ -602,21 +597,6 @@ void IPlugBase::ProcessDoubleReplacing(double** inputs, double** outputs, int nF
   }
 }
 
-// Default passthrough ONLY USED BY IOS.
-void IPlugBase::ProcessSingleReplacing(float** inputs, float** outputs, int nFrames)
-{
-  // Mutex is already locked.
-  int i, nIn = mInChannels.GetSize(), nOut = mOutChannels.GetSize();
-  for (i = 0; i < nIn; ++i)
-  {
-    memcpy(outputs[i], inputs[i], nFrames * sizeof(float));
-  }
-  for (/* same i */; i < nOut; ++i)
-  {
-    memset(outputs[i], 0, nFrames * sizeof(float));
-  }
-}
-
 // Default passthrough.
 void IPlugBase::ProcessMidiMsg(IMidiMsg* pMsg)
 {
@@ -820,9 +800,7 @@ bool IPlugBase::RestorePreset(int idx)
     {
       mCurrentPresetIdx = idx;
       PresetsChangedByHost();
-      #ifndef OS_IOS
       RedrawParamControls();
-      #endif
     }
   }
   return restoredOK;
@@ -1011,7 +989,6 @@ bool IPlugBase::CompareState(const unsigned char* incomingState, int startPos)
   return isEqual;
 }
 
-#ifndef OS_IOS
 void IPlugBase::RedrawParamControls()
 {
   if (mGraphics)
@@ -1024,7 +1001,7 @@ void IPlugBase::RedrawParamControls()
     }
   }
 }
-#endif
+
 void IPlugBase::DirtyParameters()
 {
   WDL_MutexLock lock(&mMutex);
@@ -1075,7 +1052,7 @@ void IPlugBase::DumpPresetSrcCode(const char* filename, const char* paramEnumNam
 }
 
 #ifndef MAX_BLOB_LENGTH
-#define MAX_BLOB_LENGTH 1024
+#define MAX_BLOB_LENGTH 2048
 #endif
 
 void IPlugBase::DumpPresetBlob(const char* filename)
@@ -1395,7 +1372,7 @@ bool IPlugBase::LoadProgramFromFXP(WDL_String* fileName)
       if (fxpVersion != kFXPVersionNum) return false; // TODO: what if a host saves as a different version?
       if (pluginID != GetUniqueID()) return false;
       //if (pluginVersion != GetEffectVersion(true)) return false; // TODO: provide mechanism for loading earlier versions
-      if (numParams != NParams()) return false; // TODO: provide mechanism for loading earlier versions with less params
+      //if (numParams != NParams()) return false; // TODO: provide mechanism for loading earlier versions with less params
 
       if (DoesStateChunks() && fxpMagic == 'FPCh')
       {

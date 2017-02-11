@@ -4,7 +4,6 @@
 #include "Containers.h"
 #include "IPlugOSDetect.h"
 
-#ifndef OS_IOS
 #include "../swell/swell.h"
 #include "../lice/lice_text.h"
 
@@ -236,7 +235,7 @@ struct IRECT
 
   inline IRECT SubRectVertical(int numSlices, int sliceIdx)
   {
-    int heightOfSubRect = (H() / numSlices);
+    float heightOfSubRect = (float(H()) / numSlices);
     int t = heightOfSubRect * sliceIdx;
 
     return IRECT(L, T + t, R, T + t + heightOfSubRect);
@@ -244,7 +243,7 @@ struct IRECT
 
   inline IRECT SubRectHorizontal(int numSlices, int sliceIdx)
   {
-    int widthOfSubRect = (W() / numSlices);
+    float widthOfSubRect = (float(W()) / numSlices);
     int l = widthOfSubRect * sliceIdx;
 
     return IRECT(L + l, T, L + l + widthOfSubRect, B);
@@ -301,8 +300,6 @@ struct IMouseMod
   IMouseMod(bool l = false, bool r = false, bool s = false, bool c = false, bool a = false)
     : L(l), R(r), S(s), C(c), A(a) {}
 };
-
-#endif // !OS_IOS
 
 struct IMidiMsg
 {
