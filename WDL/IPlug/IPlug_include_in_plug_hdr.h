@@ -4,6 +4,9 @@
 // Include this file in the main header for your plugin,
 // after #defining either VST_API or AU_API.
 #include <stdio.h>
+#include <stdint.h>
+typedef uint32_t uint32;
+
 #include "IPlugOSDetect.h"
 #include "resource.h" // This is your plugin's resource.h
 
