@@ -49,7 +49,7 @@ class IGraphics
 friend class IPlugGUIResize;
 public:
 	void PrepDraw();    // Called once, when the IGraphics class is attached to the IPlug class.
-
+	
 	bool IsDirty(IRECT* pR);        // Ask the plugin what needs to be redrawn.
 	bool Draw(IRECT* pR);           // The system announces what needs to be redrawn.  Ordering and drawing logic.
 	virtual bool DrawScreen(IRECT* pR) = 0;  // Tells the OS class to put the final bitmap on the screen.
@@ -147,6 +147,7 @@ public:
 	int Width() { return mWidth; }
 	int Height() { return mHeight; }
 	int FPS() { return mFPS; }
+	void SetFPS(int FPS) { mFPS = FPS; }
 
 	// This is needed for GUI resizing------------------------------------------------------------------------
 	void RescaleBitmaps(double guiScaleRatio);
