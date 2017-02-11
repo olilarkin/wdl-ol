@@ -394,22 +394,6 @@ void IPlugBase::SetOutputChannelConnections(int idx, int n, bool connected)
   }
 }
 
-int IPlugBase::NInChannelConnected()
-{
-	int channelNumber = 0;
-	// Gets the connected channel number
-	for (int i = 0; i < NInChannels(); i++)  if (IsInChannelConnected(i)) channelNumber++;
-	return channelNumber;
-}
-
-int IPlugBase::NOutChannelConnected()
-{
-	int channelNumber = 0;
-	// Gets the connected channel number
-	for (int i = 0; i < NOutChannels(); i++)  if (IsOutChannelConnected(i)) channelNumber++;
-	return channelNumber;
-}
-
 bool IPlugBase::IsInChannelConnected(int chIdx)
 {
   return (chIdx < mInChannels.GetSize() && mInChannels.Get(chIdx)->mConnected);
@@ -935,40 +919,6 @@ int IPlugBase::UnserializePresets(ByteChunk* pChunk, int startPos)
   }
   RestorePreset(mCurrentPresetIdx);
   return pos;
-}
-
-
-int IPlugBase::UnserializeParamsTransfer(ByteChunk* pChunk, int startPos, int oldNumberOfParameters)
-{
-	TRACE;
-
-	WDL_MutexLock lock(&mMutex);
-	int i, n = oldNumberOfParameters, pos = startPos;
-
-	for (int i = 0; i < n && pos >= 0; ++i)
-	{
-		IParam* pParam = mParams.Get(i);
-		double v = 0.0;
-		Trace(TRACELOC, "%d %s %f", i, pParam->GetNameForHost(), pParam->Value());
-		pos = pChunk->Get(&v, pos);
-		pParam->Set(v);
-	}
-
-	// Save parameters for GUIResize
-	if (GetGUIResize())
-	{
-		for (i = 0; i < GetGUIResize()->GetGUIResizeParameterSize(); i++)
-		{
-			IParam* pParam = GetGUIResize()->GetGUIResizeParameter(i);
-			double v = 0.0;
-
-			pos = pChunk->Get(&v, pos);
-			pParam->Set(v);
-		}
-	}
-
-	OnParamReset();
-	return pos;
 }
 
 bool IPlugBase::SerializeParams(ByteChunk* pChunk)
