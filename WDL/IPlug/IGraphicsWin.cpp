@@ -56,7 +56,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     SetWindowLongPtr(hWnd, GWLP_USERDATA, (LPARAM) (lpcs->lpCreateParams));
     int mSec = int(1000.0 / sFPS);
     SetTimer(hWnd, IPLUG_TIMER_ID, mSec, NULL);
-    SetFocus(hWnd); // gets scroll wheel working straight away
+    //SetFocus(hWnd); // gets scroll wheel working straight away
     return 0;
   }
 
