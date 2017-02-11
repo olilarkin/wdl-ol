@@ -21,7 +21,7 @@ class IControl
 public:
   // If paramIdx is > -1, this control will be associated with a plugin parameter.
   IControl(IPlugBase* pPlug, IRECT pR, int paramIdx = -1, IChannelBlend blendMethod = IChannelBlend::kBlendNone)
-    : mPlug(pPlug), mRECT(pR), mTargetRECT(pR), mParamIdx(paramIdx), mValue(0.0), mDefaultValue(-1.0),
+    : mPlug(pPlug), mRECT(pR), mNonScaledDrawRECT(pR), mTargetRECT(pR), mParamIdx(paramIdx), mValue(0.0), mDefaultValue(-1.0),
       mBlend(blendMethod), mDirty(true), mHide(false), mGrayed(false), mDisablePrompt(true), mDblAsSingleClick(false),
       mClampLo(0.0), mClampHi(1.0), mMOWhenGreyed(false), mTextEntryLength(DEFAULT_TEXT_ENTRY_LEN), 
       mValDisplayControl(0), mNameDisplayControl(0), mTooltip("") {}
@@ -79,6 +79,8 @@ public:
   IRECT* GetRECT() { return &mRECT; }       // The draw area for this control.
   IRECT* GetTargetRECT() { return &mTargetRECT; } // The mouse target area (default = draw area).
   void SetDrawRECT(IRECT pR) { mRECT = pR; }
+  IRECT* GetNonScaledDrawRECT() { return &mNonScaledDrawRECT; }
+  void SetNonScaledDrawRECT(IRECT pR) { mNonScaledDrawRECT = pR; } // Sets draw rectangle that is unaffected by GUI scaling
   void SetTargetRECT(IRECT pR) { mTargetRECT = pR; }
   virtual void TextFromTextEntry( const char* txt ) { return; } // does nothing by default
   
@@ -143,7 +145,7 @@ protected:
   int mTextEntryLength;
   IText mText;
   IPlugBase* mPlug;
-  IRECT mRECT, mTargetRECT;
+  IRECT mRECT, mTargetRECT, mNonScaledDrawRECT;
   int mParamIdx;
   int mLayerPosition = 0;
   
