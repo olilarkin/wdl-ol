@@ -536,10 +536,17 @@ void IPlugBase::SetLatency(int samples)
 void IPlugBase::SetParameterFromGUI(int idx, double normalizedValue)
 {
   Trace(TRACELOC, "%d:%f", idx, normalizedValue);
-  WDL_MutexLock lock(&mMutex);
+  
+  IMutexLock lock(this);
   GetParam(idx)->SetNormalized(normalizedValue);
-  InformHostOfParamChange(idx, normalizedValue);
   OnParamChange(idx, kGUI);
+  
+  lock.Destroy();
+
+  // Destroy lock before informing host of change
+    
+  InformHostOfParamChange(idx, normalizedValue);
+
 }
 
 void IPlugBase::OnParamReset(ParamChangeSource source)
@@ -963,11 +970,12 @@ void IPlugBase::RedrawParamControls()
 
 void IPlugBase::DirtyParameters()
 {
-  WDL_MutexLock lock(&mMutex);
-
   for (int p = 0; p < NParams(); p++)
   {
+    IMutexLock lock(this);
     double normalizedValue = GetParam(p)->GetNormalized();
+    lock.Destroy();
+      
     InformHostOfParamChange(p, normalizedValue);
   }
 }
