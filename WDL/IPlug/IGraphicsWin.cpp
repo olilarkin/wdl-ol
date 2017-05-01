@@ -891,7 +891,6 @@ HMENU IGraphicsWin::CreateMenu(IPopupMenu* pMenu, long* offsetIdx)
       }
 
       const char* entryText (titleWithPrefixNumbers ? titleWithPrefixNumbers : str);
-
         
       // Fix ampersands if present
         
@@ -899,9 +898,9 @@ HMENU IGraphicsWin::CreateMenu(IPopupMenu* pMenu, long* offsetIdx)
       {
         escapedText = WDL_String(entryText);
           
-        for (i = 0; i < escapedText.GetLength(); i++)
-          if (escapedText.Get()[i] == '&')
-            escapedText.Insert("&", i++);
+        for (int cp = 0; cp < escapedText.GetLength(); cp++)
+          if (escapedText.Get()[cp] == '&')
+            escapedText.Insert("&", cp++);
         
          entryText = escapedText.Get();
       }
