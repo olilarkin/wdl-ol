@@ -895,7 +895,7 @@ HMENU IGraphicsWin::CreateMenu(IPopupMenu* pMenu, long* offsetIdx)
         
       // Fix ampersands if present
         
-      if (strchr.entryText(entryText, '&'))
+      if (strchr(entryText, '&'))
       {
         escapedText = WDL_String(entryText);
           
