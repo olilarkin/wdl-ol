@@ -847,6 +847,8 @@ HMENU IGraphicsWin::CreateMenu(IPopupMenu* pMenu, long* offsetIdx)
 {
   HMENU hMenu = CreatePopupMenu();
 
+  WDL_String escapedText;
+    
   int flags = 0;
   long idxSubmenu = 0;
   long offset = *offsetIdx;
@@ -890,6 +892,20 @@ HMENU IGraphicsWin::CreateMenu(IPopupMenu* pMenu, long* offsetIdx)
 
       const char* entryText (titleWithPrefixNumbers ? titleWithPrefixNumbers : str);
 
+        
+      // Fix ampersands if present
+        
+      if (strchr.entryText(entryText, '&'))
+      {
+        escapedText = WDL_String(entryText);
+          
+        for (i = 0; i < escapedText.GetLength(); i++)
+          if (escapedText.Get()[i] == '&')
+            escapedText.Insert("&", i++);
+        
+         entryText = escapedText.Get();
+      }
+     
       flags = MF_STRING;
       //if (nItems < 160 && pMenu->getNbItemsPerColumn () > 0 && inc && !(inc % _menu->getNbItemsPerColumn ()))
       //  flags |= MF_MENUBARBREAK;
