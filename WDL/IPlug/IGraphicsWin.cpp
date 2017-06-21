@@ -627,13 +627,12 @@ void IGraphicsWin::ShowMouseCursor()
 void IGraphicsWin::MoveMouseCursor(int x, int y)
 {
     POINT p;
-    int newX, newY;
+	p.x = x;
+	p.y = y;
 
-    GetCursorPos(&p);
-    newX = x / GetScalingFactor() + (p.x - GetMouseX() / GetScalingFactor());
-    newY = y / GetScalingFactor() + (p.y - GetMouseY() / GetScalingFactor());
-    
-	if (SetCursorPos(newX, newY))
+    ClientToScreen(GetMainWnd(), &p);
+
+	if (SetCursorPos(p.x, p.y))
     {
       if (mCursorHidden)
       {
