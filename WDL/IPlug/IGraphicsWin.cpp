@@ -47,6 +47,14 @@ inline IMouseMod GetMouseMod(WPARAM wParam)
                    );
 }
 
+inline bool IsTouchEvent() {
+	const LONG_PTR c_SIGNATURE_MASK = 0xFFFFFF00;
+	const LONG_PTR c_MOUSEEVENTF_FROMTOUCH = 0xFF515700;
+
+	LONG_PTR extraInfo = GetMessageExtraInfo();
+	return ((extraInfo & c_SIGNATURE_MASK) == c_MOUSEEVENTF_FROMTOUCH);
+}
+
 // static
 LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -240,7 +248,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 		  if (pGraphics->GetMouseX() != GET_X_LPARAM(lParam) || pGraphics->GetMouseY() != GET_Y_LPARAM(lParam))
 		  {
 	    	pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
-		    if (pGraphics->mMousePositionFrozen)
+		    if (pGraphics->mMousePositionFrozen  && !IsTouchEvent())
 			  pGraphics->MoveMouseCursor(pGraphics->mHiddenMousePointX, pGraphics->mHiddenMousePointY);
 		  }
 	  }
