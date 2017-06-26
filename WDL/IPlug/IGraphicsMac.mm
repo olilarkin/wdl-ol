@@ -154,7 +154,8 @@ IGraphicsMac::IGraphicsMac(IPlugBase* pPlug, int w, int h, int refreshFPS)
     mGraphicsCarbon(0),
     #endif
     mGraphicsCocoa(0),
-    mColorSpace(NULL)
+    mColorSpace(NULL),
+    mTabletInput(false)
 {
   NSApplicationLoad();
 }
@@ -515,7 +516,7 @@ void IGraphicsMac::HideMouseCursor(bool freeze)
     if (CGDisplayHideCursor(CGMainDisplayID()) == CGDisplayNoErr)
         mCursorHidden = true;
     
-    if (freeze)
+    if (!mTabletInput && freeze)
         CGAssociateMouseAndMouseCursorPosition(false);
   }
 }
@@ -538,7 +539,7 @@ void IGraphicsMac::MoveMouseCursor(int x, int y)
     point.x = round(x / GetScalingFactor() + (mouse.x - GetMouseX() / GetScalingFactor()));
     point.y = round(y / GetScalingFactor() + (mouseY - GetMouseY() / GetScalingFactor()));
     
-    if (CGDisplayMoveCursorToPoint(CGMainDisplayID(), point) == CGDisplayNoErr)
+    if (!mTabletInput && CGDisplayMoveCursorToPoint(CGMainDisplayID(), point) == CGDisplayNoErr)
         IGraphics::MoveMouseCursor(x, y);
     
     CGAssociateMouseAndMouseCursorPosition(true);

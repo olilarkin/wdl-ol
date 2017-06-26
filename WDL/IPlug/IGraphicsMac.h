@@ -86,7 +86,8 @@ public:
   void HideMouseCursor(bool freeze = true);
   void ShowMouseCursor();
   void MoveMouseCursor(int x, int y);
-
+  void SetTabletInput(bool tablet) { mTabletInput = tablet; }
+    
   int ShowMessageBox(const char* pText, const char* pCaption, int type);
   void ForceEndUserEdit();
 
@@ -135,7 +136,8 @@ private:
   
   void *mColorSpace; // CGColorSpaceRef, created on demand and freed on destroy
   WDL_HeapBuf mRetinaUpscaleBuf; // used for doubled-bitmap when drawing retina
-  
+  bool mTabletInput;
+    
 public: //TODO: make this private
   void* mHostNSWindow;
 };
