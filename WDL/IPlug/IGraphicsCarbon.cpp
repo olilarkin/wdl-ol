@@ -417,10 +417,14 @@ pascal OSStatus IGraphicsCarbon::MainEventHandler(EventHandlerCallRef pHandlerCa
     {
       HIPoint hp;
       HIPoint dp;
+      UInt32 tabletEventType;
         
       GetEventParameter(pEvent, kEventParamWindowMouseLocation, typeHIPoint, 0, sizeof(HIPoint), 0, &hp);
       GetEventParameter(pEvent, kEventParamMouseDelta, typeHIPoint, 0, sizeof(HIPoint), 0, &dp);
-        
+      GetEventParameter(pEvent, kEventParamTabletEventType, typeUInt32, 0, sizeof(tabletEventType), 0, &tabletEventType);
+      
+      _this->mGraphicsMac->SetTabletInput(tabletEventType == kEventTabletPoint);
+            
       #ifdef RTAS_API
       // Header offset
       hp.x -= _this->GetLeftOffset();
