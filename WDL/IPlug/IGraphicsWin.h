@@ -79,6 +79,7 @@ private:
   int mParamEditMsg;
   bool mShowingTooltip;
   bool mMousePositionFrozen;
+  bool mTabletInput;
   int mTooltipIdx;
   int mHiddenMousePointX, mHiddenMousePointY;
 
@@ -89,6 +90,8 @@ private:
   WDL_String mMainWndClassName;
 
 public:
+
+  void CheckTabletInput(UINT msg);
   static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK ParamEditProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
   static BOOL CALLBACK FindMainWindow(HWND hWnd, LPARAM lParam);

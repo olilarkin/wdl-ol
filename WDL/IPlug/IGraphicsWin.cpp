@@ -47,12 +47,20 @@ inline IMouseMod GetMouseMod(WPARAM wParam)
                    );
 }
 
-inline bool IsTouchEvent() {
+void IGraphicsWin::CheckTabletInput(UINT msg)
+{
+  if ((msg == WM_LBUTTONDOWN) || (msg == WM_RBUTTONDOWN) || (msg == WM_MBUTTONDOWN) || (msg == WM_MOUSEMOVE) 
+	  || (msg == WM_RBUTTONDBLCLK) || (msg == WM_LBUTTONDBLCLK) || (msg == WM_MBUTTONDBLCLK) 
+	  || (msg == WM_RBUTTONUP) || (msg == WM_LBUTTONUP) || (msg == WM_MBUTTONUP)
+	  || (msg == WM_MOUSEHOVER) || (msg == WM_MOUSELEAVE))
+  {
 	const LONG_PTR c_SIGNATURE_MASK = 0xFFFFFF00;
 	const LONG_PTR c_MOUSEEVENTF_FROMTOUCH = 0xFF515700;
 
 	LONG_PTR extraInfo = GetMessageExtraInfo();
-	return ((extraInfo & c_SIGNATURE_MASK) == c_MOUSEEVENTF_FROMTOUCH);
+	mTabletInput = (((extraInfo & c_SIGNATURE_MASK) == c_MOUSEEVENTF_FROMTOUCH));
+	mMousePositionFrozen &= !mTabletInput;
+  }
 }
 
 // static
@@ -85,6 +93,8 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     }
     return DefWindowProc(hWnd, msg, wParam, lParam);
   }
+
+  pGraphics->CheckTabletInput(msg);
 
   switch (msg)
   {
@@ -248,10 +258,8 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 		  if (pGraphics->GetMouseX() != GET_X_LPARAM(lParam) || pGraphics->GetMouseY() != GET_Y_LPARAM(lParam))
 		  {
 	    	pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
-			if (pGraphics->mMousePositionFrozen && !IsTouchEvent())
+			if (pGraphics->mMousePositionFrozen)
 				pGraphics->MoveMouseCursor(pGraphics->mHiddenMousePointX, pGraphics->mHiddenMousePointY);
-			else
-				pGraphics->mMousePositionFrozen = false;
 		  }
 	  }
 
@@ -502,7 +510,7 @@ IGraphicsWin::IGraphicsWin(IPlugBase* pPlug, int w, int h, int refreshFPS)
   : IGraphics(pPlug, w, h, refreshFPS), mPlugWnd(0), mParamEditWnd(0),
     mPID(0), mParentWnd(0), mMainWnd(0), mCustomColorStorage(0),
     mEdControl(0), mEdParam(0), mDefEditProc(0), mParamEditMsg(kNone),
-    mTooltipWnd(0), mShowingTooltip(false), mMousePositionFrozen(false),
+    mTooltipWnd(0), mShowingTooltip(false), mMousePositionFrozen(false), mTabletInput(false),
 	mTooltipIdx(-1), mHiddenMousePointX(-1), mHiddenMousePointY(-1), mHInstance(0)
 {}
 
@@ -617,7 +625,7 @@ void IGraphicsWin::HideMouseCursor(bool freeze)
 
     ShowCursor(false);
     mCursorHidden = true;
-    mMousePositionFrozen = freeze;
+    mMousePositionFrozen = freeze && !mTabletInput;
   }
 }
 
@@ -636,7 +644,10 @@ void IGraphicsWin::ShowMouseCursor()
 
 void IGraphicsWin::MoveMouseCursor(int x, int y)
 {
-    POINT p;
+	if (mTabletInput)
+		return;
+	
+	POINT p;
 	p.x = x;
 	p.y = y;
 
