@@ -248,8 +248,10 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 		  if (pGraphics->GetMouseX() != GET_X_LPARAM(lParam) || pGraphics->GetMouseY() != GET_Y_LPARAM(lParam))
 		  {
 	    	pGraphics->OnMouseDrag(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &GetMouseMod(wParam));
-		    if (pGraphics->mMousePositionFrozen  && !IsTouchEvent())
-			  pGraphics->MoveMouseCursor(pGraphics->mHiddenMousePointX, pGraphics->mHiddenMousePointY);
+			if (pGraphics->mMousePositionFrozen && !IsTouchEvent())
+				pGraphics->MoveMouseCursor(pGraphics->mHiddenMousePointX, pGraphics->mHiddenMousePointY);
+			else
+				pGraphics->mMousePositionFrozen = false;
 		  }
 	  }
 
