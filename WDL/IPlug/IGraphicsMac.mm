@@ -535,7 +535,7 @@ void IGraphicsMac::MoveMouseCursor(int x, int y)
 {
     CGPoint point;
     NSPoint mouse = [NSEvent mouseLocation];
-    int mouseY = CGDisplayPixelsHigh(CGMainDisplayID()) - mouse.y;
+    double mouseY = CGDisplayPixelsHigh(CGMainDisplayID()) - mouse.y;
     point.x = round(x / GetScalingFactor() + (mouse.x - GetMouseX() / GetScalingFactor()));
     point.y = round(y / GetScalingFactor() + (mouseY - GetMouseY() / GetScalingFactor()));
     
