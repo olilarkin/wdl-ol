@@ -397,6 +397,24 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
   }
 }
 
+- (void) updateTrackingAreas
+{
+  if (mTrackingArea != nil) {
+    [self removeTrackingArea:mTrackingArea];
+  }
+  
+  mTrackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds] options:NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways owner:self userInfo:nil];
+  [self addTrackingArea:mTrackingArea];
+}
+
+- (void) mouseExited: (NSEvent*) pEvent
+{
+  if (mGraphics)
+  {
+    mGraphics->OnMouseOut();
+  }
+}
+
 - (void)keyDown: (NSEvent *)pEvent
 {
   NSString *s = [pEvent charactersIgnoringModifiers];
