@@ -2408,7 +2408,9 @@ OSStatus IPlugAU::DoGetParameter(IPlugAU *_this, AudioUnitParameterID param, Aud
 //static
 OSStatus IPlugAU::DoSetParameter(IPlugAU *_this, AudioUnitParameterID param, AudioUnitScope scope, AudioUnitElement elem, AudioUnitParameterValue value, UInt32 bufferOffset)
 {
-  // REALTIME NO LOCK
+#ifndef IPLUG_HARD_MODE
+  IPlugBase::IMutexLock lock(_this);
+#endif
   
   return _this->SetParamProc(_this, param, scope, elem, value, bufferOffset);
 }
@@ -2416,7 +2418,9 @@ OSStatus IPlugAU::DoSetParameter(IPlugAU *_this, AudioUnitParameterID param, Aud
 //static
 OSStatus IPlugAU::DoScheduleParameters(IPlugAU *_this, const AudioUnitParameterEvent *pEvent, UInt32 nEvents)
 {
-  // REALTIME NO LOCK
+#ifndef IPLUG_HARD_MODE
+  IPlugBase::IMutexLock lock(_this);
+#endif
   
   for (int i = 0; i < nEvents; ++i, ++pEvent)
   {
@@ -2436,7 +2440,9 @@ OSStatus IPlugAU::DoScheduleParameters(IPlugAU *_this, const AudioUnitParameterE
 //static
 OSStatus IPlugAU::DoRender(IPlugAU *_this, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inOutputBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData)
 {
-  // REALTIME NO LOCK
+#ifndef IPLUG_HARD_MODE
+  IPlugBase::IMutexLock lock(_this);
+#endif
   
   return RenderProc(_this, ioActionFlags, inTimeStamp, inOutputBusNumber, inNumberFrames, ioData);
 }
@@ -2455,7 +2461,9 @@ OSStatus IPlugAU::DoMIDIEvent(IPlugAU *_this, UInt32 inStatus, UInt32 inData1, U
 {
   if(_this->DoesMIDI())
   {
-    // REALTIME NO LOCK
+#ifndef IPLUG_HARD_MODE
+    IPlugBase::IMutexLock lock(_this);
+#endif
     
     IMidiMsg msg;
     msg.mStatus = inStatus;
@@ -2474,7 +2482,9 @@ OSStatus IPlugAU::DoSysEx(IPlugAU *_this, const UInt8 *inData, UInt32 inLength)
 {
   if(_this->DoesMIDI())
   {
-    // REALTIME NO LOCK
+#ifndef IPLUG_HARD_MODE
+    IPlugBase::IMutexLock lock(_this);
+#endif
     
     ISysEx sysex;
     sysex.mData = inData;
