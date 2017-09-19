@@ -44,7 +44,7 @@
       allowLocationSimulation = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         FilePath = "/Applications/Developer/AU Lab.app">
+         FilePath = "/Users/oli/Dev/auvaltool">
       </PathRunnable>
       <MacroExpansion>
          <BuildableReference
@@ -55,6 +55,12 @@
             ReferencedContainer = "container:IPlugEffect.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-v aufx Ipef Acme"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

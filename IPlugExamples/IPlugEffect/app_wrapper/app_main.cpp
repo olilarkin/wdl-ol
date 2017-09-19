@@ -237,7 +237,7 @@ void MIDICallback( double deltatime, std::vector< unsigned char > *message, void
 {
   if ( message->size() )
   {
-    IMidiMsg *myMsg;
+    IMidiMsg *myMsg = nullptr; //TODO: FUCK THIS IS HORRIBLE
 
     switch (message->size())
     {
@@ -255,7 +255,7 @@ void MIDICallback( double deltatime, std::vector< unsigned char > *message, void
         break;
     }
 
-    IMidiMsg msg(*myMsg);
+    IMidiMsg msg(*myMsg); //TODO: FUCK THIS IS HORRIBLE
 
     delete myMsg;
 
