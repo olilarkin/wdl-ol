@@ -1734,7 +1734,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# if [ -f \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\" ]\n#   then\n# \trm \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\"\n# fi\n#\n# if [ -f \"$HOME/Library/Caches/com.apple.audiounits.cache\" ]\n#   then\n# \trm \"$HOME/Library/Caches/com.apple.audiounits.cache\"\n# fi";
+			shellScript = "# if [ -f \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\" ]\n#   then\n# \trm \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\"\n# fi\n#\n# if [ -f \"$HOME/Library/Caches/com.apple.audiounits.cache\" ]\n#   then\n# \trm \"$HOME/Library/Caches/com.apple.audiounits.cache\"\n# fi\n#\n# if [ -f \"$HOME/Library/Preferences/com.apple.audio.InfoHelper.plist\" ]\n#   then\n# \trm \"$HOME/Library/Preferences/com.apple.audio.InfoHelper.plist\"\n# fi\n#\n# if [ -f \"$HOME/Library/Caches/AudioUnitCache\" ]\n#   then\n# \trm \"$HOME/Library/Caches/AudioUnitCache\"\n# fi";
 			showEnvVarsInLog = 0;
 		};
 		4F90898D1F6B2BA5006CB839 /* Run Script "generate_plists.py" */ = {
