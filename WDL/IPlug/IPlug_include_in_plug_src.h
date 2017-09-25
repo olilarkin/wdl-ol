@@ -123,7 +123,7 @@ DEF_CLASS2 (INLINE_UID(GUID_DATA1, GUID_DATA2, GUID_DATA3, GUID_DATA4),
 END_FACTORY
 
 #elif defined AU_API
-#include <Availability.h>
+#include <AvailabilityMacros.h>
 
   IPlug* MakePlug(void *memory)
   {
