@@ -1422,8 +1422,6 @@ OSStatus IPlugAU::SetState(CFPropertyListRef pPropList)
   AudioComponentDescription cd;
   AudioComponent comp = AudioComponentInstanceGetComponent(mCI);
   OSStatus r = AudioComponentGetDescription(comp, &cd);
-  AudioComponentDescription cd;
-  OSStatus r = GetComponentInfo((Component) mCI, &cd, 0, 0, 0);
 #endif
   
   if (r != noErr)
