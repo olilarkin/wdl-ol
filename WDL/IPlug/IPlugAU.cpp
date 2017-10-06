@@ -1386,6 +1386,9 @@ OSStatus IPlugAU::GetState(CFPropertyListRef* ppPropList)
   AudioComponentDescription cd;
   AudioComponent comp = AudioComponentInstanceGetComponent(mCI);
   OSStatus r = AudioComponentGetDescription(comp, &cd);
+#elif MAC_OS_X_VERSION_MAX_ALLOWED == 1060
+  ComponentDescription cd;
+  OSStatus r = GetComponentInfo((Component) mCI, &cd, 0, 0, 0);
 #else
   AudioComponentDescription cd;
   OSStatus r = GetComponentInfo((Component) mCI, &cd, 0, 0, 0);
@@ -1422,6 +1425,10 @@ OSStatus IPlugAU::SetState(CFPropertyListRef pPropList)
   AudioComponentDescription cd;
   AudioComponent comp = AudioComponentInstanceGetComponent(mCI);
   OSStatus r = AudioComponentGetDescription(comp, &cd);
+#elif MAC_OS_X_VERSION_MAX_ALLOWED == 1060
+  ComponentDescription cd;
+  OSStatus r = GetComponentInfo((Component) mCI, &cd, 0, 0, 0);
+#else
   AudioComponentDescription cd;
   OSStatus r = GetComponentInfo((Component) mCI, &cd, 0, 0, 0);
 #endif
