@@ -207,7 +207,7 @@ class IPlugAUFactory
 
     static AudioComponentPlugInInterface *Factory(const AudioComponentDescription* inDesc)
     {
-      AudioComponentPlugInInstance *acpi = (AudioComponentPlugInInstance *) malloc( offsetof(AudioComponentPlugInInstance, mInstanceStorage) + sizeof(IPlugAU) );
+      AudioComponentPlugInInstance *acpi = (AudioComponentPlugInInstance *) malloc( offsetof(AudioComponentPlugInInstance, mInstanceStorage) + sizeof(PLUG_CLASS_NAME) );
       acpi->mPlugInInterface.Open = Open;
       acpi->mPlugInInterface.Close = Close;
       acpi->mPlugInInterface.Lookup = Lookup;
