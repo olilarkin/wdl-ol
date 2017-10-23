@@ -150,7 +150,7 @@ class IPlugAUFactory
     
     static void Destruct(void *memory)
     {
-      ((IPlugAU*)memory)->~IPlugAU();
+      ((PLUG_CLASS_NAME*)memory)->~PLUG_CLASS_NAME();
     }
     
     static AudioComponentMethod Lookup (SInt16 selector)
