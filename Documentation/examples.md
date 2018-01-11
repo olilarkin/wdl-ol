@@ -33,7 +33,7 @@ Some of these are optional, but without them the build-scripts will need to be e
 * Mac Developer ID Certificates for code signing installers for 10.8>
 * PACE tools and certificate for code signing AAX binaries (AAX only, consult Avid documentation)
 
-##About the examples:
+##Example Projects
 
 * **IPlugChunks** - shows how to use chunks in a plugin. Chunks allow you to store arbitrary data in the plugin's state as opposed to just a value for each parameter.
 * **IPlugControls** -  demos the various IControl classes (example by Captain Caveman)
@@ -58,7 +58,7 @@ The **IPlugEffect** project is the main starting project I use. If you are not i
 
 Rather than changing settings for individual targets/projects inside the Xcode Project/Visual Studio solutions, most customisations can be done in the xcconfig and property sheets.
 
-##About the supported formats:
+##Supported Formats
 
 ###VST2
 
