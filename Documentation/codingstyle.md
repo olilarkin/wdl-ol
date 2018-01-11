@@ -11,7 +11,7 @@ These guidelines exist in order to try and tidy up the IPlug code base. Every de
 
 ###An example class:
 
-```C++
+```cpp
 class MyClass
 {
 public:
