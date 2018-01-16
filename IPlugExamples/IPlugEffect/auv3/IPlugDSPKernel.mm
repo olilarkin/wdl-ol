@@ -1,6 +1,6 @@
-#include "IPlugEffectDSPKernel.hpp"
+#include "IPlugDSPKernel.hpp"
 
-void IPlugEffectDSPKernel::handleOneEvent(AURenderEvent const *event) {
+void IPlugDSPKernel::handleOneEvent(AURenderEvent const *event) {
   switch (event->head.eventType) {
     case AURenderEventParameter:
     case AURenderEventParameterRamp: {
@@ -19,7 +19,7 @@ void IPlugEffectDSPKernel::handleOneEvent(AURenderEvent const *event) {
   }
 }
 
-void IPlugEffectDSPKernel::performAllSimultaneousEvents(AUEventSampleTime now, AURenderEvent const *&event) {
+void IPlugDSPKernel::performAllSimultaneousEvents(AUEventSampleTime now, AURenderEvent const *&event) {
   do {
     handleOneEvent(event);
 
@@ -30,7 +30,7 @@ void IPlugEffectDSPKernel::performAllSimultaneousEvents(AUEventSampleTime now, A
   } while (event && event->head.eventSampleTime <= now);
 }
 
-void IPlugEffectDSPKernel::processWithEvents(AudioTimeStamp const *timestamp, AUAudioFrameCount frameCount, AURenderEvent const *events) {
+void IPlugDSPKernel::processWithEvents(AudioTimeStamp const *timestamp, AUAudioFrameCount frameCount, AURenderEvent const *events) {
 
   AUEventSampleTime now = AUEventSampleTime(timestamp->mSampleTime);
   AUAudioFrameCount framesRemaining = frameCount;
@@ -65,26 +65,26 @@ void IPlugEffectDSPKernel::processWithEvents(AudioTimeStamp const *timestamp, AU
   }
 }
 
-void IPlugEffectDSPKernel::init(int channelCount, double inSampleRate) {
+void IPlugDSPKernel::init(int channelCount, double inSampleRate) {
 }
 
-void IPlugEffectDSPKernel::reset() {
+void IPlugDSPKernel::reset() {
 }
 
-void IPlugEffectDSPKernel::setParameter(AUParameterAddress address, AUValue value) {
+void IPlugDSPKernel::setParameter(AUParameterAddress address, AUValue value) {
 }
 
-AUValue IPlugEffectDSPKernel::getParameter(AUParameterAddress address) {
+AUValue IPlugDSPKernel::getParameter(AUParameterAddress address) {
   return 0.0;
 }
 
-void IPlugEffectDSPKernel::startRamp(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) {
+void IPlugDSPKernel::startRamp(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) {
 }
 
-void IPlugEffectDSPKernel::setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList) {
+void IPlugDSPKernel::setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList) {
   inBufferListPtr = inBufferList;
   outBufferListPtr = outBufferList;
 }
 
-void IPlugEffectDSPKernel::process(AUAudioFrameCount frameCount, AUAudioFrameCount bufferOffset) {
+void IPlugDSPKernel::process(AUAudioFrameCount frameCount, AUAudioFrameCount bufferOffset) {
 }

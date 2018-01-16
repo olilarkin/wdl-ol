@@ -3,7 +3,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <algorithm>
 
-class IPlugEffectDSPKernel
+class IPlugDSPKernel
 {
 public:
   void process(AUAudioFrameCount frameCount, AUAudioFrameCount bufferOffset);

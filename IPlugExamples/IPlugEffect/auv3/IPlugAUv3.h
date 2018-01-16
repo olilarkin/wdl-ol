@@ -1,4 +1,4 @@
 #import <AudioToolbox/AudioToolbox.h>
 
-@interface IPlugEffectAUv3 : AUAudioUnit
+@interface IPlugAUv3 : AUAudioUnit
 @end

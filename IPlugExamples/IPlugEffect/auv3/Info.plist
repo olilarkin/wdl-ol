@@ -49,7 +49,7 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.AudioUnit-UI</string>
 		<key>NSExtensionPrincipalClass</key>
-		<string>IPlugEffectViewController</string>
+		<string>IPlugViewController</string>
 	</dict>
 </dict>
 </plist>

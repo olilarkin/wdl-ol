@@ -1,10 +1,10 @@
 #import <AVFoundation/AVFoundation.h>
 #include "BufferedAudioBus.hpp"
 
-#import "IPlugEffectAUv3.h"
-#include "IPlugEffectDSPKernel.hpp"
+#import "IPlugAUv3.h"
+#include "IPlugDSPKernel.hpp"
 
-@interface IPlugEffectAUv3 ()
+@interface IPlugAUv3 ()
 
 @property AUAudioUnitBus *outputBus;
 @property AUAudioUnitBusArray *inputBusArray;
@@ -12,8 +12,8 @@
 
 @end
 
-@implementation IPlugEffectAUv3 {
-  IPlugEffectDSPKernel  _kernel;
+@implementation IPlugAUv3 {
+  IPlugDSPKernel  _kernel;
   BufferedInputBus _inputBus;
   
 //  AUAudioUnitPreset   *_currentPreset;
@@ -82,7 +82,7 @@
   _outputBusArray = [[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeOutput busses: @[_outputBus]];
   
   // Make a local pointer to the kernel to avoid capturing self.
-  __block IPlugEffectDSPKernel *dspKernel = &_kernel;
+  __block IPlugDSPKernel *dspKernel = &_kernel;
 
   // implementorValueObserver is called when a parameter changes value.
   _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value) {
@@ -169,7 +169,7 @@
    render, we're doing it wrong.
    */
   // Specify captured objects are mutable.
-  __block IPlugEffectDSPKernel *state = &_kernel;
+  __block IPlugDSPKernel *state = &_kernel;
   __block BufferedInputBus *input = &_inputBus;
 
   return ^AUAudioUnitStatus(
