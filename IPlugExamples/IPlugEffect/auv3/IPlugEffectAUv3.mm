@@ -96,7 +96,7 @@
   
   // A function to provide string representations of parameter values.
   _parameterTree.implementorStringFromValueCallback = ^(AUParameter *param, const AUValue *__nullable valuePtr) {
-    AUValue value = valuePtr == nil ? param.value : *valuePtr;
+//    AUValue value = valuePtr == nil ? param.value : *valuePtr;
     
     switch (param.address) {
 //      case FilterParamCutoff:
