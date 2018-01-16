@@ -2,6 +2,7 @@
 #include "BufferedAudioBus.hpp"
 
 #import "IPlugEffectAUv3.h"
+#include "IPlugEffectDSPKernel.hpp"
 
 @interface IPlugEffectAUv3 ()
 
@@ -12,8 +13,7 @@
 @end
 
 @implementation IPlugEffectAUv3 {
-  // C++ members need to be ivars; they would be copied on access if they were properties.
-//  FilterDSPKernel  _kernel;
+  IPlugEffectDSPKernel  _kernel;
   BufferedInputBus _inputBus;
   
 //  AUAudioUnitPreset   *_currentPreset;
@@ -37,31 +37,31 @@
   AVAudioFormat *defaultFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   
   // Create a DSP kernel to handle the signal processing.
-//  _kernel.init(defaultFormat.channelCount, defaultFormat.sampleRate);
+  _kernel.init(defaultFormat.channelCount, defaultFormat.sampleRate);
   
   // Create a parameter object for the cutoff frequency.
-//  AUParameter *cutoffParam = [AUParameterTree createParameterWithIdentifier:@"cutoff" name:@"Cutoff"
-//                                                                    address:FilterParamCutoff
-//                                                                        min:12.0 max:20000.0 unit:kAudioUnitParameterUnit_Hertz unitName:nil
-//                                                                      flags: kAudioUnitParameterFlag_IsReadable |
-//                              kAudioUnitParameterFlag_IsWritable |
-//                              kAudioUnitParameterFlag_CanRamp
-//                                                               valueStrings:nil dependentParameters:nil];
-//
-//  // Create a parameter object for the filter resonance.
-//  AUParameter *resonanceParam = [AUParameterTree createParameterWithIdentifier:@"resonance" name:@"Resonance"
-//                                                                       address:FilterParamResonance
-//                                                                           min:-20.0 max:20.0 unit:kAudioUnitParameterUnit_Decibels unitName:nil
-//                                                                         flags: kAudioUnitParameterFlag_IsReadable |
-//                                 kAudioUnitParameterFlag_IsWritable |
-//                                 kAudioUnitParameterFlag_CanRamp
-//                                                                  valueStrings:nil dependentParameters:nil];
+  AUParameter *cutoffParam = [AUParameterTree createParameterWithIdentifier:@"cutoff" name:@"Cutoff"
+                                                                    address:0
+                                                                        min:12.0 max:20000.0 unit:kAudioUnitParameterUnit_Hertz unitName:nil
+                                                                      flags: kAudioUnitParameterFlag_IsReadable |
+                              kAudioUnitParameterFlag_IsWritable |
+                              kAudioUnitParameterFlag_CanRamp
+                                                               valueStrings:nil dependentParameters:nil];
+
+  // Create a parameter object for the filter resonance.
+  AUParameter *resonanceParam = [AUParameterTree createParameterWithIdentifier:@"resonance" name:@"Resonance"
+                                                                       address:1
+                                                                           min:-20.0 max:20.0 unit:kAudioUnitParameterUnit_Decibels unitName:nil
+                                                                         flags: kAudioUnitParameterFlag_IsReadable |
+                                 kAudioUnitParameterFlag_IsWritable |
+                                 kAudioUnitParameterFlag_CanRamp
+                                                                  valueStrings:nil dependentParameters:nil];
   
-  // Initialize default parameter values.
-//  cutoffParam.value = 20000.0;
-//  resonanceParam.value = 0.0;
-//  _kernel.setParameter(FilterParamCutoff, cutoffParam.value);
-//  _kernel.setParameter(FilterParamResonance, resonanceParam.value);
+// Initialize default parameter values.
+  cutoffParam.value = 20000.0;
+  resonanceParam.value = 0.0;
+  _kernel.setParameter(0, cutoffParam.value);
+  _kernel.setParameter(1, resonanceParam.value);
   
   // Create factory preset array.
 //  _currentFactoryPresetIndex = kDefaultFactoryPreset;
@@ -70,7 +70,7 @@
 //               NewAUPreset(2, @"Third Preset")];
   
   // Create the parameter tree.
-//  _parameterTree = [AUParameterTree createTreeWithChildren:@[cutoffParam, resonanceParam]];
+  _parameterTree = [AUParameterTree createTreeWithChildren:@[cutoffParam, resonanceParam]];
   _parameterTree = [AUParameterTree alloc];
 
   // Create the input and output busses.
@@ -81,30 +81,30 @@
   _inputBusArray  = [[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeInput busses: @[_inputBus.bus]];
   _outputBusArray = [[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeOutput busses: @[_outputBus]];
   
-//  // Make a local pointer to the kernel to avoid capturing self.
-//  __block FilterDSPKernel *filterKernel = &_kernel;
-//
-//  // implementorValueObserver is called when a parameter changes value.
-//  _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value) {
-//    filterKernel->setParameter(param.address, value);
-//  };
-//
-//  // implementorValueProvider is called when the value needs to be refreshed.
-//  _parameterTree.implementorValueProvider = ^(AUParameter *param) {
-//    return filterKernel->getParameter(param.address);
-//  };
+  // Make a local pointer to the kernel to avoid capturing self.
+  __block IPlugEffectDSPKernel *dspKernel = &_kernel;
+
+  // implementorValueObserver is called when a parameter changes value.
+  _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value) {
+    dspKernel->setParameter(param.address, value);
+  };
+
+  // implementorValueProvider is called when the value needs to be refreshed.
+  _parameterTree.implementorValueProvider = ^(AUParameter *param) {
+    return dspKernel->getParameter(param.address);
+  };
   
   // A function to provide string representations of parameter values.
   _parameterTree.implementorStringFromValueCallback = ^(AUParameter *param, const AUValue *__nullable valuePtr) {
-//    AUValue value = valuePtr == nil ? param.value : *valuePtr;
+    AUValue value = valuePtr == nil ? param.value : *valuePtr;
     
     switch (param.address) {
-//      case FilterParamCutoff:
-//        return [NSString stringWithFormat:@"%.f", value];
-//
-//      case FilterParamResonance:
-//        return [NSString stringWithFormat:@"%.2f", value];
-//
+      case 0:
+        return [NSString stringWithFormat:@"%.f", value];
+
+      case 1:
+        return [NSString stringWithFormat:@"%.2f", value];
+
       default:
         return @"?";
     }
@@ -149,8 +149,8 @@
   
   _inputBus.allocateRenderResources(self.maximumFramesToRender);
   
-//  _kernel.init(self.outputBus.format.channelCount, self.outputBus.format.sampleRate);
-//  _kernel.reset();
+  _kernel.init(self.outputBus.format.channelCount, self.outputBus.format.sampleRate);
+  _kernel.reset();
   
   return YES;
 }
@@ -169,7 +169,7 @@
    render, we're doing it wrong.
    */
   // Specify captured objects are mutable.
-//  __block FilterDSPKernel *state = &_kernel;
+  __block IPlugEffectDSPKernel *state = &_kernel;
   __block BufferedInputBus *input = &_inputBus;
 
   return ^AUAudioUnitStatus(
@@ -211,8 +211,8 @@
       }
     }
 
-//    state->setBuffers(inAudioBufferList, outAudioBufferList);
-//    state->processWithEvents(timestamp, frameCount, realtimeEventListHead);
+    state->setBuffers(inAudioBufferList, outAudioBufferList);
+    state->processWithEvents(timestamp, frameCount, realtimeEventListHead);
 
     return noErr;
   };
