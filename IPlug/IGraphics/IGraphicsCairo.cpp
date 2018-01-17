@@ -400,11 +400,46 @@ IColor IGraphicsCairo::GetPoint(int x, int y)
 
 bool IGraphicsCairo::DrawIText(const IText& text, const char* str, IRECT& rect, bool measure)
 {
-  return true;
+	// TODO: Add way to handle the fonts.
+	icairo_create_font_from_path("C:/Windows/Fonts/Verdana.ttf");
+
+	icairo_initialize_font_face(mContext);
+	icairo_set_text(mContext, str);
+
+	// TODO: Add vertical alignment
+	icairo_text_w_aligement w_aligement;
+
+	if (text.mAlign == IText::EAlign::kAlignNear) w_aligement = icairo_text_w_aligement::W_ALIGN_LEFT;
+	if (text.mAlign == IText::EAlign::kAlignFar) w_aligement = icairo_text_w_aligement::W_ALIGN_RIGHT;
+	if (text.mAlign == IText::EAlign::kAlignCenter) w_aligement = icairo_text_w_aligement::W_ALIGN_CENTER;
+
+	icairo_set_text_position(mContext, rect, w_aligement);
+
+	cairo_set_source_rgba(mContext, text.mColor.R / 255.0, text.mColor.G / 255.0, text.mColor.B / 255.0, text.mColor.A / 255.0);
+	icairo_show_text(mContext);
+
+	icairo_destroy_font_face();
+
+	return true;
 }
 
 bool IGraphicsCairo::MeasureIText(const IText& text, const char* str, IRECT& destRect)
 {
+	// TODO: Add way to handle the fonts.
+	icairo_create_font_from_path("C:/Windows/Fonts/Verdana.ttf");
+
+	icairo_initialize_font_face(mContext);
+	icairo_set_text(mContext, str);
+
+	icairo_calculate_extents(mContext);
+
+	cairo_text_extents_t* text_extents = icairo_get_text_extents(mContext);
+	cairo_font_extents_t* font_extents = icairo_get_font_extents(mContext);
+
+	destRect = IRECT(0, 0, text_extents->width, font_extents->height);
+
+	icairo_destroy_font_face();
+
   return true;
 }
 
