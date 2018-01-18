@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IPlugOSDetect.h"
+#include "IGraphicsCairoText.h"
 
 #include "cairo/cairo.h"
 #ifdef OS_OSX
@@ -14,7 +15,7 @@
 /** IGraphics draw class using Cairo  
 *   @ingroup DrawClasses
 */
-class IGraphicsCairo : public IGraphics
+class IGraphicsCairo : public IGraphics, IGraphicsCairoText
 {
 public:
   const char* GetDrawingAPIStr() override { return "CAIRO"; }

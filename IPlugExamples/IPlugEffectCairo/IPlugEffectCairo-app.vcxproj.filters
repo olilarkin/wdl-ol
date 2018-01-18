@@ -141,6 +141,9 @@
     <ClInclude Include="..\..\IPlug\IGraphics\NanoSVG\nanosvg.h">
       <Filter>IPlug\IGraphics\NanoSVG</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\IPlug\IGraphics\IGraphicsCairoText.h">
+      <Filter>IPlug\IGraphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\IPlug\rtaudiomidi\RtAudio.cpp">
@@ -212,6 +215,9 @@
     </ClCompile>
     <ClCompile Include="..\..\IPlug\IGraphics\NanoSVG\NanoSVG_Impl.c">
       <Filter>IPlug\IGraphics\NanoSVG</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\IPlug\IGraphics\IGraphicsCairoText.cpp">
+      <Filter>IPlug\IGraphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
