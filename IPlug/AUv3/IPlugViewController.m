@@ -6,6 +6,8 @@
 @end
 
 @implementation IPlugViewController
+//  AUParameter *cutoffParameter;
+//  AUParameter *resonanceParameter;
   AUParameterObserverToken parameterObserverToken;
 @end
 
@@ -59,14 +61,7 @@
   NSLog(@"IPlugViewController allParameterValues key path changed: %s\n", keyPath.UTF8String);
   
   dispatch_async(dispatch_get_main_queue(), ^{
-    
-//    filterView.frequency = cutoffParameter.value;
-//    filterView.resonance = resonanceParameter.value;
-//
-//    frequencyLabel.stringValue = [cutoffParameter stringFromValue: nil];
-//    resonanceLabel.stringValue = [resonanceParameter stringFromValue: nil];
-//
-//    [self updateFilterViewFrequencyAndMagnitudes];
+
   });
 }
 
@@ -74,35 +69,6 @@
   AUParameterTree *paramTree = _audioUnit.parameterTree;
   
   if (paramTree) {
-//    cutoffParameter = [paramTree valueForKey: @"cutoff"];
-//    resonanceParameter = [paramTree valueForKey: @"resonance"];
-//
-//    // prevent retain cycle in parameter observer
-//    __weak FilterDemoViewController *weakSelf = self;
-//    __weak AUParameter *weakCutoffParameter = cutoffParameter;
-//    __weak AUParameter *weakResonanceParameter = resonanceParameter;
-//    parameterObserverToken = [paramTree tokenByAddingParameterObserver:^(AUParameterAddress address, AUValue value) {
-//      __strong FilterDemoViewController *strongSelf = weakSelf;
-//      __strong AUParameter *strongCutoffParameter = weakCutoffParameter;
-//      __strong AUParameter *strongResonanceParameter = weakResonanceParameter;
-//
-//      dispatch_async(dispatch_get_main_queue(), ^{
-//        if (address == strongCutoffParameter.address){
-//          strongSelf->filterView.frequency = value;
-//          strongSelf->frequencyLabel.stringValue = [strongCutoffParameter stringFromValue: nil];
-//        } else if (address == strongResonanceParameter.address) {
-//          strongSelf->filterView.resonance = value;
-//          strongSelf->resonanceLabel.stringValue = [strongResonanceParameter stringFromValue: nil];
-//        }
-//
-//        [strongSelf updateFilterViewFrequencyAndMagnitudes];
-//      });
-//    }];
-//
-//    filterView.frequency = cutoffParameter.value;
-//    filterView.resonance = resonanceParameter.value;
-//    frequencyLabel.stringValue = [cutoffParameter stringFromValue: nil];
-//    resonanceLabel.stringValue = [resonanceParameter stringFromValue: nil];
     
     [_audioUnit addObserver:self forKeyPath:@"allParameterValues"
                     options:NSKeyValueObservingOptionNew
@@ -119,6 +85,7 @@
     parameterObserverToken = 0;
   }
 }
+
 
 @end
 

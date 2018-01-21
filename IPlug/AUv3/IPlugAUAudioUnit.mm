@@ -12,16 +12,24 @@
 
 @end
 
+static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
+{
+  AUAudioUnitPreset *aPreset = [AUAudioUnitPreset new];
+  aPreset.number = number;
+  aPreset.name = name;
+  return aPreset;
+}
+
 @implementation IPlugAUAudioUnit {
   IPlugAUv3 mPlug;
   BufferedInputBus mInputBus;
   
-//  AUAudioUnitPreset   *_currentPreset;
-//  NSInteger           _currentFactoryPresetIndex;
-//  NSArray<AUAudioUnitPreset *> *_presets;
+  AUAudioUnitPreset   *_currentPreset;
+  NSInteger           _currentFactoryPresetIndex;
+  NSArray<AUAudioUnitPreset *> *_presets;
 }
 @synthesize parameterTree = _parameterTree;
-//@synthesize factoryPresets = _presets;
+@synthesize factoryPresets = _presets;
 
 - (instancetype)initWithComponentDescription:(AudioComponentDescription)componentDescription
                                      options:(AudioComponentInstantiationOptions)options
@@ -40,14 +48,19 @@
   mPlug.init(defaultFormat.channelCount, defaultFormat.sampleRate);
   
   // Create a parameter object for the cutoff frequency.
-  AUParameter *cutoffParam = [AUParameterTree createParameterWithIdentifier:@"cutoff" name:@"Cutoff"
+  AUParameter *cutoffParam = [AUParameterTree createParameterWithIdentifier:@"cutoff"
+                                                                       name:@"Cutoff"
                                                                     address:0
-                                                                        min:12.0 max:20000.0 unit:kAudioUnitParameterUnit_Hertz unitName:nil
-                                                                      flags: kAudioUnitParameterFlag_IsReadable |
-                              kAudioUnitParameterFlag_IsWritable |
-                              kAudioUnitParameterFlag_CanRamp
-                                                               valueStrings:nil dependentParameters:nil];
+                                                                        min:12.0
+                                                                        max:20000.0
+                                                                       unit:kAudioUnitParameterUnit_Hertz
+                                                                    unitName:nil
+                                                                      flags: kAudioUnitParameterFlag_IsReadable | kAudioUnitParameterFlag_IsWritable | kAudioUnitParameterFlag_CanRamp
+                                                               valueStrings:nil
+                                                        dependentParameters:nil];
 
+//  [cutoffParam retain];
+  
   // Create a parameter object for the filter resonance.
   AUParameter *resonanceParam = [AUParameterTree createParameterWithIdentifier:@"resonance" name:@"Resonance"
                                                                        address:1
@@ -57,6 +70,8 @@
                                  kAudioUnitParameterFlag_CanRamp
                                                                   valueStrings:nil dependentParameters:nil];
   
+//  [resonanceParam retain];
+
 // Initialize default parameter values.
   cutoffParam.value = 20000.0;
   resonanceParam.value = 0.0;
@@ -64,14 +79,13 @@
   mPlug.setParameter(1, resonanceParam.value);
   
   // Create factory preset array.
-//  _currentFactoryPresetIndex = kDefaultFactoryPreset;
-//  _presets = @[NewAUPreset(0, @"First Preset"),
-//               NewAUPreset(1, @"Second Preset"),
-//               NewAUPreset(2, @"Third Preset")];
+  _currentFactoryPresetIndex = 0;
+  _presets = @[NewAUPreset(0, @"First Preset"),
+               NewAUPreset(1, @"Second Preset"),
+               NewAUPreset(2, @"Third Preset")];
   
   // Create the parameter tree.
   _parameterTree = [AUParameterTree createTreeWithChildren:@[cutoffParam, resonanceParam]];
-  _parameterTree = [AUParameterTree alloc];
 
   // Create the input and output busses.
   mInputBus.init(defaultFormat, 8);
@@ -113,13 +127,13 @@
   self.maximumFramesToRender = 512;
   
 //  // set default preset as current
-//  self.currentPreset = _presets.firstObject;
+  self.currentPreset = _presets.firstObject;
   
   return self;
 }
 
 -(void)dealloc {
-//  _presets = nil;
+  _presets = nil;
 }
 
 #pragma mark - AUAudioUnit (Overrides)
@@ -168,8 +182,8 @@
   __block IPlugAUv3* pPlug = &mPlug;
   __block BufferedInputBus* input = &mInputBus;
 
-  return ^AUAudioUnitStatus(
-                            AudioUnitRenderActionFlags *actionFlags,
+//  return Block_copy(^AUAudioUnitStatus(
+  return ^AUAudioUnitStatus(AudioUnitRenderActionFlags *actionFlags,
                             const AudioTimeStamp       *timestamp,
                             AVAudioFrameCount           frameCount,
                             NSInteger                   outputBusNumber,
@@ -212,52 +226,53 @@
 
     return noErr;
   };
+//  );
 }
 
 #pragma mark- AUAudioUnit (Optional Properties)
 
-//- (AUAudioUnitPreset *)currentPreset
-//{
-//  if (_currentPreset.number >= 0) {
-//    NSLog(@"Returning Current Factory Preset: %ld\n", (long)_currentFactoryPresetIndex);
-//    return [_presets objectAtIndex:_currentFactoryPresetIndex];
-//  } else {
-//    NSLog(@"Returning Current Custom Preset: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
-//    return _currentPreset;
-//  }
-//}
+- (AUAudioUnitPreset *)currentPreset
+{
+  if (_currentPreset.number >= 0) {
+    NSLog(@"Returning Current Factory Preset: %ld\n", (long)_currentFactoryPresetIndex);
+    return [_presets objectAtIndex:_currentFactoryPresetIndex];
+  } else {
+    NSLog(@"Returning Current Custom Preset: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
+    return _currentPreset;
+  }
+}
 
-//- (void)setCurrentPreset:(AUAudioUnitPreset *)currentPreset
-//{
-//  if (nil == currentPreset) { NSLog(@"nil passed to setCurrentPreset!"); return; }
-//
-//  if (currentPreset.number >= 0) {
-//    // factory preset
-//    for (AUAudioUnitPreset *factoryPreset in _presets) {
-//      if (currentPreset.number == factoryPreset.number) {
-//
+- (void)setCurrentPreset:(AUAudioUnitPreset *)currentPreset
+{
+  if (nil == currentPreset) { NSLog(@"nil passed to setCurrentPreset!"); return; }
+
+  if (currentPreset.number >= 0) {
+    // factory preset
+    for (AUAudioUnitPreset *factoryPreset in _presets) {
+      if (currentPreset.number == factoryPreset.number) {
+
 //        AUParameter *cutoffParameter = [self.parameterTree valueForKey: @"cutoff"];
 //        AUParameter *resonanceParameter = [self.parameterTree valueForKey: @"resonance"];
 //
 //        cutoffParameter.value = presetParameters[factoryPreset.number].cutoffValue;
 //        resonanceParameter.value = presetParameters[factoryPreset.number].resonanceValue;
-//
-//        // set factory preset as current
-//        _currentPreset = currentPreset;
-//        _currentFactoryPresetIndex = factoryPreset.number;
-//        NSLog(@"currentPreset Factory: %ld, %@\n", (long)_currentFactoryPresetIndex, factoryPreset.name);
-//
-//        break;
-//      }
-//    }
-//  } else if (nil != currentPreset.name) {
-//    // set custom preset as current
-//    _currentPreset = currentPreset;
-//    NSLog(@"currentPreset Custom: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
-//  } else {
-//    NSLog(@"setCurrentPreset not set! - invalid AUAudioUnitPreset\n");
-//  }
-//}
+
+        // set factory preset as current
+        _currentPreset = currentPreset;
+        _currentFactoryPresetIndex = factoryPreset.number;
+        NSLog(@"currentPreset Factory: %ld, %@\n", (long)_currentFactoryPresetIndex, factoryPreset.name);
+
+        break;
+      }
+    }
+  } else if (nil != currentPreset.name) {
+    // set custom preset as current
+    _currentPreset = currentPreset;
+    NSLog(@"currentPreset Custom: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
+  } else {
+    NSLog(@"setCurrentPreset not set! - invalid AUAudioUnitPreset\n");
+  }
+}
 
 - (BOOL)canProcessInPlace {
   return NO;
