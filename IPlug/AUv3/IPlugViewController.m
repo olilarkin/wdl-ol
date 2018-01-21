@@ -1,8 +1,8 @@
 #import <CoreAudioKit/AUViewController.h>
-#import "IPlugAUv3.h"
+#import "IPlugAUAudioUnit.h"
 
 @interface IPlugViewController : AUViewController
-@property (nonatomic)IPlugAUv3 *audioUnit;
+@property (nonatomic)IPlugAUAudioUnit* audioUnit;
 @end
 
 @implementation IPlugViewController
@@ -14,8 +14,8 @@
 
 @implementation IPlugViewController (AUAudioUnitFactory)
 
-- (IPlugAUv3 *) createAudioUnitWithComponentDescription:(AudioComponentDescription) desc error:(NSError **)error {
-  self.audioUnit = [[IPlugAUv3 alloc] initWithComponentDescription:desc error:error];
+- (IPlugAUAudioUnit *) createAudioUnitWithComponentDescription:(AudioComponentDescription) desc error:(NSError **)error {
+  self.audioUnit = [[IPlugAUAudioUnit alloc] initWithComponentDescription:desc error:error];
 
   // Check if the UI has been loaded
   if(self.isViewLoaded) {
@@ -38,11 +38,11 @@
   // Get the parameter tree and add observers for any parameters that the UI needs to keep in sync with the Audio Unit
 }
 
-- (IPlugAUv3 *)getAudioUnit {
+- (IPlugAUAudioUnit *)getAudioUnit {
   return _audioUnit;
 }
 
-- (void)setAudioUnit:(IPlugAUv3*) audioUnit {
+- (void)setAudioUnit:(IPlugAUAudioUnit*) audioUnit {
   _audioUnit = audioUnit;
   dispatch_async(dispatch_get_main_queue(), ^{
     if ([self isViewLoaded]) {
@@ -56,7 +56,7 @@
                         change:(NSDictionary<NSString *, id> *)change
                        context:(void *)context
 {
-  NSLog(@"FilterDemoViewControler allParameterValues key path changed: %s\n", keyPath.UTF8String);
+  NSLog(@"IPlugViewController allParameterValues key path changed: %s\n", keyPath.UTF8String);
   
   dispatch_async(dispatch_get_main_queue(), ^{
     
