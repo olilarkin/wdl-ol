@@ -141,6 +141,8 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   [_mInputBusArray release];
   [_mOutputBusArray release];
   
+  delete mPlug;
+  
   [super dealloc];
 }
 
