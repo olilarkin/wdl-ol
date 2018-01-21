@@ -6,8 +6,6 @@
 @end
 
 @implementation IPlugViewController
-//  AUParameter *cutoffParameter;
-//  AUParameter *resonanceParameter;
   AUParameterObserverToken parameterObserverToken;
 @end
 
@@ -17,7 +15,7 @@
 @implementation IPlugViewController (AUAudioUnitFactory)
 
 - (IPlugAUAudioUnit *) createAudioUnitWithComponentDescription:(AudioComponentDescription) desc error:(NSError **)error {
-  self.audioUnit = [[IPlugAUAudioUnit alloc] initWithComponentDescription:desc error:error];
+  self.audioUnit = [[[IPlugAUAudioUnit alloc] initWithComponentDescription:desc error:error] retain];
 
   // Check if the UI has been loaded
   if(self.isViewLoaded) {

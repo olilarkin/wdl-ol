@@ -1,28 +1,70 @@
-#pragma once
+#ifndef _IPLUGAPI_
+#define _IPLUGAPI_
+// Only load one API class!
 
-#import <AudioToolbox/AudioToolbox.h>
-#import <algorithm>
+#include <cstring>
 
-class IPlugAUv3
+#include <CoreAudio/CoreAudioTypes.h>
+
+#include "wdlstring.h"
+
+/** Used to pass various instance info to the API class */
+struct IPlugInstanceInfo
+{
+  WDL_String mOSXBundleID;
+};
+
+#ifdef NO_IGRAPHICS
+#include "IPlugBase.h"
+typedef IPlugBase IPLUG_BASE_CLASS;
+#else
+#include "IPlugBaseGraphics.h"
+typedef IPlugBaseGraphics IPLUG_BASE_CLASS;
+#endif
+
+union AURenderEvent;
+struct AUMIDIEvent;
+
+class IPlugAUv3 : public IPLUG_BASE_CLASS
 {
 public:
-  void process(AUAudioFrameCount frameCount, AUAudioFrameCount bufferOffset);
-  void startRamp(AUParameterAddress address, AUValue value, AUAudioFrameCount duration);
-  void handleMIDIEvent(AUMIDIEvent const& midiEvent) {};
-  void processWithEvents(AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount, AURenderEvent const* events);
+  IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig config);
 
-  void init(int channelCount, double inSampleRate);
-  void reset();
-  void setParameter(AUParameterAddress address, AUValue value);
-  AUValue getParameter(AUParameterAddress address);
+  void process(uint32_t frameCount, uint32_t bufferOffset);
+  void startRamp(uint64_t address, float value, uint32_t duration);
+  void handleMIDIEvent(AUMIDIEvent const& midiEvent) {};
+  void processWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events);
+
+  void setParameter(uint64_t address, float value);
+  float getParameter(uint64_t address);
   void setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList);
+  
+  //IPlug
+  void BeginInformHostOfParamChange(int idx) override {};
+  void InformHostOfParamChange(int idx, double normalizedValue) override {};
+  void EndInformHostOfParamChange(int idx) override {};
+  void InformHostOfProgramChange() override {};
+  
+  int GetSamplePos() override { return 0; }
+  double GetTempo() override { return DEFAULT_TEMPO; }
+  void GetTimeSig(int& numerator, int& denominator) override { return; }
+  void GetTime(ITimeInfo& timeInfo) override { return; }
+  
+  void ResizeGraphics(int w, int h, double scale) override {}
+  
+protected:
+  bool SendMidiMsg(IMidiMsg& msg) override { return false; }
+  bool SendSysEx(ISysEx& msg) override { return false; }
+  
   
 private:
   void handleOneEvent(AURenderEvent const* event);
-  void performAllSimultaneousEvents(AUEventSampleTime now, AURenderEvent const*& event);
+  void performAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
   
   AudioBufferList* mInBufferList = nullptr;
   AudioBufferList* mOutBufferList = nullptr;
-  int mNumChannels = 0;
 };
 
+IPlugAUv3* MakePlug();
+
+#endif //_IPLUGAPI_

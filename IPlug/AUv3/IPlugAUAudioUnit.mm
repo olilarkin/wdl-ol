@@ -21,7 +21,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 }
 
 @implementation IPlugAUAudioUnit {
-  IPlugAUv3 mPlug;
+  IPlugAUv3* mPlug;
   BufferedInputBus mInputBus;
   
   AUAudioUnitPreset   *_currentPreset;
@@ -45,7 +45,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   AVAudioFormat *defaultFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   
   // Create a DSP kernel to handle the signal processing.
-  mPlug.init(defaultFormat.channelCount, defaultFormat.sampleRate);
+  mPlug = MakePlug();
   
   // Create a parameter object for the cutoff frequency.
   AUParameter *cutoffParam = [AUParameterTree createParameterWithIdentifier:@"cutoff"
@@ -59,7 +59,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
                                                                valueStrings:nil
                                                         dependentParameters:nil];
 
-//  [cutoffParam retain];
+  [cutoffParam retain];
   
   // Create a parameter object for the filter resonance.
   AUParameter *resonanceParam = [AUParameterTree createParameterWithIdentifier:@"resonance" name:@"Resonance"
@@ -70,13 +70,13 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
                                  kAudioUnitParameterFlag_CanRamp
                                                                   valueStrings:nil dependentParameters:nil];
   
-//  [resonanceParam retain];
+  [resonanceParam retain];
 
 // Initialize default parameter values.
   cutoffParam.value = 20000.0;
   resonanceParam.value = 0.0;
-  mPlug.setParameter(0, cutoffParam.value);
-  mPlug.setParameter(1, resonanceParam.value);
+  mPlug->setParameter(0, cutoffParam.value);
+  mPlug->setParameter(1, resonanceParam.value);
   
   // Create factory preset array.
   _currentFactoryPresetIndex = 0;
@@ -84,19 +84,23 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
                NewAUPreset(1, @"Second Preset"),
                NewAUPreset(2, @"Third Preset")];
   
+  [_presets retain];
+  
   // Create the parameter tree.
-  _parameterTree = [AUParameterTree createTreeWithChildren:@[cutoffParam, resonanceParam]];
+  _parameterTree = [[AUParameterTree createTreeWithChildren:@[cutoffParam, resonanceParam]] retain];
 
   // Create the input and output busses.
   mInputBus.init(defaultFormat, 8);
-  _outputBus = [[AUAudioUnitBus alloc] initWithFormat:defaultFormat error:nil];
+  _outputBus = [[[AUAudioUnitBus alloc] initWithFormat:defaultFormat error:nil] retain];
+  
+  [defaultFormat release];
   
   // Create the input and output bus arrays.
-  _mInputBusArray  = [[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeInput busses: @[mInputBus.bus]];
-  _mOutputBusArray = [[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeOutput busses: @[_outputBus]];
+  _mInputBusArray  = [[[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeInput busses: @[mInputBus.bus]] retain];
+  _mOutputBusArray = [[[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeOutput busses: @[_outputBus]] retain];
   
   // Make a local pointer to the kernel to avoid capturing self.
-  __block IPlugAUv3* plug = &mPlug;
+  __block IPlugAUv3* plug = mPlug;
 
   // implementorValueObserver is called when a parameter changes value.
   _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value) {
@@ -133,7 +137,11 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 }
 
 -(void)dealloc {
-  _presets = nil;
+  [_presets release];
+  [_mInputBusArray release];
+  [_mOutputBusArray release];
+  
+  [super dealloc];
 }
 
 #pragma mark - AUAudioUnit (Overrides)
@@ -163,8 +171,9 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   
   mInputBus.allocateRenderResources(self.maximumFramesToRender);
   
-  mPlug.init(self.outputBus.format.channelCount, self.outputBus.format.sampleRate);
-  mPlug.reset();
+  mPlug->SetBlockSize(self.maximumFramesToRender);
+  mPlug->SetSampleRate(self.outputBus.format.sampleRate);
+  mPlug->Reset();
   
   return YES;
 }
@@ -179,11 +188,10 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 
 - (AUInternalRenderBlock)internalRenderBlock {
 
-  __block IPlugAUv3* pPlug = &mPlug;
+  __block IPlugAUv3* pPlug = mPlug;
   __block BufferedInputBus* input = &mInputBus;
 
-//  return Block_copy(^AUAudioUnitStatus(
-  return ^AUAudioUnitStatus(AudioUnitRenderActionFlags *actionFlags,
+  return Block_copy(^AUAudioUnitStatus(AudioUnitRenderActionFlags *actionFlags,
                             const AudioTimeStamp       *timestamp,
                             AVAudioFrameCount           frameCount,
                             NSInteger                   outputBusNumber,
@@ -225,8 +233,8 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
     pPlug->processWithEvents(timestamp, frameCount, realtimeEventListHead);
 
     return noErr;
-  };
-//  );
+  }
+  );
 }
 
 #pragma mark- AUAudioUnit (Optional Properties)

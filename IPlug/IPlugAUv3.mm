@@ -1,4 +1,10 @@
 #include "IPlugAUv3.h"
+#import <AudioToolbox/AudioToolbox.h>
+
+IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
+: IPLUG_BASE_CLASS(c, kAPIAUv3)
+{
+}
 
 void IPlugAUv3::handleOneEvent(AURenderEvent const *event) {
   switch (event->head.eventType) {
@@ -30,16 +36,16 @@ void IPlugAUv3::performAllSimultaneousEvents(AUEventSampleTime now, AURenderEven
   } while (event && event->head.eventSampleTime <= now);
 }
 
-void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, AUAudioFrameCount frameCount, AURenderEvent const *events) {
+void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events) {
 
   AUEventSampleTime now = AUEventSampleTime(timestamp->mSampleTime);
-  AUAudioFrameCount framesRemaining = frameCount;
+  uint32_t framesRemaining = frameCount;
   AURenderEvent const *event = events;
   
   while (framesRemaining > 0) {
     // If there are no more events, we can process the entire remaining segment and exit.
     if (event == nullptr) {
-      AUAudioFrameCount const bufferOffset = frameCount - framesRemaining;
+      uint32_t const bufferOffset = frameCount - framesRemaining;
       process(framesRemaining, bufferOffset);
       return;
     }
@@ -47,11 +53,11 @@ void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, AUAudioFrameC
     // **** start late events late.
     auto timeZero = AUEventSampleTime(0);
     auto headEventTime = event->head.eventSampleTime;
-    AUAudioFrameCount const framesThisSegment = AUAudioFrameCount(std::max(timeZero, headEventTime - now));
+    uint32_t const framesThisSegment = uint32_t(std::max(timeZero, headEventTime - now));
     
     // Compute everything before the next event.
     if (framesThisSegment > 0) {
-      AUAudioFrameCount const bufferOffset = frameCount - framesRemaining;
+      uint32_t const bufferOffset = frameCount - framesRemaining;
       process(framesThisSegment, bufferOffset);
               
       // Advance frames.
@@ -65,21 +71,15 @@ void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, AUAudioFrameC
   }
 }
 
-void IPlugAUv3::init(int channelCount, double inSampleRate) {
-  mNumChannels = channelCount;
+
+void IPlugAUv3::setParameter(uint64_t address, float value) {
 }
 
-void IPlugAUv3::reset() {
-}
-
-void IPlugAUv3::setParameter(AUParameterAddress address, AUValue value) {
-}
-
-AUValue IPlugAUv3::getParameter(AUParameterAddress address) {
+float IPlugAUv3::getParameter(uint64_t address) {
   return 0.0;
 }
 
-void IPlugAUv3::startRamp(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) {
+void IPlugAUv3::startRamp(uint64_t address, float value, uint32_t duration) {
 }
 
 void IPlugAUv3::setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList) {
@@ -87,18 +87,20 @@ void IPlugAUv3::setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBu
   mOutBufferList = outBufferList;
 }
 
-void IPlugAUv3::process(AUAudioFrameCount frameCount, AUAudioFrameCount bufferOffset) {
-  int channelCount = mNumChannels;
-
-  for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-
-    int frameOffset = int(frameIndex + bufferOffset);
-    
-    for (int channel = 0; channel < channelCount; ++channel) {
-      float* input  = (float*) mInBufferList->mBuffers[channel].mData  + frameOffset;
-      float* output = (float*) mOutBufferList->mBuffers[channel].mData + frameOffset;
-      
-      *output = *input * 0.5f;
-    }
-  }
+void IPlugAUv3::process(uint32_t frameCount, uint32_t bufferOffset) {
+//  int channelCount = mNumChannels;
+//
+//  for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+//
+//    int frameOffset = int(frameIndex + bufferOffset);
+//
+//    for (int channel = 0; channel < channelCount; ++channel) {
+//      float* input  = (float*) mInBufferList->mBuffers[channel].mData  + frameOffset;
+//      float* output = (float*) mOutBufferList->mBuffers[channel].mData + frameOffset;
+//
+//      *output = *input * 0.5f;
+//    }
+//  }
 }
+
+
