@@ -175,7 +175,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   
   mPlug->SetBlockSize(self.maximumFramesToRender);
   mPlug->SetSampleRate(self.outputBus.format.sampleRate);
-  mPlug->Reset();
+  mPlug->OnReset();
   
   return YES;
 }
