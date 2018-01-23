@@ -1,5 +1,5 @@
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Losers (who use OS X))
-   Copyright (C) 2006-2007, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -145,8 +145,7 @@ int SWELL_MacKeyToWindowsKeyEx(void *nsevent, int *flags, int mode)
   NSEvent *theEvent = (NSEvent *)nsevent;
   if (!theEvent) theEvent = [NSApp currentEvent];
 
-  int mod=[theEvent modifierFlags];// & ( NSShiftKeyMask|NSControlKeyMask|NSAlternateKeyMask|NSCommandKeyMask);
-                                   //	if ([theEvent isARepeat]) return;
+  const NSInteger mod=[theEvent modifierFlags];
     
   int flag=0;
   if (mod & NSShiftKeyMask) flag|=FSHIFT;
@@ -234,7 +233,7 @@ int SWELL_KeyToASCII(int wParam, int lParam, int *newflags)
 
 WORD GetAsyncKeyState(int key)
 {
-  int state=0;
+  CGEventFlags state=0;
   if (key == VK_LBUTTON || key == VK_RBUTTON || key == VK_MBUTTON)
   {
     state=GetCurrentEventButtonState();
@@ -310,12 +309,13 @@ static NSCursor* MakeSWELLSystemCursor(const char *id)
   const unsigned char W = 0xFF;
   const unsigned char G = 0xF8;
   
-  static NSCursor* carr[3] = { 0, 0, 0 };
+  static NSCursor* carr[4] = { 0, 0, 0, 0 };
   
   NSCursor** pc=0;
   if (id == IDC_SIZEALL) pc = &carr[0];
   else if (id == IDC_SIZENWSE) pc = &carr[1];
   else if (id == IDC_SIZENESW) pc = &carr[2];
+  else if (id == IDC_NO) pc = &carr[3];
   else return 0;
   
   if (!(*pc))
@@ -429,7 +429,7 @@ static NSImage *swell_imageFromCursorString(const char *name, POINT *hotSpot)
   if (!strstr(name,"/") && strlen(name)<1024)
   {
     char tmpn[4096];
-    GetModuleFileName(NULL,tmpn,sizeof(tmpn)-128-strlen(name));
+    GetModuleFileName(NULL,tmpn,(DWORD)(sizeof(tmpn)-128-strlen(name)));
     strcat(tmpn,"/Contents/Resources/");
     strcat(tmpn,name);
     strcat(tmpn,".cur");
@@ -472,7 +472,7 @@ static NSImage *swell_imageFromCursorString(const char *name, POINT *hotSpot)
           fwrite(buf,1,16,outfp);
           for (;;)
           {
-            int a = fread(buf,1,sizeof(buf),fp);
+            size_t a = fread(buf,1,sizeof(buf),fp);
             if (a<1) break;
             fwrite(buf,1,a,outfp);
           }           
@@ -669,8 +669,7 @@ BOOL SWELL_SetCursorPos(int X, int Y)
     return TRUE;
   }
 
-
-  int h=CGDisplayPixelsHigh(CGMainDisplayID());
+  const int h = (int)CGDisplayPixelsHigh(CGMainDisplayID());
   CGPoint pos=CGPointMake(X,h-Y);
   return CGWarpMouseCursorPosition(pos)==kCGErrorSuccess;
 }

@@ -97,6 +97,7 @@ typedef bool WDL_bool;
 #ifndef wdl_max
 #define wdl_max(x,y) ((x)<(y)?(y):(x))
 #define wdl_min(x,y) ((x)<(y)?(x):(y))
+#define wdl_abs(x) ((x)<0 ? -(x) : (x))
 #endif
 
 #ifndef _WIN32
@@ -128,13 +129,32 @@ typedef bool WDL_bool;
 #define WDL_DIRCHAR_STR "/"
 #endif
 
+#if defined(_WIN32) || defined(__APPLE__)
+  // on __APPLE__ we should ideally check the filesystem for case-sensitivity, assuming a case-insensitive-only match
+  #define wdl_filename_cmp(x,y) stricmp(x,y)
+  #define wdl_filename_cmpn(x,y,n) strnicmp(x,y,n)
+#else
+  #define wdl_filename_cmp(x,y) strcmp(x,y)
+  #define wdl_filename_cmpn(x,y,n) strncmp(x,y,n)
+#endif
 
 #if defined(__GNUC__) || defined(__INTEL_COMPILER)
-  #define WDL_likely(x) __builtin_expect(!!(x),1)
-  #define WDL_unlikely(x) __builtin_expect(!!(x),0)
+  #define WDL_likely(x) (__builtin_expect(!!(x),1))
+  #define WDL_unlikely(x) (__builtin_expect(!!(x),0))
 #else
   #define WDL_likely(x) (!!(x))
   #define WDL_unlikely(x) (!!(x))
+#endif
+
+#if defined(_DEBUG) || defined(DEBUG)
+#include <assert.h>
+#define WDL_ASSERT(x) assert(x)
+#define WDL_NORMALLY(x) (assert(x),1)
+#define WDL_NOT_NORMALLY(x) (assert(!(x)),0)
+#else
+#define WDL_ASSERT(x)
+#define WDL_NORMALLY(x) WDL_likely(x)
+#define WDL_NOT_NORMALLY(x) WDL_unlikely(x)
 #endif
 
 #endif

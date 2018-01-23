@@ -1,5 +1,5 @@
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for L****)
-   Copyright (C) 2006-2010, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -109,7 +109,7 @@ typedef uintptr_t UINT_PTR, *PUINT_PTR, ULONG_PTR, *PULONG_PTR, DWORD_PTR, *PDWO
 #define MAX_PATH 1024
 
 
-#if !defined(max) && !defined(WDL_NO_DEFINE_MINMAX)
+#if !defined(max) && !defined(WDL_NO_DEFINE_MINMAX) && !defined(NOMINMAX)
 #define max(x,y) ((x)<(y)?(y):(x))
 #define min(x,y) ((x)<(y)?(x):(y))
 #endif
@@ -362,6 +362,10 @@ typedef struct tagDRAWITEMSTRUCT {
 typedef struct tagBITMAP {
   LONG bmWidth;
   LONG bmHeight;
+  LONG bmWidthBytes;
+  WORD bmPlanes;
+  WORD bmBitsPixel;
+  LPVOID bmBits;
 } BITMAP, *PBITMAP, *LPBITMAP;
 #define ODT_MENU        1
 #define ODT_LISTBOX     2
@@ -478,9 +482,10 @@ typedef struct
   DWORD_PTR dwItemData;
   char *dwTypeData;
   int cch;
+  HBITMAP hbmpItem;
 } MENUITEMINFO;
 
-#define SetMenuDefaultItem(a,b,c) (0)
+#define SetMenuDefaultItem(a,b,c) do { if ((a)||(b)||(c)) { } } while(0)
 
 typedef struct {
   POINT ptReserved, ptMaxSize, ptMaxPosition, ptMinTrackSize, ptMaxTrackSize;
@@ -866,6 +871,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define MIIM_TYPE 4
 #define MIIM_SUBMENU 8
 #define MIIM_DATA 16
+#define MIIM_BITMAP 0x80
 
 #define MF_ENABLED 0
 #define MF_GRAYED 1
@@ -1212,19 +1218,19 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define SRCCOPY 0
 #define SRCCOPY_USEALPHACHAN 0xdeadbeef
 #define PS_SOLID 0
-#define DT_CALCRECT 1
-#define DT_VCENTER 2
-#define DT_CENTER 4
-#define DT_END_ELLIPSIS 8
-#define DT_BOTTOM 16
-#define DT_RIGHT 32
-#define DT_SINGLELINE 64
-#define DT_NOPREFIX 128
-#define DT_NOCLIP 256
-#define DT_WORDBREAK 512
 
 #define DT_TOP 0
 #define DT_LEFT 0
+#define DT_CENTER 1
+#define DT_RIGHT 2
+#define DT_VCENTER 4
+#define DT_BOTTOM 8
+#define DT_WORDBREAK 0x10
+#define DT_SINGLELINE 0x20
+#define DT_NOCLIP 0x100
+#define DT_CALCRECT 0x400
+#define DT_NOPREFIX 0x800
+#define DT_END_ELLIPSIS 0x8000
 
 #define FW_DONTCARE         0
 #define FW_THIN             100
@@ -1259,6 +1265,8 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 
 #define NULL_PEN 1
 #define NULL_BRUSH 2
+
+#define GGI_MARK_NONEXISTING_GLYPHS 1
 
 #define GMEM_ZEROINIT 1
 #define GMEM_FIXED 0

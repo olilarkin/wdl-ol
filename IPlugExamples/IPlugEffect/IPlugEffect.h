@@ -1,20 +1,32 @@
-#ifndef __IPLUGEFFECT__
-#define __IPLUGEFFECT__
+#pragma once
 
 #include "IPlug_include_in_plug_hdr.h"
+
+const int kNumPrograms = 1;
+
+enum EParams
+{
+  kGain = 0,
+  kNumParams
+};
+
+enum ELayout
+{
+  kWidth = 300,
+  kHeight = 300,
+  
+  kTextX = 10,
+  kTextY = 10,
+  kGainX = 100,
+  kGainY = 100
+};
 
 class IPlugEffect : public IPlug
 {
 public:
   IPlugEffect(IPlugInstanceInfo instanceInfo);
   ~IPlugEffect();
-
-  void Reset();
-  void OnParamChange(int paramIdx);
-  void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
-
-private:
-  double mGain;
+//   void OnReset() override;
+//  void OnParamChange(int paramIdx) override;
+  void ProcessBlock(double** inputs, double** outputs, int nFrames) override;
 };
-
-#endif

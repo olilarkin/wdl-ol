@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Python shell script for Duplicating WDL-OL IPlug Projects
-# Oli Larkin 2012-2014 http://www.olilarkin.co.uk
+# Oli Larkin 2012-2017 http://www.olilarkin.co.uk
 # License: WTFPL http://sam.zoy.org/wtfpl/COPYING
 # Modified from this script by Bibha Tripathi http://code.activestate.com/recipes/435904-sedawk-python-script-to-rename-subdirectories-of-a/
 # Author accepts no responsibilty for wiping your hd
@@ -28,20 +28,20 @@ import fileinput, glob, string, sys, os, re, uuid
 from shutil import copy, copytree, ignore_patterns, rmtree
 from os.path import join
 
-VERSION = "0.9"
+VERSION = "0.91"
 
 # binary files that we don't want to do find and replace inside
 FILTERED_FILE_EXTENSIONS = [".ico",".icns", ".pdf", ".png", ".zip", ".exe", ".wav", ".aif"]
 # files that we don't want to duplicate
-DONT_COPY = ("*.exe", "*.dmg", "*.pkg", "*.mpkg", "*.svn", "*.ncb", "*.suo", "*sdf", "ipch", "build-*", "*.layout", "*.depend", ".DS_Store")
+DONT_COPY = (".vs", "*.exe", "*.dmg", "*.pkg", "*.mpkg", "*.svn", "*.ncb", "*.suo", "*sdf", "ipch", "build-*", "*.layout", "*.depend", ".DS_Store")
 
 SUBFOLDERS_TO_SEARCH = [
+"projects",
 "app_wrapper",
 "resources",
 "installer",
 "scripts",
 "manual",
-"ios_wrapper",
 "xcschemes",
 "xcshareddata",
 "xcuserdata",
@@ -85,11 +85,11 @@ def dirwalk(dir, searchproject, replaceproject, searchman, replaceman):
         print("recursing in main xcode project directory: ")
         for x in dirwalk(fullpath, searchproject, replaceproject, searchman, replaceman):
           yield x
-      elif checkdirname(f, searchproject + "-ios.xcodeproj"):
-        os.rename(fullpath, os.path.join(dir, replaceproject + "-ios.xcodeproj"))
-        fullpath = os.path.join(dir, replaceproject + "-ios.xcodeproj")
+      elif checkdirname(f, searchproject + ".xcworkspace"):
+        os.rename(fullpath, os.path.join(dir, replaceproject + ".xcworkspace"))
+        fullpath = os.path.join(dir, replaceproject + ".xcworkspace")
         
-        print("recursing in ios xcode project directory: ")
+        print("recursing in main xcode workspace directory: ")
         for x in dirwalk(fullpath, searchproject, replaceproject, searchman, replaceman):
           yield x
       elif (f in SUBFOLDERS_TO_SEARCH):

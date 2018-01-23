@@ -2,6 +2,7 @@
 
 #include "virtwnd-controls.h"
 
+#include <AppKit/AppKit.h>
 
 @class VWndNSAccessibility;
 static VWndNSAccessibility *GetVWndNSAccessible(WDL_VWnd *vwnd);
@@ -58,7 +59,7 @@ public:
      [(par=p) retain]; 
      (vwnd=vw)->SetAccessibilityBridge(this);
   }
-  ~VWndBridgeNS() 
+  virtual ~VWndBridgeNS()
   { 
 //    if (vwnd) printf("Destroying self before Released, wtf!\n");
   }

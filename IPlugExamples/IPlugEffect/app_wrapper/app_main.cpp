@@ -7,28 +7,26 @@
 #endif
 
 HWND gHWND;
-
-HINSTANCE gHINST;
 UINT gScrollMessage;
 IPlug* gPluginInstance;
-RtAudio* gDAC = 0;
-RtMidiIn *gMidiIn = 0;
-RtMidiOut *gMidiOut = 0;
+RtAudio* gDAC = nullptr;
+RtMidiIn* gMidiIn = nullptr;
+RtMidiOut* gMidiOut = nullptr;
 
-AppState *gState;
-AppState *gTempState;
-AppState *gActiveState;
+AppState* gState;
+AppState* gTempState;
+AppState* gActiveState;
 
-char *gINIPath = new char[200]; // path of ini file
+char gINIPath[MAX_PATH]; // path of ini file
 
-unsigned int gIOVS = 512;
-unsigned int gSigVS = 32;
-unsigned int gBufIndex = 0; // Loops 0 to SigVS
-unsigned int gVecElapsed = 0;
+uint32_t gIOVS = 512;
+uint32_t gSigVS = 32;
+uint32_t gBufIndex = 0; // Loops 0 to SigVS
+uint32_t gVecElapsed = 0;
 double gFadeMult = 0.; // Fade multiplier
 
-std::vector<unsigned int> gAudioInputDevs;
-std::vector<unsigned int> gAudioOutputDevs;
+std::vector<uint32_t> gAudioInputDevs;
+std::vector<uint32_t> gAudioOutputDevs;
 std::vector<std::string> gMIDIInputDevNames;
 std::vector<std::string> gMIDIOutputDevNames;
 std::vector<std::string> gAudioIDDevNames;
@@ -88,7 +86,7 @@ int GetAudioDeviceID(char* deviceNameToTest)
   return -1;
 }
 
-unsigned int GetMIDIInPortNumber(const char* nameToTest)
+uint32_t GetMIDIInPortNumber(const char* nameToTest)
 {
   int start = 1;
 
@@ -108,7 +106,7 @@ unsigned int GetMIDIInPortNumber(const char* nameToTest)
   return -1;
 }
 
-unsigned int GetMIDIOutPortNumber(const char* nameToTest)
+uint32_t GetMIDIOutPortNumber(const char* nameToTest)
 {
   int start = 1;
 
@@ -139,7 +137,7 @@ void ProbeAudioIO()
   gAudioOutputDevs.clear();
   gAudioIDDevNames.clear();
 
-  unsigned int nDevices = gDAC->getDeviceCount();
+  uint32_t nDevices = gDAC->getDeviceCount();
 
   for (int i=0; i<nDevices; i++)
   {
@@ -237,47 +235,38 @@ void MIDICallback( double deltatime, std::vector< unsigned char > *message, void
 {
   if ( message->size() )
   {
-    IMidiMsg *myMsg;
+    IMidiMsg msg;
 
     switch (message->size())
     {
       case 1:
-        myMsg = new IMidiMsg(0, message->at(0), 0, 0);
+        msg = IMidiMsg(0, message->at(0), 0, 0);
         break;
       case 2:
-        myMsg = new IMidiMsg(0, message->at(0), message->at(1), 0);
+        msg = IMidiMsg(0, message->at(0), message->at(1), 0);
         break;
       case 3:
-        myMsg = new IMidiMsg(0, message->at(0), message->at(1), message->at(2));
+        msg = IMidiMsg(0, message->at(0), message->at(1), message->at(2));
         break;
       default:
         DBGMSG("NOT EXPECTING %d midi callback msg len\n", (int) message->size());
         break;
     }
 
-    IMidiMsg msg(*myMsg);
-
-    delete myMsg;
-
     // filter midi messages based on channel, if gStatus.mMidiInChan != all (0)
     if (gState->mMidiInChan)
     {
       if (gState->mMidiInChan == msg.Channel() + 1 )
-        gPluginInstance->ProcessMidiMsg(&msg);
+        gPluginInstance->ProcessMidiMsg(msg);
     }
     else
     {
-      gPluginInstance->ProcessMidiMsg(&msg);
+      gPluginInstance->ProcessMidiMsg(msg);
     }
   }
 }
 
-int AudioCallback(void *outputBuffer,
-                  void *inputBuffer,
-                  unsigned int nFrames,
-                  double streamTime,
-                  RtAudioStreamStatus status,
-                  void *userData )
+int AudioCallback(void *outputBuffer, void *inputBuffer, uint32_t nFrames, double streamTime, RtAudioStreamStatus status, void *userData )
 {
   if ( status )
     std::cout << "Stream underflow detected!" << std::endl;
@@ -290,7 +279,7 @@ int AudioCallback(void *outputBuffer,
   if(!gState->mAudioInIsMono)
     inRightOffset = nFrames;
 
-  if (gVecElapsed > N_VECTOR_WAIT) // wait N_VECTOR_WAIT * iovs before processing audio, to avoid clicks
+  if (gVecElapsed > APP_N_VECTOR_WAIT) // wait N_VECTOR_WAIT * iovs before processing audio, to avoid clicks
   {
     for (int i=0; i<nFrames; i++)
     {
@@ -301,7 +290,7 @@ int AudioCallback(void *outputBuffer,
         double* inputs[2] = {inputBufferD + i, inputBufferD + inRightOffset + i};
         double* outputs[2] = {outputBufferD + i, outputBufferD + nFrames + i};
 
-        gPluginInstance->LockMutexAndProcessDoubleReplacing(inputs, outputs, gSigVS);
+        gPluginInstance->ProcessBlock(inputs, outputs, gSigVS);
       }
 
       // fade in
@@ -384,19 +373,19 @@ bool TryToChangeAudio()
 
   if (inputID != -1 && outputID != -1)
   {
-    return InitialiseAudio(inputID, outputID, samplerate, iovs, NUM_CHANNELS, gState->mAudioInChanL - 1, gState->mAudioOutChanL - 1);
+    return InitialiseAudio(inputID, outputID, samplerate, iovs, APP_NUM_CHANNELS, gState->mAudioInChanL - 1, gState->mAudioOutChanL - 1);
   }
 
   return false;
 }
 
-bool InitialiseAudio(unsigned int inId,
-                     unsigned int outId,
-                     unsigned int sr,
-                     unsigned int iovs,
-                     unsigned int chnls,
-                     unsigned int inChanL,
-                     unsigned int outChanL
+bool InitialiseAudio(uint32_t inId,
+                     uint32_t outId,
+                     uint32_t sr,
+                     uint32_t iovs,
+                     uint32_t chnls,
+                     uint32_t inChanL,
+                     uint32_t outChanL
                     )
 {
   TRACE;
@@ -409,7 +398,7 @@ bool InitialiseAudio(unsigned int inId,
       {
         gDAC->abortStream();
       }
-      catch (RtError& e)
+      catch (RtAudioError& e)
       {
         e.printMessage();
       }
@@ -442,7 +431,7 @@ bool InitialiseAudio(unsigned int inId,
 
   gPluginInstance->SetBlockSize(gSigVS);
   gPluginInstance->SetSampleRate(sr);
-  gPluginInstance->Reset();
+  gPluginInstance->OnReset();
 
   try
   {
@@ -452,7 +441,7 @@ bool InitialiseAudio(unsigned int inId,
 
     memcpy(gActiveState, gState, sizeof(AppState)); // copy state to active state
   }
-  catch ( RtError& e )
+  catch ( RtAudioError& e )
   {
     e.printMessage();
     return false;
@@ -467,7 +456,7 @@ bool InitialiseMidi()
   {
     gMidiIn = new RtMidiIn();
   }
-  catch ( RtError &error )
+  catch ( RtAudioError &error )
   {
     FREE_NULL(gMidiIn);
     error.printMessage();
@@ -478,7 +467,7 @@ bool InitialiseMidi()
   {
     gMidiOut = new RtMidiOut();
   }
-  catch ( RtError &error )
+  catch ( RtAudioError &error )
   {
     FREE_NULL(gMidiOut);
     error.printMessage();
@@ -486,14 +475,14 @@ bool InitialiseMidi()
   }
 
   gMidiIn->setCallback( &MIDICallback );
-  gMidiIn->ignoreTypes( !ENABLE_SYSEX, !ENABLE_MIDICLOCK, !ENABLE_ACTIVE_SENSING );
+  gMidiIn->ignoreTypes( !APP_ENABLE_SYSEX, !APP_ENABLE_MIDICLOCK, !APP_ENABLE_ACTIVE_SENSING );
 
   return true;
 }
 
 bool ChooseMidiInput(const char* pPortName)
 {
-  unsigned int port = GetMIDIInPortNumber(pPortName);
+  uint32_t port = GetMIDIInPortNumber(pPortName);
 
   if(port == -1)
   {
@@ -547,7 +536,7 @@ bool ChooseMidiInput(const char* pPortName)
 
 bool ChooseMidiOutput(const char* pPortName)
 {
-  unsigned int port = GetMIDIOutPortNumber(pPortName);
+  uint32_t port = GetMIDIOutPortNumber(pPortName);
 
   if(port == -1)
   {
@@ -602,18 +591,9 @@ bool ChooseMidiOutput(const char* pPortName)
 
 extern bool AttachGUI()
 {
-  IGraphics* pGraphics = gPluginInstance->GetGUI();
-
-  if (pGraphics)
+  if (gPluginInstance->GetHasUI())
   {
-#ifdef OS_WIN
-    if (!pGraphics->OpenWindow(gHWND))
-      pGraphics=0;
-#else // Cocoa OSX
-    if (!pGraphics->OpenWindow(gHWND))
-      pGraphics=0;
-#endif
-    if (pGraphics)
+    if (gPluginInstance->OpenWindow((void*) gHWND))
     {
       gPluginInstance->OnGUIOpen();
       return true;
@@ -631,7 +611,7 @@ void Init()
   ProbeMidiIO(); // find out what midi IO devs are available and put their names in the global variables gMidiInputDevs / gMidiOutputDevs
 
   // Initialise the plugin
-  gPluginInstance = MakePlug(gMidiOut, &gState->mMidiOutChan);
+  gPluginInstance = MakePlug(gMidiOut, gState->mMidiOutChan);
   gPluginInstance->RestorePreset(0);
 
   ChooseMidiInput(gState->mMidiInDev);
@@ -647,7 +627,7 @@ void Cleanup()
     // Stop the stream
     gDAC->stopStream();
   }
-  catch (RtError& e)
+  catch (RtAudioError& e)
   {
     e.printMessage();
   }
@@ -665,7 +645,6 @@ void Cleanup()
   delete gMidiIn;
   delete gMidiOut;
   delete gDAC;
-  delete [] gINIPath;
 }
 
 #ifdef OS_WIN
@@ -692,7 +671,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
       return 0;
     }
 
-    gHINST=hInstance;
+    gHInstance=hInstance;
 
     InitCommonControls();
     gScrollMessage = RegisterWindowMessage("MSWHEEL_ROLLMSG");
@@ -758,7 +737,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdPa
 
     Init();
 
-    CreateDialog(gHINST,MAKEINTRESOURCE(IDD_DIALOG_MAIN),GetDesktopWindow(),MainDlgProc);
+    CreateDialog(gHInstance, MAKEINTRESOURCE(IDD_DIALOG_MAIN),GetDesktopWindow(),MainDlgProc);
 
     for(;;)
     {
@@ -966,91 +945,12 @@ INT_PTR SWELLAppMain(int msg, INT_PTR parm1, INT_PTR parm2)
 
 #endif
 
-
 #ifndef OS_WIN
+#define CBS_HASSTRINGS 0
+#define SWELL_DLG_SCALE_AUTOGEN 1
+#define SET_IDD_DIALOG_PREF_SCALE 1.5
 #include "swell-dlggen.h"
-
-#define SET_IDD_SCALE 1.
-#define SET_IDD_STYLE SWELL_DLG_WS_FLIPPED|SWELL_DLG_WS_NOAUTOSIZE
-
-SWELL_DEFINE_DIALOG_RESOURCE_BEGIN(IDD_DIALOG_MAIN, SET_IDD_STYLE, BUNDLE_NAME, GUI_WIDTH, GUI_HEIGHT, SET_IDD_SCALE)
-BEGIN
-//   EDITTEXT        IDC_EDIT1,59,50,145,14,ES_AUTOHSCROLL
-//   LTEXT           "Enter some text here:",IDC_STATIC,59,39,73,8
-END
-SWELL_DEFINE_DIALOG_RESOURCE_END(IDD_DIALOG_MAIN)
-
-SWELL_DEFINE_DIALOG_RESOURCE_BEGIN(IDD_DIALOG_PREF,SET_IDD_STYLE,"Preferences",320,420,SET_IDD_SCALE)
-BEGIN
-GROUPBOX        "Audio Settings", IDC_STATIC, 5, 10, 300, 230
-
-LTEXT           "Driver Type", IDC_STATIC, 20, 32, 60, 20
-COMBOBOX        IDC_COMBO_AUDIO_DRIVER, 20, 50, 150, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Input Device", IDC_STATIC, 20, 75, 80, 20
-COMBOBOX        IDC_COMBO_AUDIO_IN_DEV, 20, 90, 150, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Output Device", IDC_STATIC, 20, 115, 80, 20
-COMBOBOX        IDC_COMBO_AUDIO_OUT_DEV, 20, 130, 150, 100, CBS_DROPDOWNLIST
-
-LTEXT           "In 1 (L)", IDC_STATIC, 20, 155, 90, 20
-COMBOBOX        IDC_COMBO_AUDIO_IN_L, 20, 170, 46, 100, CBS_DROPDOWNLIST
-
-LTEXT           "In 2 (R)", IDC_STATIC, 75, 155, 90, 20
-COMBOBOX        IDC_COMBO_AUDIO_IN_R, 75, 170, 46, 100, CBS_DROPDOWNLIST
-
-CHECKBOX        "Mono", IDC_CB_MONO_INPUT, 125, 128, 56, 100, 0
-
-LTEXT           "Out 1 (L)", IDC_STATIC, 20, 195, 60, 20
-COMBOBOX        IDC_COMBO_AUDIO_OUT_L, 20, 210, 46, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Out 2 (R)", IDC_STATIC, 75, 195, 60, 20
-COMBOBOX        IDC_COMBO_AUDIO_OUT_R, 75, 210, 46, 100, CBS_DROPDOWNLIST
-
-LTEXT           "IO Vector Size", IDC_STATIC, 200, 32, 80, 20
-COMBOBOX        IDC_COMBO_AUDIO_IOVS, 200, 50, 90, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Signal Vector Size", IDC_STATIC, 200, 75, 100, 20
-COMBOBOX        IDC_COMBO_AUDIO_SIGVS, 200, 90, 90, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Sampling Rate", IDC_STATIC, 200, 115, 80, 20
-COMBOBOX        IDC_COMBO_AUDIO_SR, 200, 130, 90, 100, CBS_DROPDOWNLIST
-
-PUSHBUTTON      "Audio Midi Setup...", IDC_BUTTON_ASIO, 180, 170, 110, 40
-
-GROUPBOX        "MIDI Settings", IDC_STATIC, 5, 255, 300, 120
-
-LTEXT           "Input Device", IDC_STATIC, 20, 275, 100, 20
-COMBOBOX        IDC_COMBO_MIDI_IN_DEV, 20, 293, 150, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Output Device", IDC_STATIC, 20, 320, 100, 20
-COMBOBOX        IDC_COMBO_MIDI_OUT_DEV, 20, 338, 150, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Input Channel", IDC_STATIC, 200, 275, 100, 20
-COMBOBOX        IDC_COMBO_MIDI_IN_CHAN, 200, 293, 90, 100, CBS_DROPDOWNLIST
-
-LTEXT           "Output Channel", IDC_STATIC, 200, 320, 100, 20
-COMBOBOX        IDC_COMBO_MIDI_OUT_CHAN, 200, 338, 90, 100, CBS_DROPDOWNLIST
-
-DEFPUSHBUTTON   "OK", IDOK, 192, 383, 50, 20
-PUSHBUTTON      "Apply", IDAPPLY, 132, 383, 50, 20
-PUSHBUTTON      "Cancel", IDCANCEL, 252, 383, 50, 20
-END
-SWELL_DEFINE_DIALOG_RESOURCE_END(IDD_DIALOG_PREF)
-
+#include "../resources/IPlugEffect.rc_mac_dlg"
 #include "swell-menugen.h"
-
-SWELL_DEFINE_MENU_RESOURCE_BEGIN(IDR_MENU1)
-POPUP "&File"
-BEGIN
-// MENUITEM SEPARATOR
-MENUITEM "Preferences...",              ID_PREFERENCES
-MENUITEM "&Quit",                       ID_QUIT
-END
-POPUP "&Help"
-BEGIN
-MENUITEM "&About",                      ID_ABOUT
-END
-SWELL_DEFINE_MENU_RESOURCE_END(IDR_MENU1)
-
+#include "../resources/IPlugEffect.rc_mac_menu"
 #endif

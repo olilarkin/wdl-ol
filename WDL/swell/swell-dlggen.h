@@ -1,6 +1,5 @@
-
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Losers (who use OS X))
-   Copyright (C) 2006-2007, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -114,6 +113,7 @@ struct SWELL_DlgResourceEntry
 
 #define BS_CENTER 0x0300L
 #define BS_LEFTTEXT 0x0020L
+#define BS_LEFT 0x100L
 #define BS_GROUPBOX      0x20000000
 #define BS_DEFPUSHBUTTON 0x10000000
 #define BS_PUSHBUTTON    0x8000000
@@ -136,11 +136,11 @@ struct SWELL_DlgResourceEntry
 #define ES_CENTER 1
 #define ES_RIGHT 2
 #define ES_MULTILINE 4
+#define ES_AUTOHSCROLL 0x80
                                     
 // flags we ignore
 #define LVS_SHOWSELALWAYS 0
 #define LVS_SHAREIMAGELISTS 0
-#define ES_AUTOHSCROLL 0
 #define ES_AUTOVSCROLL 0
 #define GROUP 0
 #define PBS_SMOOTH 0
@@ -150,13 +150,13 @@ struct SWELL_DlgResourceEntry
 #define TBS_BOTH 0
 #define LBS_NOINTEGRALHEIGHT 0
 #define TVS_HASLINES 0
+#define TVS_LINESATROOT 0
 #define TVS_SHOWSELALWAYS 0
 #define TVS_HASBUTTONS 0
 #define BS_FLAT 0
 #define TVS_DISABLEDRAGDROP 0
 #define TVS_TRACKSELECT 0
 #define TVS_NONEVENHEIGHT 0
-#define BS_LEFT 0
 #define SS_SUNKEN 0
 #define BS_RIGHT 0
 #define WS_EX_STATICEDGE 0

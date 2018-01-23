@@ -15,36 +15,33 @@
 *.mode1v3
 *.db
 *.LSOverride
-*.xcworkspace
 *xcuserdata*
 *.xcschememanagement.plist
 build-*
-/IPlugExamples/*/*.vcxproj.user
 
-PCH/*
+_*
 VST3_SDK/*
 VST_SDK/*
-PT9_SDK/*
 AAX_SDK/*
 ASIO_SDK/*
 CA_SDK/*
-Projects/*
-*/*/gui/*
 
 Icon?
 .DS_Stor*
 
-/WDL/IPlug/IPlug.vcxproj.user
-/WDL/lice/lice.vcxproj.user
-/WDL/IPlug/doc/
-/WorkProjects/
-/ObsoleteProjects/
+Documentation/html
+Documentation/doxygen_warnings.txt
 IPlugExamples/build_errors.log
+IPlugExamples/duplicate.pyc
 
-/IPlugExamples/IPlugEEL/libEEL/build/
+.vscode/
 
-/Ports/
+Projects/*
+WorkProjects/*
+ObsoleteProjects/*
+Ports/*
 
-/ReaperExtensions/
-
-/IPlugExamples/duplicate.pyc
+/ReaperExtensions
+*.db-shm
+*.db-wal
+*.opendb
