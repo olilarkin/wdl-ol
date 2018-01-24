@@ -8,19 +8,13 @@
 
 #include "wdlstring.h"
 
+#include "IPlugBase_select.h"
+
 /** Used to pass various instance info to the API class */
 struct IPlugInstanceInfo
 {
   WDL_String mOSXBundleID;
 };
-
-#ifdef NO_IGRAPHICS
-#include "IPlugBase.h"
-typedef IPlugBase IPLUG_BASE_CLASS;
-#else
-#include "IPlugBaseGraphics.h"
-typedef IPlugBaseGraphics IPLUG_BASE_CLASS;
-#endif
 
 union AURenderEvent;
 struct AUMIDIEvent;
