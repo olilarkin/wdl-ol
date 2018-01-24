@@ -28,12 +28,13 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   NSInteger           _currentFactoryPresetIndex;
   NSArray<AUAudioUnitPreset *> *_presets;
 }
-@synthesize parameterTree = _parameterTree;
-@synthesize factoryPresets = _presets;
+@synthesize parameterTree = _parameterTree; // TODO: what is @synthesize
+@synthesize factoryPresets = _presets;  // TODO: what is @synthesize
 
 - (instancetype)initWithComponentDescription:(AudioComponentDescription)componentDescription
                                      options:(AudioComponentInstantiationOptions)options
-                                       error:(NSError **)outError {
+                                       error:(NSError **)outError
+{
   
   self = [super initWithComponentDescription:componentDescription
                                      options:options
@@ -103,17 +104,20 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   __block IPlugAUv3* plug = mPlug;
 
   // implementorValueObserver is called when a parameter changes value.
-  _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value) {
+  _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value)
+  {
     plug->setParameter(param.address, value);
   };
 
   // implementorValueProvider is called when the value needs to be refreshed.
-  _parameterTree.implementorValueProvider = ^(AUParameter *param) {
+  _parameterTree.implementorValueProvider = ^(AUParameter *param)
+  {
     return plug->getParameter(param.address);
   };
   
   // A function to provide string representations of parameter values.
-  _parameterTree.implementorStringFromValueCallback = ^(AUParameter *param, const AUValue *__nullable valuePtr) {
+  _parameterTree.implementorStringFromValueCallback = ^(AUParameter *param, const AUValue *__nullable valuePtr)
+  {
     AUValue value = valuePtr == nil ? param.value : *valuePtr;
     
     switch (param.address) {
@@ -136,7 +140,8 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   return self;
 }
 
--(void)dealloc {
+-(void)dealloc
+{
   [_presets release];
   [_mInputBusArray release];
   [_mOutputBusArray release];
@@ -148,21 +153,27 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 
 #pragma mark - AUAudioUnit (Overrides)
 
-- (AUAudioUnitBusArray *)inputBusses {
+- (AUAudioUnitBusArray *)inputBusses
+{
   return _mInputBusArray;
 }
 
-- (AUAudioUnitBusArray *)outputBusses {
+- (AUAudioUnitBusArray *)outputBusses
+{
   return _mOutputBusArray;
 }
 
-- (BOOL)allocateRenderResourcesAndReturnError:(NSError **)outError {
-  if (![super allocateRenderResourcesAndReturnError:outError]) {
+- (BOOL)allocateRenderResourcesAndReturnError:(NSError **)outError
+{
+  if (![super allocateRenderResourcesAndReturnError:outError])
+  {
     return NO;
   }
   
-  if (self.outputBus.format.channelCount != mInputBus.bus.format.channelCount) {
-    if (outError) {
+  if (self.outputBus.format.channelCount != mInputBus.bus.format.channelCount)
+  {
+    if (outError)
+    {
       *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:kAudioUnitErr_FailedInitialization userInfo:nil];
     }
     // Notify superclass that initialization was not successful
@@ -180,7 +191,8 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
   return YES;
 }
 
-- (void)deallocateRenderResources {
+- (void)deallocateRenderResources
+{
   mInputBus.deallocateRenderResources();
   
   [super deallocateRenderResources];
@@ -188,8 +200,8 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 
 #pragma mark - AUAudioUnit (AUAudioUnitImplementation)
 
-- (AUInternalRenderBlock)internalRenderBlock {
-
+- (AUInternalRenderBlock)internalRenderBlock
+{
   __block IPlugAUv3* pPlug = mPlug;
   __block BufferedInputBus* input = &mInputBus;
 
@@ -199,43 +211,46 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
                             NSInteger                   outputBusNumber,
                             AudioBufferList            *outputData,
                             const AURenderEvent        *realtimeEventListHead,
-                            AURenderPullInputBlock      pullInputBlock) {
-    AudioUnitRenderActionFlags pullFlags = 0;
+                            AURenderPullInputBlock      pullInputBlock)
+    {
+      AudioUnitRenderActionFlags pullFlags = 0;
 
-    AUAudioUnitStatus err = input->pullInput(&pullFlags, timestamp, frameCount, 0, pullInputBlock);
+      AUAudioUnitStatus err = input->pullInput(&pullFlags, timestamp, frameCount, 0, pullInputBlock);
 
-    if (err != 0) { return err; }
-    
-    AudioBufferList *inAudioBufferList = input->mutableAudioBufferList;
+      if (err != 0) { return err; }
+      
+      AudioBufferList *inAudioBufferList = input->mutableAudioBufferList;
 
-    /*
-     Important:
-     If the caller passed non-null output pointers (outputData->mBuffers[x].mData), use those.
+      /*
+       Important:
+       If the caller passed non-null output pointers (outputData->mBuffers[x].mData), use those.
 
-     If the caller passed null output buffer pointers, process in memory owned by the Audio Unit
-     and modify the (outputData->mBuffers[x].mData) pointers to point to this owned memory.
-     The Audio Unit is responsible for preserving the validity of this memory until the next call to render,
-     or deallocateRenderResources is called.
+       If the caller passed null output buffer pointers, process in memory owned by the Audio Unit
+       and modify the (outputData->mBuffers[x].mData) pointers to point to this owned memory.
+       The Audio Unit is responsible for preserving the validity of this memory until the next call to render,
+       or deallocateRenderResources is called.
 
-     If your algorithm cannot process in-place, you will need to preallocate an output buffer
-     and use it here.
+       If your algorithm cannot process in-place, you will need to preallocate an output buffer
+       and use it here.
 
-     See the description of the canProcessInPlace property.
-     */
+       See the description of the canProcessInPlace property.
+       */
 
-    // If passed null output buffer pointers, process in-place in the input buffer.
-    AudioBufferList *outAudioBufferList = outputData;
-    if (outAudioBufferList->mBuffers[0].mData == nullptr) {
-      for (UInt32 i = 0; i < outAudioBufferList->mNumberBuffers; ++i) {
-        outAudioBufferList->mBuffers[i].mData = inAudioBufferList->mBuffers[i].mData;
+      // If passed null output buffer pointers, process in-place in the input buffer.
+      AudioBufferList *outAudioBufferList = outputData;
+      if (outAudioBufferList->mBuffers[0].mData == nullptr)
+      {
+        for (UInt32 i = 0; i < outAudioBufferList->mNumberBuffers; ++i)
+        {
+          outAudioBufferList->mBuffers[i].mData = inAudioBufferList->mBuffers[i].mData;
+        }
       }
+
+      pPlug->setBuffers(inAudioBufferList, outAudioBufferList);
+      pPlug->processWithEvents(timestamp, frameCount, realtimeEventListHead);
+
+      return noErr;
     }
-
-    pPlug->setBuffers(inAudioBufferList, outAudioBufferList);
-    pPlug->processWithEvents(timestamp, frameCount, realtimeEventListHead);
-
-    return noErr;
-  }
   );
 }
 
@@ -243,10 +258,13 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 
 - (AUAudioUnitPreset *)currentPreset
 {
-  if (_currentPreset.number >= 0) {
+  if (_currentPreset.number >= 0)
+  {
     NSLog(@"Returning Current Factory Preset: %ld\n", (long)_currentFactoryPresetIndex);
     return [_presets objectAtIndex:_currentFactoryPresetIndex];
-  } else {
+  }
+  else
+  {
     NSLog(@"Returning Current Custom Preset: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
     return _currentPreset;
   }
@@ -254,12 +272,18 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 
 - (void)setCurrentPreset:(AUAudioUnitPreset *)currentPreset
 {
-  if (nil == currentPreset) { NSLog(@"nil passed to setCurrentPreset!"); return; }
+  if (nil == currentPreset)
+  {
+    NSLog(@"nil passed to setCurrentPreset!"); return;
+  }
 
-  if (currentPreset.number >= 0) {
+  if (currentPreset.number >= 0)
+  {
     // factory preset
-    for (AUAudioUnitPreset *factoryPreset in _presets) {
-      if (currentPreset.number == factoryPreset.number) {
+    for (AUAudioUnitPreset *factoryPreset in _presets)
+    {
+      if (currentPreset.number == factoryPreset.number)
+      {
 
 //        AUParameter *cutoffParameter = [self.parameterTree valueForKey: @"cutoff"];
 //        AUParameter *resonanceParameter = [self.parameterTree valueForKey: @"resonance"];
@@ -275,16 +299,21 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
         break;
       }
     }
-  } else if (nil != currentPreset.name) {
+  }
+  else if (nil != currentPreset.name)
+  {
     // set custom preset as current
     _currentPreset = currentPreset;
     NSLog(@"currentPreset Custom: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
-  } else {
+  }
+  else
+  {
     NSLog(@"setCurrentPreset not set! - invalid AUAudioUnitPreset\n");
   }
 }
 
-- (BOOL)canProcessInPlace {
+- (BOOL)canProcessInPlace
+{
   return NO;
 }
 
