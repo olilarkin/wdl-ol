@@ -112,14 +112,56 @@ inline void GetVersionStr(int version, WDL_String& str)
   str.SetFormatted(MAX_VERSION_STR_LEN, "v%d.%d.%d", ver, rmaj, rmin);
 }
 
-inline double ToNormalizedParam(double nonNormalizedValue, double min, double max, double shape)
+inline double ToNormalizedSymmetric(double nonNormalizedValue, double min, double max, double shape)
 {
-  return std::pow((nonNormalizedValue - min) / (max - min), 1.0 / shape);
+  const auto mid = 0.5 * (max + min);
+  const auto halfRange = max - mid;
+  auto d = nonNormalizedValue - mid;
+
+  if (d < 0.0)
+    return 0.5 - 0.5 * pow(2.0 * -d, 1.0 / shape);
+
+  else
+    return 0.5 + 0.5 * pow(2.0 * d, 1.0 / shape);
 }
 
-inline double FromNormalizedParam(double normalizedValue, double min, double max, double shape)
+inline double FromNormalizedSymmetric(double normalizedValue, double min, double max, double shape)
 {
-  return min + std::pow((double) normalizedValue, shape) * (max - min);
+  const auto mid = 0.5 * (max + min);
+  const auto halfRange = max - mid;
+  auto d = normalizedValue - 0.5;
+
+  if (d < 0.0)
+    return mid - halfRange * pow(2.0 * -d, shape);
+
+  else
+    return mid + halfRange * pow(2.0 * d, shape);
+}
+
+inline double ToNormalizedParam(double nonNormalizedValue, double min, double max, double shape, bool symmetric = false)
+{
+  switch (symmetric)
+  {
+  default:
+  case false:
+    return pow((nonNormalizedValue - min) / (max - min), 1.0 / shape);
+
+  case true:
+    return ToNormalizedSymmetric(nonNormalizedValue, min, max, shape);
+  }
+}
+
+inline double FromNormalizedParam(double normalizedValue, double min, double max, double shape, bool symmetric = false)
+{
+  switch (symmetric)
+  {
+  default:
+  case false:
+    return min + pow((double) normalizedValue, shape) * (max - min);
+
+  case true:
+    return FromNormalizedSymmetric(normalizedValue, min, max, shape);
+  }
 }
 
 template <class SRC, class DEST>
