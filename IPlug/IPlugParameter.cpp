@@ -79,7 +79,7 @@ double IParam::DBToAmp() const
 
 void IParam::SetNormalized(double normalizedValue)
 {
-  mValue = FromNormalizedParam(normalizedValue, mMin, mMax, mShape);
+  mValue = FromNormalizedParam(normalizedValue, mMin, mMax, mShape, mShapeSymmetry);
   
   if (mType != kTypeDouble)
   {
@@ -97,17 +97,17 @@ double IParam::GetNormalized() const
 double IParam::GetNormalized(double nonNormalizedValue) const
 {
   nonNormalizedValue = BOUNDED(nonNormalizedValue, mMin, mMax);
-  return ToNormalizedParam(nonNormalizedValue, mMin, mMax, mShape);
+  return ToNormalizedParam(nonNormalizedValue, mMin, mMax, mShape, mShapeSymmetry);
 }
 
 double IParam::GetNonNormalized(double normalizedValue) const
 {
-  return FromNormalizedParam(normalizedValue, mMin, mMax, mShape);
+  return FromNormalizedParam(normalizedValue, mMin, mMax, mShape, mShapeSymmetry);
 }
 
 void IParam::GetDisplayForHost(double value, bool normalized, char* rDisplay, bool withDisplayText)
 {
-  if (normalized) value = FromNormalizedParam(value, mMin, mMax, mShape);
+  if (normalized) value = FromNormalizedParam(value, mMin, mMax, mShape, mShapeSymmetry);
 
   if (withDisplayText)
   {
