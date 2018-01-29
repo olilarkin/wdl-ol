@@ -60,7 +60,6 @@ private:
   
   AudioBufferList* mInBufferList = nullptr;
   AudioBufferList* mOutBufferList = nullptr;
-  char mParamValueString[MAX_PARAM_DISPLAY_LEN];
 };
 
 IPlugAUv3* MakePlug();

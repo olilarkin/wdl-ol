@@ -4,7 +4,6 @@
 IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 : IPLUG_BASE_CLASS(c, kAPIAUv3)
 {
-  memset(mParamValueString, 0, MAX_PARAM_DISPLAY_LEN * sizeof(char));
 }
 
 void IPlugAUv3::HandleOneEvent(AURenderEvent const *event)
@@ -105,8 +104,8 @@ const char* IPlugAUv3::GetParamDisplayForHost(uint64_t address, float value)
   const int paramIdx = (int) address;
   
   WDL_MutexLock lock(&mParams_mutex);
-  GetParam(paramIdx)->GetDisplayForHost(value, false, mParamValueString);
-  return (const char*) mParamValueString;
+  GetParam(paramIdx)->GetDisplayForHost(value, false, mParamDisplayStr);
+  return (const char*) mParamDisplayStr.Get();
 }
 
 //void IPlugAUv3::startRamp(uint64_t address, float value, uint32_t duration) {
