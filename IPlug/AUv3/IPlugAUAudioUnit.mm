@@ -26,7 +26,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   BufferedInputBus mInputBus;
   BufferedOutputBus mOutputBus;
 //  BufferedInputBus mSideChainInputBus;
-
+  NSArray<NSNumber*>* mChannelCapabilitiesArray;
   AUHostMusicalContextBlock mMusicalContext;
   AUHostTransportStateBlock mTransportContext;
   AUAudioUnitPreset* mCurrentPreset;
@@ -51,16 +51,28 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   
   assert(mPlug);
   
+  NSMutableArray* pChannelCapabilities = [[NSMutableArray alloc] init];
+  
+  for (int i = 0; i < mPlug->NChannelIO(); i++)
+  {
+    int inputs, outputs;
+    mPlug->GetChannelIO(i, inputs, outputs);
+    [pChannelCapabilities addObject: [NSNumber numberWithInt:inputs]];
+    [pChannelCapabilities addObject: [NSNumber numberWithInt:outputs]];
+  }
+
+  mChannelCapabilitiesArray = pChannelCapabilities;
+
   // Initialize a default format for the busses.
   AVAudioFormat* pInputBusFormat = nil;
   
   if(mPlug->NInChannels())
-    pInputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+    pInputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->NInChannels()];
   
 //  if(mPlug->HasSidechainInput())
 //    AVAudioFormat* pSideChainInputBusFormat = nil;
   
-  AVAudioFormat* pOutputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AVAudioFormat* pOutputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->NOutChannels()];
   
   NSMutableArray* pParametersToAddToTree = [[NSMutableArray alloc] init];
   
@@ -235,25 +247,20 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   return _mOutputBusArray;
 }
 
-- (BOOL)allocateRenderResourcesAndReturnError:(NSError **)outError {
-  if (![super allocateRenderResourcesAndReturnError:outError]) {
+- (BOOL)allocateRenderResourcesAndReturnError:(NSError **)ppOutError {
+  if (![super allocateRenderResourcesAndReturnError:ppOutError]) {
     return NO;
   }
   
-  if (mInputBus.bus.format.channelCount > mPlug->NInChannels()) {
-    if (outError) {
-      *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:kAudioUnitErr_FailedInitialization userInfo:nil];
-    }
-
-    self.renderResourcesAllocated = NO;
-    
-    return NO;
-  }
+  uint32_t reqNumInputChannels = mInputBus.bus.format.channelCount;  //requested # input channels
+  uint32_t reqNumOutputChannels = mOutputBus.bus.format.channelCount;//requested # output channels
   
-  if (mOutputBus.bus.format.channelCount > mPlug->NOutChannels()) {
-    if (outError) {
-      *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:kAudioUnitErr_FailedInitialization userInfo:nil];
-    }
+  // TODO: legal io doesn't consider sidechain inputs
+  if (!mPlug->LegalIO(reqNumInputChannels, reqNumOutputChannels))
+  {
+    if (ppOutError)
+      *ppOutError = [NSError errorWithDomain:NSOSStatusErrorDomain code:kAudioUnitErr_FailedInitialization userInfo:nil];
+  
     // Notify superclass that initialization was not successful
     self.renderResourcesAllocated = NO;
     
@@ -335,17 +342,17 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     pPlug->SetBuffers(inAudioBufferList, outAudioBufferList);
     
     Float64 tempo; Float64 ppqPos; double numerator; NSInteger denominator;
-    double samplePos; double cycleStart; double cycleEnd;
+    double samplePos; double cycleStart; double cycleEnd; double currentMeasureDownbeatPosition;
     AUHostTransportStateFlags transportStateFlags;
   
-    mMusicalContext(&tempo, &numerator, &denominator, &ppqPos, nil/*sampleOffsetToNextBeat*/, nil/*currentMeasureDownbeatPosition*/);
+    mMusicalContext(&tempo, &numerator, &denominator, &ppqPos, nil/*sampleOffsetToNextBeat*/, &currentMeasureDownbeatPosition);
     mTransportContext(&transportStateFlags, &samplePos, &cycleStart, &cycleEnd);
     
     ITimeInfo timeInfo;
     timeInfo.mTempo = tempo;
     timeInfo.mSamplePos = samplePos;
     timeInfo.mPPQPos = ppqPos;
-//    timeInfo.mLastBar = ?
+    timeInfo.mLastBar = currentMeasureDownbeatPosition; //TODO: is that correct?
     timeInfo.mCycleStart = cycleStart;
     timeInfo.mCycleEnd = cycleEnd;
     timeInfo.mNumerator = (int) numerator; //TODO: update ITimeInfo precision?
@@ -396,6 +403,11 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 
 - (BOOL)canProcessInPlace {
   return NO;
+}
+
+- (NSArray<NSNumber*>*)channelCapabilities
+{
+  return mChannelCapabilitiesArray;
 }
 
 @end

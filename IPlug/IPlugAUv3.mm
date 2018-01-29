@@ -4,6 +4,7 @@
 IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 : IPLUG_BASE_CLASS(c, kAPIAUv3)
 {
+  Trace(TRACELOC, "%s", c.effectName);
 }
 
 void IPlugAUv3::HandleOneEvent(AURenderEvent const *event)
@@ -111,31 +112,30 @@ const char* IPlugAUv3::GetParamDisplayForHost(uint64_t address, float value)
 //void IPlugAUv3::startRamp(uint64_t address, float value, uint32_t duration) {
 //}
 
-void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufferList) {
+void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufferList)
+{
   SetInputChannelConnections(0, NInChannels(), false);
   SetOutputChannelConnections(0, NOutChannels(), false);
-  mInBufferList = pInBufList;
-  mOutBufferList = pOutBufferList;
 
-//  AttachInputBuffers(0, 1, (float**) &(pInBufList->mBuffers[i].mData), nFrames);
-//  AttachOutputBuffers(0, 1, (float**) &(pOutBufferList->mBuffers[i].mData), nFrames);
+  //TODO: assumes 1 bus
+//  int inputChanIdx = 0;
+//  for(int i = 0; i < pInBufList->mNumberBuffers; i++)
+//  {
+//    AttachInputBuffers(inputChanIdx, pInBufList->mBuffers[i].mNumberChannels, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
+//    inputChanIdx += pInBufList->mBuffers[i].mNumberChannels;
+//  }
+//
+//  int outputChanIdx = 0;
+//  for(int i = 0; i < pOutBufferList->mNumberBuffers; i++)
+//  {
+//    AttachOutputBuffers(outputChanIdx, pOutBufferList->mBuffers[i].mNumberChannels, (float**) &(pOutBufferList->mBuffers[i].mData));
+//    outputChanIdx += pOutBufferList->mBuffers[i].mNumberChannels;
+//  }
 }
 
 void IPlugAUv3::Process(uint32_t frameCount, uint32_t bufferOffset)
 {
-//  int channelCount = mNumChannels;
-//
-//  for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-//
-//    int frameOffset = int(frameIndex + bufferOffset);
-//
-//    for (int channel = 0; channel < channelCount; ++channel) {
-//      float* input  = (float*) mInBufferList->mBuffers[channel].mData  + frameOffset;
-//      float* output = (float*) mOutBufferList->mBuffers[channel].mData + frameOffset;
-//
-//      *output = *input * 0.5f;
-//    }
-//  }
+//  ProcessBuffers(0.f, frameCount);
 }
 
 void IPlugAUv3::SetTimeInfo(ITimeInfo& timeInfo)

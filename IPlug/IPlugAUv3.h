@@ -51,9 +51,6 @@ protected:
 private:
   void HandleOneEvent(AURenderEvent const* event);
   void PerformAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
-  
-  AudioBufferList* mInBufferList = nullptr;
-  AudioBufferList* mOutBufferList = nullptr;
 };
 
 IPlugAUv3* MakePlug();
