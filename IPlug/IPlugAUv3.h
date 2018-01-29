@@ -24,15 +24,18 @@ class IPlugAUv3 : public IPLUG_BASE_CLASS
 public:
   IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig config);
 
-  void process(uint32_t frameCount, uint32_t bufferOffset);
-  void startRamp(uint64_t address, float value, uint32_t duration);
-  void handleMIDIEvent(AUMIDIEvent const& midiEvent) {};
-  void processWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events);
+  void Process(uint32_t frameCount, uint32_t bufferOffset);
+//  void startRamp(uint64_t address, float value, uint32_t duration);
+//  void HandleMIDIEvent(AUMIDIEvent const& midiEvent) {};
+  void ProcessWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events);
 
-  void setParameter(uint64_t address, float value);
-  float getParameter(uint64_t address);
-  void setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList);
+  void SetParameter(uint64_t address, float value);
+  float GetParameter(uint64_t address);
+  const char* GetParamDisplayForHost(uint64_t address, float value);
   
+  void SetBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList);
+  void SetTimeInfo(ITimeInfo& timeInfo);
+
   //IPlug
   void BeginInformHostOfParamChange(int idx) override {};
   void InformHostOfParamChange(int idx, double normalizedValue) override {};
@@ -50,13 +53,14 @@ protected:
   bool SendMidiMsg(IMidiMsg& msg) override { return false; }
   bool SendSysEx(ISysEx& msg) override { return false; }
   
-  
 private:
-  void handleOneEvent(AURenderEvent const* event);
-  void performAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
+  void HandleOneEvent(AURenderEvent const* event);
+  void PerformAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
+  ITimeInfo mTimeInfo;
   
   AudioBufferList* mInBufferList = nullptr;
   AudioBufferList* mOutBufferList = nullptr;
+  char mParamValueString[MAX_PARAM_DISPLAY_LEN];
 };
 
 IPlugAUv3* MakePlug();

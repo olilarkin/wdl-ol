@@ -6,144 +6,218 @@
 
 @interface IPlugAUAudioUnit ()
 
-@property AUAudioUnitBus* outputBus;
+//@property AUAudioUnitBus* mOutputBus;
 @property AUAudioUnitBusArray* mInputBusArray;
 @property AUAudioUnitBusArray* mOutputBusArray;
 
 @end
 
-static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
+static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 {
-  AUAudioUnitPreset *aPreset = [AUAudioUnitPreset new];
-  aPreset.number = number;
-  aPreset.name = name;
-  return aPreset;
+  AUAudioUnitPreset* pPreset = [AUAudioUnitPreset new];
+  pPreset.number = number;
+  pPreset.name = pName;
+  return pPreset;
 }
 
-@implementation IPlugAUAudioUnit {
+@implementation IPlugAUAudioUnit
+{
   IPlugAUv3* mPlug;
   BufferedInputBus mInputBus;
-  
-  AUAudioUnitPreset   *_currentPreset;
-  NSInteger           _currentFactoryPresetIndex;
-  NSArray<AUAudioUnitPreset *> *_presets;
+  BufferedOutputBus mOutputBus;
+//  BufferedInputBus mSideChainInputBus;
+
+  AUHostMusicalContextBlock mMusicalContext;
+  AUHostTransportStateBlock mTransportContext;
+  AUAudioUnitPreset* mCurrentPreset;
+  NSArray<AUAudioUnitPreset*>* mPresets;
 }
-@synthesize parameterTree = _parameterTree; // TODO: what is @synthesize
-@synthesize factoryPresets = _presets;  // TODO: what is @synthesize
+
+@synthesize parameterTree = _mParameterTree;
+@synthesize factoryPresets = mPresets;
 
 - (instancetype)initWithComponentDescription:(AudioComponentDescription)componentDescription
                                      options:(AudioComponentInstantiationOptions)options
-                                       error:(NSError **)outError
-{
+                                       error:(NSError **)ppOutError {
   
   self = [super initWithComponentDescription:componentDescription
                                      options:options
-                                       error:outError];
+                                       error:ppOutError];
   
   if (self == nil) { return nil; }
-  
-  // Initialize a default format for the busses.
-  AVAudioFormat *defaultFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   
   // Create a DSP kernel to handle the signal processing.
   mPlug = MakePlug();
   
-  // Create a parameter object for the cutoff frequency.
-  AUParameter *cutoffParam = [AUParameterTree createParameterWithIdentifier:@"cutoff"
-                                                                       name:@"Cutoff"
-                                                                    address:0
-                                                                        min:12.0
-                                                                        max:20000.0
-                                                                       unit:kAudioUnitParameterUnit_Hertz
-                                                                    unitName:nil
-                                                                      flags: kAudioUnitParameterFlag_IsReadable | kAudioUnitParameterFlag_IsWritable | kAudioUnitParameterFlag_CanRamp
-                                                               valueStrings:nil
-                                                        dependentParameters:nil];
-
-  [cutoffParam retain];
+  assert(mPlug);
   
-  // Create a parameter object for the filter resonance.
-  AUParameter *resonanceParam = [AUParameterTree createParameterWithIdentifier:@"resonance" name:@"Resonance"
-                                                                       address:1
-                                                                           min:-20.0 max:20.0 unit:kAudioUnitParameterUnit_Decibels unitName:nil
-                                                                         flags: kAudioUnitParameterFlag_IsReadable |
-                                 kAudioUnitParameterFlag_IsWritable |
-                                 kAudioUnitParameterFlag_CanRamp
-                                                                  valueStrings:nil dependentParameters:nil];
+  // Initialize a default format for the busses.
+  AVAudioFormat* pInputBusFormat = nil;
   
-  [resonanceParam retain];
+  if(mPlug->NInChannels())
+    pInputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  
+//  if(mPlug->HasSidechainInput())
+//    AVAudioFormat* pSideChainInputBusFormat = nil;
+  
+  AVAudioFormat* pOutputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  
+  NSMutableArray* pParametersToAddToTree = [[NSMutableArray alloc] init];
+  
+  for ( auto i = 0; i < mPlug->NParams(); i++)
+  {
+    IParam* pParam = mPlug->GetParam(i);
+    
+    AudioUnitParameterOptions options =
+    //kAudioUnitParameterFlag_CFNameRelease
+    //kAudioUnitParameterFlag_PlotHistory
+    //kAudioUnitParameterFlag_MeterReadOnly
+    //kAudioUnitParameterFlag_DisplayMask
+    //kAudioUnitParameterFlag_DisplaySquareRoot
+    //kAudioUnitParameterFlag_DisplaySquared
+    //kAudioUnitParameterFlag_DisplayCubed
+    //kAudioUnitParameterFlag_DisplayCubeRoot
+    //kAudioUnitParameterFlag_DisplayExponential
+    //kAudioUnitParameterFlag_HasClump
+    //kAudioUnitParameterFlag_ValuesHaveStrings
+    //kAudioUnitParameterFlag_DisplayLogarithmic
+    kAudioUnitParameterFlag_IsHighResolution |
+    //kAudioUnitParameterFlag_NonRealTime
+    //kAudioUnitParameterFlag_CanRamp |
+    //kAudioUnitParameterFlag_ExpertMode
+    //kAudioUnitParameterFlag_HasCFNameString
+    //kAudioUnitParameterFlag_IsGlobalMeta
+    kAudioUnitParameterFlag_IsReadable ;
+    
+    if (pParam->GetCanAutomate())
+    {
+      options = options | kAudioUnitParameterFlag_IsWritable;
+    }
+    
+    if (pParam->GetIsMeta())
+    {
+      options |= kAudioUnitParameterFlag_IsElementMeta;
+    }
+    
+    AudioUnitParameterUnit unit;
+    
+    NSString* pUnitName = nil;
+    
+    switch (pParam->Type())
+    {
+      case IParam::kTypeBool:
+        unit = kAudioUnitParameterUnit_Boolean;
+        break;
+      case IParam::kTypeEnum:
+        //fall through
+      case IParam::kTypeInt:
+        unit = kAudioUnitParameterUnit_Indexed;
+        break;
+      default:
+      {
+        const char* label = pParam->GetLabelForHost();
+        
+        if (CSTR_NOT_EMPTY(label))
+        {
+          unit = kAudioUnitParameterUnit_CustomUnit;
+          pUnitName = [NSString stringWithCString:label encoding:NSUTF8StringEncoding];
+        }
+        else
+        {
+          unit = kAudioUnitParameterUnit_Generic;
+        }
+      }
+    }
+    
+    NSMutableArray* pValueStrings = nil;
+    
+    //TODO: pValueStrings
 
-// Initialize default parameter values.
-  cutoffParam.value = 20000.0;
-  resonanceParam.value = 0.0;
-  mPlug->setParameter(0, cutoffParam.value);
-  mPlug->setParameter(1, resonanceParam.value);
+    //TODO:: make better identifier?
+    AUParameter *pAUParam = [AUParameterTree createParameterWithIdentifier:    [NSString stringWithString:[NSString stringWithFormat:@"Param%d", i]]
+                                                                         name: [NSString stringWithCString:pParam->GetNameForHost() encoding:NSUTF8StringEncoding]
+                                                                      address: AUParameterAddress(i)
+                                                                          min: pParam->GetMin()
+                                                                          max: pParam->GetMax()
+                                                                         unit: unit
+                                                                     unitName: pUnitName
+                                                                        flags: options
+                                                                 valueStrings: pValueStrings
+                                                          dependentParameters: nil];
+    
+    pAUParam.value = pParam->GetDefault();
+    
+    [pParametersToAddToTree addObject:pAUParam];
+
+//    [pAUParam retain];
+  }
   
   // Create factory preset array.
-  _currentFactoryPresetIndex = 0;
-  _presets = @[NewAUPreset(0, @"First Preset"),
-               NewAUPreset(1, @"Second Preset"),
-               NewAUPreset(2, @"Third Preset")];
+  NSMutableArray* pPresets = [[NSMutableArray alloc] init];
+
+  for(auto i = 0; i < mPlug->NPresets(); i++)
+  {
+    [pPresets addObject:NewAUPreset(i, [NSString stringWithCString: mPlug->GetPresetName(i) encoding:NSUTF8StringEncoding])];
+  }
   
-  [_presets retain];
+  mPresets = pPresets;
+  [mPresets retain];
+//  [pPresets release];
   
   // Create the parameter tree.
-  _parameterTree = [[AUParameterTree createTreeWithChildren:@[cutoffParam, resonanceParam]] retain];
+  _mParameterTree = [[AUParameterTree createTreeWithChildren:pParametersToAddToTree] retain];
 
   // Create the input and output busses.
-  mInputBus.init(defaultFormat, 8);
-  _outputBus = [[[AUAudioUnitBus alloc] initWithFormat:defaultFormat error:nil] retain];
   
-  [defaultFormat release];
+  if (!mPlug->IsInstrument())
+    mInputBus.init(pInputBusFormat, mPlug->NInChannels());
+  
+  mOutputBus.init(pOutputBusFormat, mPlug->NOutChannels());
+  
+  if(pInputBusFormat)
+    [pInputBusFormat release];
+  
+  [pOutputBusFormat release];
   
   // Create the input and output bus arrays.
-  _mInputBusArray  = [[[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeInput busses: @[mInputBus.bus]] retain];
-  _mOutputBusArray = [[[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeOutput busses: @[_outputBus]] retain];
+  if(!mPlug->IsInstrument())
+    _mInputBusArray  = [[[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeInput busses: @[mInputBus.bus]] retain];
+  
+  _mOutputBusArray = [[[AUAudioUnitBusArray alloc] initWithAudioUnit:self busType:AUAudioUnitBusTypeOutput busses: @[mOutputBus.bus]] retain];
   
   // Make a local pointer to the kernel to avoid capturing self.
   __block IPlugAUv3* plug = mPlug;
 
   // implementorValueObserver is called when a parameter changes value.
-  _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value)
-  {
-    plug->setParameter(param.address, value);
+  _mParameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value) {
+    plug->SetParameter(param.address, value);
   };
 
   // implementorValueProvider is called when the value needs to be refreshed.
-  _parameterTree.implementorValueProvider = ^(AUParameter *param)
-  {
-    return plug->getParameter(param.address);
+  _mParameterTree.implementorValueProvider = ^(AUParameter *param) {
+    return plug->GetParameter(param.address);
   };
   
   // A function to provide string representations of parameter values.
-  _parameterTree.implementorStringFromValueCallback = ^(AUParameter *param, const AUValue *__nullable valuePtr)
-  {
+  _mParameterTree.implementorStringFromValueCallback = ^(AUParameter *param, const AUValue *__nullable valuePtr) {
     AUValue value = valuePtr == nil ? param.value : *valuePtr;
-    
-    switch (param.address) {
-      case 0:
-        return [NSString stringWithFormat:@"%.f", value];
-
-      case 1:
-        return [NSString stringWithFormat:@"%.2f", value];
-
-      default:
-        return @"?";
-    }
+    return [NSString stringWithCString:plug->GetParamDisplayForHost(param.address, value) encoding:NSUTF8StringEncoding];
   };
   
   self.maximumFramesToRender = 512;
   
-//  // set default preset as current
-  self.currentPreset = _presets.firstObject;
+  self.currentPreset = mPresets.firstObject;
   
   return self;
 }
 
 -(void)dealloc
 {
-  [_presets release];
-  [_mInputBusArray release];
+  [mPresets release];
+  
+  if(!mPlug->IsInstrument())
+    [_mInputBusArray release];
+  
   [_mOutputBusArray release];
   
   delete mPlug;
@@ -153,27 +227,31 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
 
 #pragma mark - AUAudioUnit (Overrides)
 
-- (AUAudioUnitBusArray *)inputBusses
-{
+- (AUAudioUnitBusArray *)inputBusses {
   return _mInputBusArray;
 }
 
-- (AUAudioUnitBusArray *)outputBusses
-{
+- (AUAudioUnitBusArray *)outputBusses {
   return _mOutputBusArray;
 }
 
-- (BOOL)allocateRenderResourcesAndReturnError:(NSError **)outError
-{
-  if (![super allocateRenderResourcesAndReturnError:outError])
-  {
+- (BOOL)allocateRenderResourcesAndReturnError:(NSError **)outError {
+  if (![super allocateRenderResourcesAndReturnError:outError]) {
     return NO;
   }
   
-  if (self.outputBus.format.channelCount != mInputBus.bus.format.channelCount)
-  {
-    if (outError)
-    {
+  if (mInputBus.bus.format.channelCount > mPlug->NInChannels()) {
+    if (outError) {
+      *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:kAudioUnitErr_FailedInitialization userInfo:nil];
+    }
+
+    self.renderResourcesAllocated = NO;
+    
+    return NO;
+  }
+  
+  if (mOutputBus.bus.format.channelCount > mPlug->NOutChannels()) {
+    if (outError) {
       *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:kAudioUnitErr_FailedInitialization userInfo:nil];
     }
     // Notify superclass that initialization was not successful
@@ -182,28 +260,54 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
     return NO;
   }
   
-  mInputBus.allocateRenderResources(self.maximumFramesToRender);
+  if (self.musicalContextBlock)
+    mMusicalContext = self.musicalContextBlock;
+  else
+    mMusicalContext = nil;
+  
+  if (self.transportStateBlock)
+    mTransportContext = self.transportStateBlock;
+  else
+    mTransportContext = nil;
+  
+  if(mPlug->NInChannels())
+    mInputBus.allocateRenderResources(self.maximumFramesToRender);
+  
+//  if(mPlug->HasSidechainInput())
+//    mSidchainInputBuss.allocateRenderResources(self.maximumFramesToRender);
+  
+  mOutputBus.allocateRenderResources(self.maximumFramesToRender);
   
   mPlug->SetBlockSize(self.maximumFramesToRender);
-  mPlug->SetSampleRate(self.outputBus.format.sampleRate);
+  mPlug->SetSampleRate(mOutputBus.bus.format.sampleRate);
   mPlug->OnReset();
   
   return YES;
 }
 
-- (void)deallocateRenderResources
-{
-  mInputBus.deallocateRenderResources();
+- (void)deallocateRenderResources {
+  
+  if(mPlug->NInChannels())
+    mInputBus.deallocateRenderResources();
+  
+//  if(mPlug->HasSidechainInput())
+//    mSidchainInputBus.deallocateRenderResources();
+  
+  mOutputBus.deallocateRenderResources();
+  
+  mMusicalContext = nullptr;
+  mTransportContext = nullptr;
   
   [super deallocateRenderResources];
 }
 
 #pragma mark - AUAudioUnit (AUAudioUnitImplementation)
 
-- (AUInternalRenderBlock)internalRenderBlock
-{
+- (AUInternalRenderBlock)internalRenderBlock {
+
   __block IPlugAUv3* pPlug = mPlug;
   __block BufferedInputBus* input = &mInputBus;
+  __block BufferedOutputBus* output = &mOutputBus;
 
   return Block_copy(^AUAudioUnitStatus(AudioUnitRenderActionFlags *actionFlags,
                             const AudioTimeStamp       *timestamp,
@@ -211,109 +315,86 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString *name)
                             NSInteger                   outputBusNumber,
                             AudioBufferList            *outputData,
                             const AURenderEvent        *realtimeEventListHead,
-                            AURenderPullInputBlock      pullInputBlock)
-    {
-      AudioUnitRenderActionFlags pullFlags = 0;
+                            AURenderPullInputBlock      pullInputBlock) {
+    AudioUnitRenderActionFlags pullFlags = 0;
 
-      AUAudioUnitStatus err = input->pullInput(&pullFlags, timestamp, frameCount, 0, pullInputBlock);
+    AUAudioUnitStatus err = input->pullInput(&pullFlags, timestamp, frameCount, 0, pullInputBlock);
 
-      if (err != 0) { return err; }
-      
-      AudioBufferList *inAudioBufferList = input->mutableAudioBufferList;
+    if (err != 0) { return err; }
+    
+    AudioBufferList *inAudioBufferList = input->mutableAudioBufferList;
+    AudioBufferList *outAudioBufferList = output->mutableAudioBufferList;
 
-      /*
-       Important:
-       If the caller passed non-null output pointers (outputData->mBuffers[x].mData), use those.
-
-       If the caller passed null output buffer pointers, process in memory owned by the Audio Unit
-       and modify the (outputData->mBuffers[x].mData) pointers to point to this owned memory.
-       The Audio Unit is responsible for preserving the validity of this memory until the next call to render,
-       or deallocateRenderResources is called.
-
-       If your algorithm cannot process in-place, you will need to preallocate an output buffer
-       and use it here.
-
-       See the description of the canProcessInPlace property.
-       */
-
-      // If passed null output buffer pointers, process in-place in the input buffer.
-      AudioBufferList *outAudioBufferList = outputData;
-      if (outAudioBufferList->mBuffers[0].mData == nullptr)
-      {
-        for (UInt32 i = 0; i < outAudioBufferList->mNumberBuffers; ++i)
-        {
-          outAudioBufferList->mBuffers[i].mData = inAudioBufferList->mBuffers[i].mData;
-        }
+    // If passed null output buffer pointers, process in-place in the input buffer.
+    if (outAudioBufferList->mBuffers[0].mData == nullptr) {
+      for (UInt32 i = 0; i < outAudioBufferList->mNumberBuffers; ++i) {
+        outAudioBufferList->mBuffers[i].mData = inAudioBufferList->mBuffers[i].mData;
       }
-
-      pPlug->setBuffers(inAudioBufferList, outAudioBufferList);
-      pPlug->processWithEvents(timestamp, frameCount, realtimeEventListHead);
-
-      return noErr;
     }
+
+    pPlug->SetBuffers(inAudioBufferList, outAudioBufferList);
+    
+    Float64 tempo; Float64 ppqPos; double numerator; NSInteger denominator;
+    double samplePos; double cycleStart; double cycleEnd;
+    AUHostTransportStateFlags transportStateFlags;
+  
+    mMusicalContext(&tempo, &numerator, &denominator, &ppqPos, nil/*sampleOffsetToNextBeat*/, nil/*currentMeasureDownbeatPosition*/);
+    mTransportContext(&transportStateFlags, &samplePos, &cycleStart, &cycleEnd);
+    
+    ITimeInfo timeInfo;
+    timeInfo.mTempo = tempo;
+    timeInfo.mSamplePos = samplePos;
+    timeInfo.mPPQPos = ppqPos;
+//    timeInfo.mLastBar = ?
+    timeInfo.mCycleStart = cycleStart;
+    timeInfo.mCycleEnd = cycleEnd;
+    timeInfo.mNumerator = (int) numerator; //TODO: update ITimeInfo precision?
+    timeInfo.mDenominator = (int) denominator; //TODO: update ITimeInfo precision?
+    timeInfo.mTransportIsRunning = transportStateFlags == AUHostTransportStateMoving || transportStateFlags == AUHostTransportStateRecording;
+    timeInfo.mTransportLoopEnabled = transportStateFlags == AUHostTransportStateCycling;
+
+    pPlug->SetTimeInfo(timeInfo);
+    pPlug->ProcessWithEvents(timestamp, frameCount, realtimeEventListHead);
+
+    return noErr;
+  }
   );
 }
 
 #pragma mark- AUAudioUnit (Optional Properties)
 
-- (AUAudioUnitPreset *)currentPreset
-{
-  if (_currentPreset.number >= 0)
-  {
-    NSLog(@"Returning Current Factory Preset: %ld\n", (long)_currentFactoryPresetIndex);
-    return [_presets objectAtIndex:_currentFactoryPresetIndex];
-  }
-  else
-  {
-    NSLog(@"Returning Current Custom Preset: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
-    return _currentPreset;
-  }
-}
+//- (AUAudioUnitPreset *)currentPreset
+//{
+//  if (mCurrentPreset.number >= 0)
+//    return [mPresets objectAtIndex:mPlug->GetCurrentPresetIdx()];
+//  else
+//    return mCurrentPreset;
+//}
 
-- (void)setCurrentPreset:(AUAudioUnitPreset *)currentPreset
-{
-  if (nil == currentPreset)
-  {
-    NSLog(@"nil passed to setCurrentPreset!"); return;
-  }
-
-  if (currentPreset.number >= 0)
-  {
-    // factory preset
-    for (AUAudioUnitPreset *factoryPreset in _presets)
-    {
-      if (currentPreset.number == factoryPreset.number)
-      {
-
-//        AUParameter *cutoffParameter = [self.parameterTree valueForKey: @"cutoff"];
-//        AUParameter *resonanceParameter = [self.parameterTree valueForKey: @"resonance"];
+//- (void)setCurrentPreset:(AUAudioUnitPreset *)currentPreset
+//{
+//  if (nil == currentPreset) { NSLog(@"nil passed to setCurrentPreset!"); return; }
 //
-//        cutoffParameter.value = presetParameters[factoryPreset.number].cutoffValue;
-//        resonanceParameter.value = presetParameters[factoryPreset.number].resonanceValue;
+//  if (currentPreset.number >= 0)
+//  {
+//    // factory preset
+//    for (AUAudioUnitPreset* pFactoryPreset in mPresets)
+//    {
+//      if (currentPreset.number == pFactoryPreset.number)
+//      {
+//        mPlug->RestorePreset(int(pFactoryPreset.number));
+//        mCurrentPreset = currentPreset;
+//        break;
+//      }
+//    }
+//  }
+//  else if (currentPreset.name != nil)
+//  {
+//    mCurrentPreset = currentPreset;
+//  }
+//}
 
-        // set factory preset as current
-        _currentPreset = currentPreset;
-        _currentFactoryPresetIndex = factoryPreset.number;
-        NSLog(@"currentPreset Factory: %ld, %@\n", (long)_currentFactoryPresetIndex, factoryPreset.name);
-
-        break;
-      }
-    }
-  }
-  else if (nil != currentPreset.name)
-  {
-    // set custom preset as current
-    _currentPreset = currentPreset;
-    NSLog(@"currentPreset Custom: %ld, %@\n", (long)_currentPreset.number, _currentPreset.name);
-  }
-  else
-  {
-    NSLog(@"setCurrentPreset not set! - invalid AUAudioUnitPreset\n");
-  }
-}
-
-- (BOOL)canProcessInPlace
-{
+- (BOOL)canProcessInPlace {
   return NO;
 }
 
