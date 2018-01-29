@@ -42,11 +42,6 @@ public:
   void EndInformHostOfParamChange(int idx) override {};
   void InformHostOfProgramChange() override {};
   
-  int GetSamplePos() override { return 0; }
-  double GetTempo() override { return DEFAULT_TEMPO; }
-  void GetTimeSig(int& numerator, int& denominator) override { return; }
-  void GetTime(ITimeInfo& timeInfo) override { return; }
-  
   void ResizeGraphics(int w, int h, double scale) override {}
   
 protected:
@@ -56,7 +51,6 @@ protected:
 private:
   void HandleOneEvent(AURenderEvent const* event);
   void PerformAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
-  ITimeInfo mTimeInfo;
   
   AudioBufferList* mInBufferList = nullptr;
   AudioBufferList* mOutBufferList = nullptr;
