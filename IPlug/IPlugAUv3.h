@@ -13,7 +13,7 @@
 /** Used to pass various instance info to the API class */
 struct IPlugInstanceInfo
 {
-  WDL_String mOSXBundleID;
+  WDL_String mBundleID;
 };
 
 union AURenderEvent;
