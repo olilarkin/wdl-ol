@@ -146,7 +146,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     //TODO: pValueStrings
 
     //TODO:: make better identifier?
-    AUParameter *pAUParam = [AUParameterTree createParameterWithIdentifier:    [NSString stringWithString:[NSString stringWithFormat:@"Param%d", i]]
+    AUParameter *pAUParam = [AUParameterTree createParameterWithIdentifier:    [NSString stringWithString:[NSString stringWithFormat:@"%d", i]]
                                                                          name: [NSString stringWithCString:pParam->GetNameForHost() encoding:NSUTF8StringEncoding]
                                                                       address: AUParameterAddress(i)
                                                                           min: pParam->GetMin()
@@ -283,7 +283,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 //  if(mPlug->HasSidechainInput())
 //    mSidchainInputBuss.allocateRenderResources(self.maximumFramesToRender);
   
-  mOutputBus.allocateRenderResources(self.maximumFramesToRender);
+//  mOutputBus.allocateRenderResources(self.maximumFramesToRender);
   
   mPlug->SetBlockSize(self.maximumFramesToRender);
   mPlug->SetSampleRate(mOutputBus.bus.format.sampleRate);
@@ -300,7 +300,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 //  if(mPlug->HasSidechainInput())
 //    mSidchainInputBus.deallocateRenderResources();
   
-  mOutputBus.deallocateRenderResources();
+//  mOutputBus.deallocateRenderResources();
   
   mMusicalContext = nullptr;
   mTransportContext = nullptr;
@@ -314,7 +314,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 
   __block IPlugAUv3* pPlug = mPlug;
   __block BufferedInputBus* input = &mInputBus;
-  __block BufferedOutputBus* output = &mOutputBus;
+//  __block BufferedOutputBus* output = &mOutputBus;
 
   return Block_copy(^AUAudioUnitStatus(AudioUnitRenderActionFlags *actionFlags,
                             const AudioTimeStamp       *timestamp,
@@ -323,6 +323,9 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
                             AudioBufferList            *outputData,
                             const AURenderEvent        *realtimeEventListHead,
                             AURenderPullInputBlock      pullInputBlock) {
+    
+    TRACE_PROCESS
+    
     AudioUnitRenderActionFlags pullFlags = 0;
 
     AUAudioUnitStatus err = input->pullInput(&pullFlags, timestamp, frameCount, 0, pullInputBlock);
@@ -330,35 +333,46 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     if (err != 0) { return err; }
     
     AudioBufferList *inAudioBufferList = input->mutableAudioBufferList;
-    AudioBufferList *outAudioBufferList = output->mutableAudioBufferList;
+//    AudioBufferList *outAudioBufferList = output->mutableAudioBufferList;
 
-    // If passed null output buffer pointers, process in-place in the input buffer.
+//    output->prepareOutputBufferList(outputData, frameCount, true);
+    
+    AudioBufferList *outAudioBufferList = outputData;
     if (outAudioBufferList->mBuffers[0].mData == nullptr) {
       for (UInt32 i = 0; i < outAudioBufferList->mNumberBuffers; ++i) {
         outAudioBufferList->mBuffers[i].mData = inAudioBufferList->mBuffers[i].mData;
       }
     }
-
+    
     pPlug->SetBuffers(inAudioBufferList, outAudioBufferList);
     
-    Float64 tempo; Float64 ppqPos; double numerator; NSInteger denominator;
-    double samplePos; double cycleStart; double cycleEnd; double currentMeasureDownbeatPosition;
-    AUHostTransportStateFlags transportStateFlags;
-  
-    mMusicalContext(&tempo, &numerator, &denominator, &ppqPos, nil/*sampleOffsetToNextBeat*/, &currentMeasureDownbeatPosition);
-    mTransportContext(&transportStateFlags, &samplePos, &cycleStart, &cycleEnd);
-    
     ITimeInfo timeInfo;
-    timeInfo.mTempo = tempo;
-    timeInfo.mSamplePos = samplePos;
-    timeInfo.mPPQPos = ppqPos;
-    timeInfo.mLastBar = currentMeasureDownbeatPosition; //TODO: is that correct?
-    timeInfo.mCycleStart = cycleStart;
-    timeInfo.mCycleEnd = cycleEnd;
-    timeInfo.mNumerator = (int) numerator; //TODO: update ITimeInfo precision?
-    timeInfo.mDenominator = (int) denominator; //TODO: update ITimeInfo precision?
-    timeInfo.mTransportIsRunning = transportStateFlags == AUHostTransportStateMoving || transportStateFlags == AUHostTransportStateRecording;
-    timeInfo.mTransportLoopEnabled = transportStateFlags == AUHostTransportStateCycling;
+
+    if(mMusicalContext)
+    {
+      Float64 tempo; Float64 ppqPos; double numerator; NSInteger denominator; double currentMeasureDownbeatPosition; NSInteger sampleOffsetToNextBeat;
+
+      mMusicalContext(&tempo, &numerator, &denominator, &ppqPos, &sampleOffsetToNextBeat, &currentMeasureDownbeatPosition);
+      
+      timeInfo.mTempo = tempo;
+      timeInfo.mPPQPos = ppqPos;
+      timeInfo.mLastBar = currentMeasureDownbeatPosition; //TODO: is that correct?
+      timeInfo.mNumerator = (int) numerator; //TODO: update ITimeInfo precision?
+      timeInfo.mDenominator = (int) denominator; //TODO: update ITimeInfo precision?
+    }
+      
+    if(mTransportContext)
+    {
+      double samplePos; double cycleStart; double cycleEnd; AUHostTransportStateFlags transportStateFlags;
+
+      mTransportContext(&transportStateFlags, &samplePos, &cycleStart, &cycleEnd);
+      
+      timeInfo.mSamplePos = samplePos;
+      timeInfo.mCycleStart = cycleStart;
+      timeInfo.mCycleEnd = cycleEnd;
+      timeInfo.mTransportIsRunning = transportStateFlags == AUHostTransportStateMoving || transportStateFlags == AUHostTransportStateRecording;
+      timeInfo.mTransportLoopEnabled = transportStateFlags == AUHostTransportStateCycling;
+    }
 
     pPlug->SetTimeInfo(timeInfo);
     pPlug->ProcessWithEvents(timestamp, frameCount, realtimeEventListHead);

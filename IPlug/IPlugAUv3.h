@@ -24,7 +24,6 @@ class IPlugAUv3 : public IPLUG_BASE_CLASS
 public:
   IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig config);
 
-  void Process(uint32_t frameCount, uint32_t bufferOffset);
 //  void startRamp(uint64_t address, float value, uint32_t duration);
 //  void HandleMIDIEvent(AUMIDIEvent const& midiEvent) {};
   void ProcessWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events);

@@ -9,16 +9,18 @@ IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 
 void IPlugAUv3::HandleOneEvent(AURenderEvent const *event)
 {
+  TRACE_PROCESS;
+  
   switch (event->head.eventType)
   {
 //      TODO: audiounit parameter automation
-//    case AURenderEventParameter:
-//    case AURenderEventParameterRamp: {
+    case AURenderEventParameter:
+    case AURenderEventParameterRamp: {
 //      AUParameterEvent const& paramEvent = event->parameter;
 //
 //      startRamp(paramEvent.parameterAddress, paramEvent.value, paramEvent.rampDurationSampleFrames);
-//      break;
-//    }
+      break;
+    }
       
     case AURenderEventMIDI:
     {
@@ -55,8 +57,9 @@ void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
   while (framesRemaining > 0) {
     // If there are no more events, we can process the entire remaining segment and exit.
     if (event == nullptr) {
-      uint32_t const bufferOffset = frameCount - framesRemaining;
-      Process(framesRemaining, bufferOffset);
+//      uint32_t const bufferOffset = frameCount - framesRemaining;
+      ProcessBuffers(0.f, framesRemaining); // what about bufferOffset
+
       return;
     }
 
@@ -66,10 +69,11 @@ void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
     uint32_t const framesThisSegment = uint32_t(std::max(timeZero, headEventTime - now));
     
     // Compute everything before the next event.
-    if (framesThisSegment > 0) {
-      uint32_t const bufferOffset = frameCount - framesRemaining;
-      Process(framesThisSegment, bufferOffset);
-              
+    if (framesThisSegment > 0)
+    {
+//      uint32_t const bufferOffset = frameCount - framesRemaining;
+      ProcessBuffers(0.f, framesThisSegment); // what about bufferOffset
+
       // Advance frames.
       framesRemaining -= framesThisSegment;
 
@@ -112,30 +116,30 @@ const char* IPlugAUv3::GetParamDisplayForHost(uint64_t address, float value)
 //void IPlugAUv3::startRamp(uint64_t address, float value, uint32_t duration) {
 //}
 
-void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufferList)
+void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufList)
 {
+  TRACE_PROCESS;
+
   SetInputChannelConnections(0, NInChannels(), false);
   SetOutputChannelConnections(0, NOutChannels(), false);
 
-  //TODO: assumes 1 bus
-//  int inputChanIdx = 0;
-//  for(int i = 0; i < pInBufList->mNumberBuffers; i++)
-//  {
-//    AttachInputBuffers(inputChanIdx, pInBufList->mBuffers[i].mNumberChannels, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
-//    inputChanIdx += pInBufList->mBuffers[i].mNumberChannels;
-//  }
-//
-//  int outputChanIdx = 0;
-//  for(int i = 0; i < pOutBufferList->mNumberBuffers; i++)
-//  {
-//    AttachOutputBuffers(outputChanIdx, pOutBufferList->mBuffers[i].mNumberChannels, (float**) &(pOutBufferList->mBuffers[i].mData));
-//    outputChanIdx += pOutBufferList->mBuffers[i].mNumberChannels;
-//  }
-}
-
-void IPlugAUv3::Process(uint32_t frameCount, uint32_t bufferOffset)
-{
-//  ProcessBuffers(0.f, frameCount);
+  int chanIdx = 0;
+  for(int i = 0; i < pInBufList->mNumberBuffers; i++)
+  {
+    int nConnected = pInBufList->mBuffers[i].mNumberChannels;
+    SetInputChannelConnections(chanIdx, nConnected, true);
+    AttachInputBuffers(chanIdx, nConnected, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
+    chanIdx += nConnected;
+  }
+  
+  chanIdx = 0;
+  for(int i = 0; i < pOutBufList->mNumberBuffers; i++)
+  {
+    int nConnected = pOutBufList->mBuffers[i].mNumberChannels;
+    SetOutputChannelConnections(chanIdx, nConnected, true);
+    AttachOutputBuffers(chanIdx, nConnected, (float**) &(pOutBufList->mBuffers[i].mData));
+    chanIdx += nConnected;
+  }
 }
 
 void IPlugAUv3::SetTimeInfo(ITimeInfo& timeInfo)
