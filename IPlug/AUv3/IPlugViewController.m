@@ -1,102 +1,127 @@
 #import <CoreAudioKit/AUViewController.h>
 #import "IPlugAUAudioUnit.h"
 
-@interface IPlugViewController : AUViewController
-@property (nonatomic)IPlugAUAudioUnit* audioUnit; // TODO: what is @property (nonatomic)
+@interface IPlugViewController : AUViewController <AUAudioUnitFactory>
+@property (nonatomic, retain) AUAudioUnit* audioUnit; // TODO: what is @property (nonatomic)
 @end
 
 @implementation IPlugViewController
-  AUParameterObserverToken parameterObserverToken;
-@end
+//  AUParameterObserverToken parameterObserverToken;
 
-@interface IPlugViewController (AUAudioUnitFactory) <AUAudioUnitFactory>
-@end
-
-@implementation IPlugViewController (AUAudioUnitFactory)
-
-- (IPlugAUAudioUnit *) createAudioUnitWithComponentDescription:(AudioComponentDescription) desc error:(NSError **)error
+- (AUAudioUnit*) createAudioUnitWithComponentDescription:(AudioComponentDescription) desc error:(NSError **)error
 {
   self.audioUnit = [[[IPlugAUAudioUnit alloc] initWithComponentDescription:desc error:error] retain];
-
-  // Check if the UI has been loaded
-  if(self.isViewLoaded)
-  {
-    [self connectUIToAudioUnit];
-  }
-
+  
   return self.audioUnit;
 }
 
 - (void) viewDidLoad
 {
   [super viewDidLoad];
-  
-  // Check if the Audio Unit has been loaded
-  if(self.audioUnit)
-  {
-    [self connectUIToAudioUnit];
-  }
 }
 
-- (void)connectUIToAudioUnit
-{
-  // Get the parameter tree and add observers for any parameters that the UI needs to keep in sync with the Audio Unit
-}
-
-- (IPlugAUAudioUnit *)getAudioUnit
+- (AUAudioUnit *)getAudioUnit
 {
   return _audioUnit;
 }
 
-- (void)setAudioUnit:(IPlugAUAudioUnit*) audioUnit
+- (void)setAudioUnit:(AUAudioUnit*) audioUnit
 {
   _audioUnit = audioUnit;
-  dispatch_async(dispatch_get_main_queue(), ^
-  {
-    if ([self isViewLoaded])
-    {
-      [self connectViewWithAU];
-    }
-  });
-}
-
-- (void)observeValueForKeyPath:(NSString *)keyPath
-                      ofObject:(id)object
-                        change:(NSDictionary<NSString *, id> *)change
-                       context:(void *)context
-{
-  NSLog(@"IPlugViewController allParameterValues key path changed: %s\n", keyPath.UTF8String);
   
   dispatch_async(dispatch_get_main_queue(), ^
   {
-    //TODO:
+//    NSView* pView = (NSView*) [_audioUnit openWindow:(void*)self.view];
+//    int viewWidth = 300;
+//    int viewHeight = 300;
+//    CGRect newSize = CGRectMake (0, 0, viewWidth, viewHeight);
+//    [self setFrame:newSize];
+//    self.preferredContentSize = CGSizeMake (viewWidth, viewHeight);
+
   });
 }
 
-- (void)connectViewWithAU
+//- (void)observeValueForKeyPath:(NSString *)keyPath
+//                      ofObject:(id)object
+//                        change:(NSDictionary<NSString *, id> *)change
+//                       context:(void *)context
+//{
+//  NSLog(@"IPlugViewController allParameterValues key path changed: %s\n", keyPath.UTF8String);
+//
+//  dispatch_async(dispatch_get_main_queue(), ^
+//  {
+//    //TODO:
+//  });
+//}
+
+//- (void)connectViewWithAU
+//{
+//  AUParameterTree *paramTree = _audioUnit.parameterTree;
+//
+//  if (paramTree)
+//  {
+//    [_audioUnit addObserver:self forKeyPath:@"allParameterValues"
+//                    options:NSKeyValueObservingOptionNew
+//                    context:parameterObserverToken];
+//  }
+//  else
+//  {
+//    NSLog(@"paramTree is NULL!\n");
+//  }
+//}
+//
+//- (void)disconnectViewWithAU
+//{
+//  if (parameterObserverToken)
+//  {
+//    [_audioUnit.parameterTree removeParameterObserver:parameterObserverToken];
+//    [_audioUnit removeObserver:self forKeyPath:@"allParameterValues" context:parameterObserverToken];
+//    parameterObserverToken = 0;
+//  }
+//}
+
+- (void)setFrame:(CGRect)newSize
 {
-  AUParameterTree *paramTree = _audioUnit.parameterTree;
-  
-  if (paramTree)
-  {
-    [_audioUnit addObserver:self forKeyPath:@"allParameterValues"
-                    options:NSKeyValueObservingOptionNew
-                    context:parameterObserverToken];
-  }
-  else
-  {
-    NSLog(@"paramTree is NULL!\n");
-  }
+  [super.view setFrame:newSize];
+//  ViewRect viewRect (0, 0, newSize.size.width, newSize.size.height);
+//  
+//  if (plugView)
+//    plugView->onSize (&viewRect);
 }
 
-- (void)disconnectViewWithAU
+//#define PLATFORM_VIEW UIView
+#define PLATFORM_VIEW NSView
+
+- (void)loadView
 {
-  if (parameterObserverToken)
-  {
-    [_audioUnit.parameterTree removeParameterObserver:parameterObserverToken];
-    [_audioUnit removeObserver:self forKeyPath:@"allParameterValues" context:parameterObserverToken];
-    parameterObserverToken = 0;
-  }
+  PLATFORM_VIEW* view = [[PLATFORM_VIEW alloc] initWithFrame:CGRectMake (0, 0, 0, 0)];
+  [self setView:view];
+}
+
+- (instancetype) initWithNibName:(nullable NSString*) nib bundle: (nullable NSBundle*) bndl
+{
+  self = [super initWithNibName: nib bundle: bndl];
+  return self;
+}
+
+- (CGSize) preferredContentSize
+{
+  return CGSizeMake (300, 300);
+}
+
+- (void)viewDidLayoutSubviews
+{
+}
+
+- (NSIndexSet *)supportedViewConfigurations:(NSArray<AUAudioUnitViewConfiguration *> *)availableViewConfigurations
+{
+  NSIndexSet* pSet = [[NSMutableIndexSet alloc] init];
+
+  return pSet;
+}
+
+- (void)selectViewConfiguration:(AUAudioUnitViewConfiguration *)viewConfiguration
+{
 }
 
 
