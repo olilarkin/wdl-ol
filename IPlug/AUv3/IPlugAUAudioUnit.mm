@@ -74,8 +74,11 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   
   AVAudioFormat* pOutputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->NOutChannels()];
   
-  NSMutableArray* pParametersToAddToTree = [[NSMutableArray alloc] init];
-  
+  NSMutableArray* rootNode = [[NSMutableArray alloc] init];
+  NSMutableArray* treeArray = [[NSMutableArray<AUParameter*> alloc] init];
+
+  [treeArray addObject:[[NSMutableArray alloc] init]]; // ROOT
+
   for ( auto i = 0; i < mPlug->NParams(); i++)
   {
     IParam* pParam = mPlug->GetParam(i);
@@ -143,7 +146,6 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     
     NSMutableArray* pValueStrings = nil;
     
-    //TODO: pValueStrings
     if(pParam->NDisplayTexts())
     {
       pValueStrings = [[NSMutableArray alloc] init];
@@ -153,8 +155,27 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
         [pValueStrings addObject:[NSString stringWithCString:pParam->GetDisplayText(dt)]];
       }
     }
+    
+    const char* paramGroupName = pParam->GetParamGroupForHost();
+    auto clumpID = 0;
 
-    //TODO:: make better identifier?
+    if (CSTR_NOT_EMPTY(paramGroupName))
+    {
+      for(auto g = 0; i< mPlug->NParamGroups(); g++)
+      {
+        if(strcmp(paramGroupName, mPlug->GetParamGroupName(g)) == 0)
+        {
+          clumpID = g+1;
+        }
+      }
+      
+      if (clumpID == 0) // a brand new clump
+      {
+        clumpID = mPlug->AddParamGroup(paramGroupName);
+        [treeArray addObject:[[NSMutableArray alloc] init]]; // ROOT
+      }
+    }
+
     AUParameter *pAUParam = [AUParameterTree createParameterWithIdentifier:    [NSString stringWithString:[NSString stringWithFormat:@"%d", i]]
                                                                          name: [NSString stringWithCString:pParam->GetNameForHost() encoding:NSUTF8StringEncoding]
                                                                       address: AUParameterAddress(i)
@@ -168,14 +189,37 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     
     pAUParam.value = pParam->GetDefault();
     
-    [pParametersToAddToTree addObject:pAUParam];
-
-//    [pAUParam retain];
+    [[treeArray objectAtIndex:clumpID] addObject:pAUParam];
   }
   
+  for (auto p = 0; p < [treeArray count]; p++)
+  {
+    if (p == 0)
+    {
+      for (auto j = 0; j < [[treeArray objectAtIndex:p] count]; j++)
+      {
+        [rootNode addObject:treeArray[p][j]];
+      }
+    }
+    else
+    {
+      AUParameterGroup* pGroup = [AUParameterTree createGroupWithIdentifier:[NSString stringWithString:[NSString stringWithFormat:@"Group %d", p-1]]
+                                                                       name:[NSString stringWithCString:mPlug->GetParamGroupName(p-1) encoding:NSUTF8StringEncoding]
+                                                                   children:treeArray[p]];
+
+      [rootNode addObject:pGroup];
+    }
+  }
+  
+  _mParameterTree = [AUParameterTree createTreeWithChildren:rootNode];
+  [_mParameterTree retain];
+   
+  [rootNode release];
+  [treeArray release];
+
   // Create factory preset array.
   NSMutableArray* pPresets = [[NSMutableArray alloc] init];
-
+  
   for(auto i = 0; i < mPlug->NPresets(); i++)
   {
     [pPresets addObject:NewAUPreset(i, [NSString stringWithCString: mPlug->GetPresetName(i) encoding:NSUTF8StringEncoding])];
@@ -183,11 +227,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   
   mPresets = pPresets;
   [mPresets retain];
-//  [pPresets release];
   
-  // Create the parameter tree.
-  _mParameterTree = [[AUParameterTree createTreeWithChildren:pParametersToAddToTree] retain];
-
   // Create the input and output busses.
   
   if (!mPlug->IsInstrument())
