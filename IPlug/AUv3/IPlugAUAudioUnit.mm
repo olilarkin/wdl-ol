@@ -144,6 +144,15 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     NSMutableArray* pValueStrings = nil;
     
     //TODO: pValueStrings
+    if(pParam->NDisplayTexts())
+    {
+      pValueStrings = [[NSMutableArray alloc] init];
+      
+      for(auto dt = 0; dt < pParam->NDisplayTexts(); dt++)
+      {
+        [pValueStrings addObject:[NSString stringWithCString:pParam->GetDisplayText(dt)]];
+      }
+    }
 
     //TODO:: make better identifier?
     AUParameter *pAUParam = [AUParameterTree createParameterWithIdentifier:    [NSString stringWithString:[NSString stringWithFormat:@"%d", i]]
