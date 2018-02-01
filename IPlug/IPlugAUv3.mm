@@ -37,7 +37,8 @@ void IPlugAUv3::HandleOneEvent(AURenderEvent const *event)
   }
 }
 
-void IPlugAUv3::PerformAllSimultaneousEvents(AUEventSampleTime now, AURenderEvent const *&event) {
+void IPlugAUv3::PerformAllSimultaneousEvents(AUEventSampleTime now, AURenderEvent const *&event)
+{
   do {
     HandleOneEvent(event);
 
@@ -48,8 +49,8 @@ void IPlugAUv3::PerformAllSimultaneousEvents(AUEventSampleTime now, AURenderEven
   } while (event && event->head.eventSampleTime <= now);
 }
 
-void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events) {
-
+void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events)
+{
   AUEventSampleTime now = AUEventSampleTime(timestamp->mSampleTime);
   uint32_t framesRemaining = frameCount;
   AURenderEvent const *event = events;

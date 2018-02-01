@@ -464,13 +464,19 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 //  }
 //}
 
-- (BOOL)canProcessInPlace {
+- (BOOL)canProcessInPlace
+{
   return NO;
 }
 
 - (NSArray<NSNumber*>*)channelCapabilities
 {
   return mChannelCapabilitiesArray;
+}
+
+- (void*)openWindow:(void*) pParent
+{
+  return mPlug->OpenWindow(pParent);
 }
 
 @end

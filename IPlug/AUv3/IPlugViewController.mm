@@ -2,8 +2,11 @@
 #import "IPlugAUAudioUnit.h"
 #include "IPlugLogger.h"
 
+//#define PLATFORM_VIEW UIView
+#define PLATFORM_VIEW NSView
+
 @interface IPlugViewController : AUViewController <AUAudioUnitFactory>
-@property (nonatomic, retain) AUAudioUnit* audioUnit; // TODO: what is @property (nonatomic)
+@property (nonatomic, retain) IPlugAUAudioUnit* audioUnit; // TODO: what is @property (nonatomic)
 @end
 
 @implementation IPlugViewController
@@ -16,10 +19,11 @@
   
   return self.audioUnit;
 }
-
+//
 //- (void) viewDidLoad
 //{
 //  TRACE;
+//  self.preferredContentSize = NSMakeSize(480, 122);
 //
 //  [super viewDidLoad];
 //}
@@ -31,7 +35,7 @@
   return _audioUnit;
 }
 
-- (void)setAudioUnit:(AUAudioUnit*) audioUnit
+- (void)setAudioUnit:(IPlugAUAudioUnit*) audioUnit
 {
   TRACE;
 
@@ -39,13 +43,12 @@
   
   dispatch_async(dispatch_get_main_queue(), ^
   {
-//    NSView* pView = (NSView*) [_audioUnit openWindow:(void*)self.view];
-//    int viewWidth = 300;
-//    int viewHeight = 300;
-//    CGRect newSize = CGRectMake (0, 0, viewWidth, viewHeight);
-//    [self setFrame:newSize];
-//    self.preferredContentSize = CGSizeMake (viewWidth, viewHeight);
-
+    [_audioUnit openWindow:(void*)self.view];
+    int viewWidth = 300;
+    int viewHeight = 300;
+    CGRect newSize = CGRectMake (0, 0, viewWidth, viewHeight);
+    [self setFrame:newSize];
+    self.preferredContentSize = CGSizeMake (viewWidth, viewHeight);
   });
 }
 
@@ -87,40 +90,14 @@
 //    parameterObserverToken = 0;
 //  }
 //}
-
+//
 - (void)setFrame:(CGRect)newSize
 {
   TRACE;
 
   [super.view setFrame:newSize];
-//  ViewRect viewRect (0, 0, newSize.size.width, newSize.size.height);
-//  
-//  if (plugView)
-//    plugView->onSize (&viewRect);
-}
 
-//#define PLATFORM_VIEW UIView
-#define PLATFORM_VIEW NSView
-
-//- (void)loadView
-//{
-//  TRACE;
-//
-//  PLATFORM_VIEW* view = [[PLATFORM_VIEW alloc] initWithFrame:CGRectMake (0, 0, 0, 0)];
-//  [self setView:view];
-//}
-
-- (instancetype) initWithNibName:(nullable NSString*) nib bundle: (nullable NSBundle*) bndl
-{
-  self = [super initWithNibName: nib bundle: bndl];
-  return self;
-}
-
-- (CGSize) preferredContentSize
-{
-  TRACE;
-
-  return CGSizeMake (300, 300);
+  //TODO: _audioUnit OnResize
 }
 
 - (void)viewDidLayoutSubviews
