@@ -32,7 +32,7 @@ public:
   float GetParameter(uint64_t address);
   const char* GetParamDisplayForHost(uint64_t address, float value);
   
-  void SetBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList);
+  void SetBuffers(AudioBufferList* pInBufferList, AudioBufferList* pOutBufferList);
   void SetTimeInfo(ITimeInfo& timeInfo);
 
   //IPlug
