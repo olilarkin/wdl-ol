@@ -37,12 +37,13 @@ public:
   bool SendSysEx(ISysEx& msg) override { return false; }
   
   //IPlugAUv3
-  void ProcessWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events);
+  void ProcessWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events, ITimeInfo& timeInfo);
   void SetParameter(uint64_t address, float value);
   float GetParameter(uint64_t address);
   const char* GetParamDisplayForHost(uint64_t address, float value);
   void SetBuffers(AudioBufferList* pInBufferList, AudioBufferList* pOutBufferList);
-  void SetTimeInfo(ITimeInfo& timeInfo);
+  void Prepare(double sampleRate, uint32_t blockSize);
+  
 private:
   void HandleOneEvent(AURenderEvent const* event);
   void PerformAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
