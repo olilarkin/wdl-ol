@@ -20,7 +20,7 @@ union AURenderEvent;
 struct AUMIDIEvent;
 
 class IPlugAUv3 : public IPLUG_BASE_CLASS
-                , public IPlugProcessor
+                , public IPlugProcessor<PLUG_SAMPLE_DST>
 {
 public:
   IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig config);

@@ -54,13 +54,13 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   //https://developer.apple.com/documentation/audiotoolbox/auaudiounit/1387685-channelcapabilities
   NSMutableArray* pChannelCapabilities = [[NSMutableArray alloc] init];
   
-  for (int i = 0; i < mPlug->NChannelIO(); i++)
-  {
-    int inputs, outputs;
-    mPlug->GetChannelIO(i, inputs, outputs);
-    [pChannelCapabilities addObject: [NSNumber numberWithInt:inputs]];
-    [pChannelCapabilities addObject: [NSNumber numberWithInt:outputs]];
-  }
+//  for (int i = 0; i < mPlug->NChannelIO(); i++)
+//  {
+//    int inputs, outputs;
+//    mPlug->GetChannelIO(i, inputs, outputs);
+//    [pChannelCapabilities addObject: [NSNumber numberWithInt:inputs]];
+//    [pChannelCapabilities addObject: [NSNumber numberWithInt:outputs]];
+//  }
 
   mChannelCapabilitiesArray = pChannelCapabilities;
 
@@ -427,8 +427,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
       timeInfo.mTransportLoopEnabled = transportStateFlags == AUHostTransportStateCycling;
     }
 
-    pPlug->SetTimeInfo(timeInfo);
-    pPlug->ProcessWithEvents(timestamp, frameCount, realtimeEventListHead);
+    pPlug->ProcessWithEvents(timestamp, frameCount, realtimeEventListHead, timeInfo);
 
     return noErr;
   }

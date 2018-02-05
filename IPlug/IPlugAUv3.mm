@@ -3,7 +3,7 @@
 
 IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 : IPLUG_BASE_CLASS(c, kAPIAUv3)
-, IPlugProcessor(c, kAPIAUv3)
+, IPlugProcessor<PLUG_SAMPLE_DST>(c, kAPIAUv3)
 {
   Trace(TRACELOC, "%s", c.effectName);
 }
