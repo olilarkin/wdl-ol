@@ -33,7 +33,7 @@ public:
   void ResizeGraphics(int w, int h, double scale) override {}
 
   //IPlugProcessor
-  bool SendMidiMsg(IMidiMsg& msg) override { return false; }
+  bool SendMidiMsg(const IMidiMsg& msg) override { return false; }
   bool SendSysEx(ISysEx& msg) override { return false; }
   
   //IPlugAUv3
