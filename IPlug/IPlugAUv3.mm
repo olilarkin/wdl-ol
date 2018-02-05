@@ -97,7 +97,7 @@ void IPlugAUv3::SetParameter(uint64_t address, float value)
   IParam* pParam = GetParam(paramIdx);
   pParam->Set((double) value);
   SetParameterInUIFromAPI(paramIdx, value, false);
-  OnParamChange(paramIdx);
+  OnParamChange(paramIdx, ParamSource::kAutomation);
 }
 
 float IPlugAUv3::GetParameter(uint64_t address)
