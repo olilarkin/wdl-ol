@@ -3,6 +3,7 @@
 
 IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 : IPLUG_BASE_CLASS(c, kAPIAUv3)
+, IPlugProcessor<PLUG_SAMPLE_DST>(c, kAPIAUv3)
 {
   Trace(TRACELOC, "%s", c.effectName);
 }
@@ -49,8 +50,10 @@ void IPlugAUv3::PerformAllSimultaneousEvents(AUEventSampleTime now, AURenderEven
   } while (event && event->head.eventSampleTime <= now);
 }
 
-void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events)
+void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events, ITimeInfo& timeInfo)
 {
+  SetTimeInfo(timeInfo);
+  
   AUEventSampleTime now = AUEventSampleTime(timestamp->mSampleTime);
   uint32_t framesRemaining = frameCount;
   AURenderEvent const *event = events;
@@ -143,7 +146,8 @@ void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBuf
   }
 }
 
-void IPlugAUv3::SetTimeInfo(ITimeInfo& timeInfo)
+void IPlugAUv3::Prepare(double sampleRate, uint32_t blockSize)
 {
-  mTimeInfo = timeInfo;
+  SetBlockSize(blockSize);
+  SetSampleRate(sampleRate);
 }

@@ -20,32 +20,29 @@ union AURenderEvent;
 struct AUMIDIEvent;
 
 class IPlugAUv3 : public IPLUG_BASE_CLASS
+                , public IPlugProcessor<PLUG_SAMPLE_DST>
 {
 public:
   IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig config);
-
-//  void startRamp(uint64_t address, float value, uint32_t duration);
-//  void HandleMIDIEvent(AUMIDIEvent const& midiEvent) {};
-  void ProcessWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events);
-
-  void SetParameter(uint64_t address, float value);
-  float GetParameter(uint64_t address);
-  const char* GetParamDisplayForHost(uint64_t address, float value);
   
-  void SetBuffers(AudioBufferList* pInBufferList, AudioBufferList* pOutBufferList);
-  void SetTimeInfo(ITimeInfo& timeInfo);
-
-  //IPlug
+  //IPlugBase
   void BeginInformHostOfParamChange(int idx) override {};
   void InformHostOfParamChange(int idx, double normalizedValue) override {};
   void EndInformHostOfParamChange(int idx) override {};
   void InformHostOfProgramChange() override {};
-  
   void ResizeGraphics(int w, int h, double scale) override {}
-  
-protected:
+
+  //IPlugProcessor
   bool SendMidiMsg(IMidiMsg& msg) override { return false; }
   bool SendSysEx(ISysEx& msg) override { return false; }
+  
+  //IPlugAUv3
+  void ProcessWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events, ITimeInfo& timeInfo);
+  void SetParameter(uint64_t address, float value);
+  float GetParameter(uint64_t address);
+  const char* GetParamDisplayForHost(uint64_t address, float value);
+  void SetBuffers(AudioBufferList* pInBufferList, AudioBufferList* pOutBufferList);
+  void Prepare(double sampleRate, uint32_t blockSize);
   
 private:
   void HandleOneEvent(AURenderEvent const* event);

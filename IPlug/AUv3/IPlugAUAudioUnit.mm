@@ -51,15 +51,16 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   
   assert(mPlug);
   
+  //https://developer.apple.com/documentation/audiotoolbox/auaudiounit/1387685-channelcapabilities
   NSMutableArray* pChannelCapabilities = [[NSMutableArray alloc] init];
   
-  for (int i = 0; i < mPlug->NChannelIO(); i++)
-  {
-    int inputs, outputs;
-    mPlug->GetChannelIO(i, inputs, outputs);
-    [pChannelCapabilities addObject: [NSNumber numberWithInt:inputs]];
-    [pChannelCapabilities addObject: [NSNumber numberWithInt:outputs]];
-  }
+//  for (int i = 0; i < mPlug->NChannelIO(); i++)
+//  {
+//    int inputs, outputs;
+//    mPlug->GetChannelIO(i, inputs, outputs);
+//    [pChannelCapabilities addObject: [NSNumber numberWithInt:inputs]];
+//    [pChannelCapabilities addObject: [NSNumber numberWithInt:outputs]];
+//  }
 
   mChannelCapabilitiesArray = pChannelCapabilities;
 
@@ -67,14 +68,16 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   AVAudioFormat* pInputBusFormat = nil;
   
   if(mPlug->NInChannels())
+  {
+//    TODO: should implement AudioChannelLayoutTag based version for flexibility with multichannel
     pInputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->NInChannels()];
-  
+  }
 //  if(mPlug->HasSidechainInput())
 //    AVAudioFormat* pSideChainInputBusFormat = nil;
   
+  //    TODO: should implement AudioChannelLayoutTag based version for flexibility with multichannel
   AVAudioFormat* pOutputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->NOutChannels()];
   
-  NSMutableArray* rootNode = [[NSMutableArray alloc] init];
   NSMutableArray* treeArray = [[NSMutableArray<AUParameter*> alloc] init];
 
   [treeArray addObject:[[NSMutableArray alloc] init]]; // ROOT
@@ -192,13 +195,15 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     [[treeArray objectAtIndex:clumpID] addObject:pAUParam];
   }
   
+  NSMutableArray* rootNodeArray = [[NSMutableArray alloc] init];
+
   for (auto p = 0; p < [treeArray count]; p++)
   {
     if (p == 0)
     {
       for (auto j = 0; j < [[treeArray objectAtIndex:p] count]; j++)
       {
-        [rootNode addObject:treeArray[p][j]];
+        [rootNodeArray addObject:treeArray[p][j]];
       }
     }
     else
@@ -207,14 +212,14 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
                                                                        name:[NSString stringWithCString:mPlug->GetParamGroupName(p-1) encoding:NSUTF8StringEncoding]
                                                                    children:treeArray[p]];
 
-      [rootNode addObject:pGroup];
+      [rootNodeArray addObject:pGroup];
     }
   }
   
-  _mParameterTree = [AUParameterTree createTreeWithChildren:rootNode];
+  _mParameterTree = [AUParameterTree createTreeWithChildren:rootNodeArray];
   [_mParameterTree retain];
    
-  [rootNode release];
+  [rootNodeArray release];
   [treeArray release];
 
   // Create factory preset array.
@@ -334,8 +339,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   
 //  mOutputBus.allocateRenderResources(self.maximumFramesToRender);
   
-  mPlug->SetBlockSize(self.maximumFramesToRender);
-  mPlug->SetSampleRate(mOutputBus.bus.format.sampleRate);
+  mPlug->Prepare(mOutputBus.bus.format.sampleRate, self.maximumFramesToRender);
   mPlug->OnReset();
   
   return YES;
@@ -423,8 +427,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
       timeInfo.mTransportLoopEnabled = transportStateFlags == AUHostTransportStateCycling;
     }
 
-    pPlug->SetTimeInfo(timeInfo);
-    pPlug->ProcessWithEvents(timestamp, frameCount, realtimeEventListHead);
+    pPlug->ProcessWithEvents(timestamp, frameCount, realtimeEventListHead, timeInfo);
 
     return noErr;
   }
