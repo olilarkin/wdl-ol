@@ -90,32 +90,22 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     //kAudioUnitParameterFlag_CFNameRelease
     //kAudioUnitParameterFlag_PlotHistory
     //kAudioUnitParameterFlag_MeterReadOnly
-    //kAudioUnitParameterFlag_DisplayMask
-    //kAudioUnitParameterFlag_DisplaySquareRoot
-    //kAudioUnitParameterFlag_DisplaySquared
-    //kAudioUnitParameterFlag_DisplayCubed
-    //kAudioUnitParameterFlag_DisplayCubeRoot
-    //kAudioUnitParameterFlag_DisplayExponential
-    //kAudioUnitParameterFlag_HasClump
-    //kAudioUnitParameterFlag_ValuesHaveStrings
-    //kAudioUnitParameterFlag_DisplayLogarithmic
-    kAudioUnitParameterFlag_IsHighResolution |
-    //kAudioUnitParameterFlag_NonRealTime
     //kAudioUnitParameterFlag_CanRamp |
     //kAudioUnitParameterFlag_ExpertMode
     //kAudioUnitParameterFlag_HasCFNameString
     //kAudioUnitParameterFlag_IsGlobalMeta
-    kAudioUnitParameterFlag_IsReadable ;
+    kAudioUnitParameterFlag_IsReadable |
+    kAudioUnitParameterFlag_IsWritable;
+    
+#ifndef IPLUG1_COMPATIBILITY // unfortunately this flag was not set for IPlug1, and it breaks state
+    options |= kAudioUnitParameterFlag_IsHighResolution;
+#endif
     
     if (pParam->GetCanAutomate())
-    {
-      options = options | kAudioUnitParameterFlag_IsWritable;
-    }
+      options = options | kAudioUnitParameterFlag_NonRealTime;
     
     if (pParam->GetIsMeta())
-    {
       options |= kAudioUnitParameterFlag_IsElementMeta;
-    }
     
     AudioUnitParameterUnit unit;
     
@@ -137,13 +127,19 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
         
         if (CSTR_NOT_EMPTY(label))
         {
+          //kAudioUnitParameterFlag_DisplayMask
+          //kAudioUnitParameterFlag_DisplaySquareRoot
+          //kAudioUnitParameterFlag_DisplaySquared
+          //kAudioUnitParameterFlag_DisplayCubed
+          //kAudioUnitParameterFlag_DisplayCubeRoot
+          //kAudioUnitParameterFlag_DisplayExponential
+          //kAudioUnitParameterFlag_DisplayLogarithmic
+          //options |=
           unit = kAudioUnitParameterUnit_CustomUnit;
           pUnitName = [NSString stringWithCString:label encoding:NSUTF8StringEncoding];
         }
         else
-        {
           unit = kAudioUnitParameterUnit_Generic;
-        }
       }
     }
     
@@ -151,6 +147,8 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
     
     if(pParam->NDisplayTexts())
     {
+      options |= kAudioUnitParameterFlag_ValuesHaveStrings;
+
       pValueStrings = [[NSMutableArray alloc] init];
       
       for(auto dt = 0; dt < pParam->NDisplayTexts(); dt++)
@@ -164,6 +162,8 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 
     if (CSTR_NOT_EMPTY(paramGroupName))
     {
+      options |= kAudioUnitParameterFlag_HasClump;
+      
       for(auto g = 0; i< mPlug->NParamGroups(); g++)
       {
         if(strcmp(paramGroupName, mPlug->GetParamGroupName(g)) == 0)
