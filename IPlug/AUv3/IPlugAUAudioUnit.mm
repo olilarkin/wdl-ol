@@ -377,7 +377,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
                             const AURenderEvent        *realtimeEventListHead,
                             AURenderPullInputBlock      pullInputBlock) {
     
-    TRACE_PROCESS
+    TRACE;
     
     AudioUnitRenderActionFlags pullFlags = 0;
 

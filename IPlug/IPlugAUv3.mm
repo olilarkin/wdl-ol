@@ -6,15 +6,12 @@ IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 , IPlugProcessor<PLUG_SAMPLE_DST>(c, kAPIAUv3)
 , IPlugPresetHandler(c, kAPIAUv3)
 {
-  AttachPresetHandler(this);
-
   Trace(TRACELOC, "%s", c.effectName);
+  AttachPresetHandler(this);
 }
 
 void IPlugAUv3::HandleOneEvent(AURenderEvent const *event)
 {
-  TRACE_PROCESS;
-  
   switch (event->head.eventType)
   {
 //      TODO: audiounit parameter automation
@@ -55,6 +52,8 @@ void IPlugAUv3::PerformAllSimultaneousEvents(AUEventSampleTime now, AURenderEven
 
 void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events, ITimeInfo& timeInfo)
 {
+  TRACE;
+  
   SetTimeInfo(timeInfo);
   
   AUEventSampleTime now = AUEventSampleTime(timestamp->mSampleTime);
@@ -125,8 +124,6 @@ const char* IPlugAUv3::GetParamDisplayForHost(uint64_t address, float value)
 
 void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufList)
 {
-  TRACE_PROCESS;
-
   SetInputChannelConnections(0, NInChannels(), false);
   SetOutputChannelConnections(0, NOutChannels(), false);
 
