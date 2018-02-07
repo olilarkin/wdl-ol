@@ -21,6 +21,7 @@ struct AUMIDIEvent;
 
 class IPlugAUv3 : public IPLUG_BASE_CLASS
                 , public IPlugProcessor<PLUG_SAMPLE_DST>
+                , public IPlugPresetHandler
 {
 public:
   IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig config);
