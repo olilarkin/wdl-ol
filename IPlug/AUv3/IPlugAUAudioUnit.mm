@@ -67,16 +67,16 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   // Initialize a default format for the busses.
   AVAudioFormat* pInputBusFormat = nil;
   
-  if(mPlug->NInChannels())
+  if(mPlug->MaxNChannels(ERoute::kInput))
   {
 //    TODO: should implement AudioChannelLayoutTag based version for flexibility with multichannel
-    pInputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->NInChannels()];
+    pInputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->MaxNChannels(ERoute::kInput)];
   }
 //  if(mPlug->HasSidechainInput())
 //    AVAudioFormat* pSideChainInputBusFormat = nil;
   
   //    TODO: should implement AudioChannelLayoutTag based version for flexibility with multichannel
-  AVAudioFormat* pOutputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->NOutChannels()];
+  AVAudioFormat* pOutputBusFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:DEFAULT_SAMPLE_RATE channels:mPlug->MaxNChannels(ERoute::kOutput)];
   
   NSMutableArray* treeArray = [[NSMutableArray<AUParameter*> alloc] init];
 
@@ -236,9 +236,9 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   // Create the input and output busses.
   
   if (!mPlug->IsInstrument())
-    mInputBus.init(pInputBusFormat, mPlug->NInChannels());
+    mInputBus.init(pInputBusFormat, mPlug->MaxNChannels(ERoute::kInput));
   
-  mOutputBus.init(pOutputBusFormat, mPlug->NOutChannels());
+  mOutputBus.init(pOutputBusFormat, mPlug->MaxNChannels(ERoute::kOutput));
   
   if(pInputBusFormat)
     [pInputBusFormat release];
@@ -331,7 +331,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   else
     mTransportContext = nil;
   
-  if(mPlug->NInChannels())
+  if(mPlug->MaxNChannels(ERoute::kInput))
     mInputBus.allocateRenderResources(self.maximumFramesToRender);
   
 //  if(mPlug->HasSidechainInput())
@@ -347,7 +347,7 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
 
 - (void)deallocateRenderResources {
   
-  if(mPlug->NInChannels())
+  if(mPlug->MaxNChannels(ERoute::kInput))
     mInputBus.deallocateRenderResources();
   
 //  if(mPlug->HasSidechainInput())

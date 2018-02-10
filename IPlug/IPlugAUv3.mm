@@ -124,15 +124,15 @@ const char* IPlugAUv3::GetParamDisplayForHost(uint64_t address, float value)
 
 void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufList)
 {
-  SetInputChannelConnections(0, NInChannels(), false);
-  SetOutputChannelConnections(0, NOutChannels(), false);
+  SetChannelConnections(ERoute::kInput, 0, MaxNChannels(ERoute::kInput), false);
+  SetChannelConnections(ERoute::kOutput, 0, MaxNChannels(ERoute::kOutput), false);
 
   int chanIdx = 0;
   for(int i = 0; i < pInBufList->mNumberBuffers; i++)
   {
     int nConnected = pInBufList->mBuffers[i].mNumberChannels;
-    SetInputChannelConnections(chanIdx, nConnected, true);
-    AttachInputBuffers(chanIdx, nConnected, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
+    SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
+    AttachBuffers(ERoute::kInput, chanIdx, nConnected, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
     chanIdx += nConnected;
   }
   
@@ -140,8 +140,8 @@ void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBuf
   for(int i = 0; i < pOutBufList->mNumberBuffers; i++)
   {
     int nConnected = pOutBufList->mBuffers[i].mNumberChannels;
-    SetOutputChannelConnections(chanIdx, nConnected, true);
-    AttachOutputBuffers(chanIdx, nConnected, (float**) &(pOutBufList->mBuffers[i].mData));
+    SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
+    AttachBuffers(ERoute::kOutput, chanIdx, nConnected, (float**) &(pOutBufList->mBuffers[i].mData), GetBlockSize());
     chanIdx += nConnected;
   }
 }
