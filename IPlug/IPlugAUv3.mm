@@ -54,7 +54,7 @@ void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
 {
   TRACE;
   
-  SetTimeInfo(timeInfo);
+  _SetTimeInfo(timeInfo);
   
   AUEventSampleTime now = AUEventSampleTime(timestamp->mSampleTime);
   uint32_t framesRemaining = frameCount;
@@ -64,7 +64,7 @@ void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
     // If there are no more events, we can process the entire remaining segment and exit.
     if (event == nullptr) {
 //      uint32_t const bufferOffset = frameCount - framesRemaining;
-      ProcessBuffers(0.f, framesRemaining); // what about bufferOffset
+      _ProcessBuffers(0.f, framesRemaining); // what about bufferOffset
 
       return;
     }
@@ -78,7 +78,7 @@ void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
     if (framesThisSegment > 0)
     {
 //      uint32_t const bufferOffset = frameCount - framesRemaining;
-      ProcessBuffers(0.f, framesThisSegment); // what about bufferOffset
+      _ProcessBuffers(0.f, framesThisSegment); // what about bufferOffset
 
       // Advance frames.
       framesRemaining -= framesThisSegment;
@@ -124,15 +124,15 @@ const char* IPlugAUv3::GetParamDisplayForHost(uint64_t address, float value)
 
 void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufList)
 {
-  SetChannelConnections(ERoute::kInput, 0, MaxNChannels(ERoute::kInput), false);
-  SetChannelConnections(ERoute::kOutput, 0, MaxNChannels(ERoute::kOutput), false);
+  _SetChannelConnections(ERoute::kInput, 0, MaxNChannels(ERoute::kInput), false);
+  _SetChannelConnections(ERoute::kOutput, 0, MaxNChannels(ERoute::kOutput), false);
 
   int chanIdx = 0;
   for(int i = 0; i < pInBufList->mNumberBuffers; i++)
   {
     int nConnected = pInBufList->mBuffers[i].mNumberChannels;
-    SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
-    AttachBuffers(ERoute::kInput, chanIdx, nConnected, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
+    _SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
+    _AttachBuffers(ERoute::kInput, chanIdx, nConnected, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
     chanIdx += nConnected;
   }
   
@@ -140,14 +140,14 @@ void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBuf
   for(int i = 0; i < pOutBufList->mNumberBuffers; i++)
   {
     int nConnected = pOutBufList->mBuffers[i].mNumberChannels;
-    SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
-    AttachBuffers(ERoute::kOutput, chanIdx, nConnected, (float**) &(pOutBufList->mBuffers[i].mData), GetBlockSize());
+    _SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
+    _AttachBuffers(ERoute::kOutput, chanIdx, nConnected, (float**) &(pOutBufList->mBuffers[i].mData), GetBlockSize());
     chanIdx += nConnected;
   }
 }
 
 void IPlugAUv3::Prepare(double sampleRate, uint32_t blockSize)
 {
-  SetBlockSize(blockSize);
-  SetSampleRate(sampleRate);
+  _SetBlockSize(blockSize);
+  _SetSampleRate(sampleRate);
 }
