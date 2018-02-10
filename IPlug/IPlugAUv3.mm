@@ -98,7 +98,7 @@ void IPlugAUv3::SetParameter(uint64_t address, float value)
   WDL_MutexLock lock(&mParams_mutex);
   IParam* pParam = GetParam(paramIdx);
   pParam->Set((double) value);
-  SetParameterInUIFromAPI(paramIdx, value, false);
+  SendParameterValueToUIFromAPI(paramIdx, value, false);
   OnParamChange(paramIdx, EParamSource::kAutomation);
 }
 
