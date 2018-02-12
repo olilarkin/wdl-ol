@@ -44,7 +44,7 @@ public:
   void GetTimeSig(int& numerator, int& denominator) override { return; }
   void GetTime(ITimeInfo& timeInfo) override { return; }
   
-  void ResizeGraphics(int w, int h, double scale) override {}
+  void ResizeGraphics() override {}
   
 protected:
   bool SendMidiMsg(IMidiMsg& msg) override { return false; }
