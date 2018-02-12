@@ -6,7 +6,7 @@ IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 , IPlugProcessor<PLUG_SAMPLE_DST>(c, kAPIAUv3)
 , IPlugPresetHandler(c, kAPIAUv3)
 {
-  Trace(TRACELOC, "%s", c.effectName);
+  Trace(TRACELOC, "%s", c.pluginName);
   AttachPresetHandler(this);
 }
 
