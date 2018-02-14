@@ -6,7 +6,7 @@ IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 , IPlugProcessor<PLUG_SAMPLE_DST>(c, kAPIAUv3)
 , IPlugPresetHandler(c, kAPIAUv3)
 {
-  Trace(TRACELOC, "%s", c.effectName);
+  Trace(TRACELOC, "%s", c.pluginName);
   AttachPresetHandler(this);
 }
 
@@ -98,7 +98,7 @@ void IPlugAUv3::SetParameter(uint64_t address, float value)
   WDL_MutexLock lock(&mParams_mutex);
   IParam* pParam = GetParam(paramIdx);
   pParam->Set((double) value);
-  SetParameterInUIFromAPI(paramIdx, value, false);
+  SendParameterValueToUIFromAPI(paramIdx, value, false);
   OnParamChange(paramIdx, EParamSource::kAutomation);
 }
 
