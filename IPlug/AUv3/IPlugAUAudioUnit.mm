@@ -54,13 +54,12 @@ static AUAudioUnitPreset* NewAUPreset(NSInteger number, NSString* pName)
   //https://developer.apple.com/documentation/audiotoolbox/auaudiounit/1387685-channelcapabilities
   NSMutableArray* pChannelCapabilities = [[NSMutableArray alloc] init];
   
-//  for (int i = 0; i < mPlug->NChannelIO(); i++)
-//  {
-//    int inputs, outputs;
-//    mPlug->GetChannelIO(i, inputs, outputs);
-//    [pChannelCapabilities addObject: [NSNumber numberWithInt:inputs]];
-//    [pChannelCapabilities addObject: [NSNumber numberWithInt:outputs]];
-//  }
+  //TODO: handle multi bus
+  for (int i = 0; i < mPlug->NIOConfigs(); i++)
+  {
+    [pChannelCapabilities addObject: [NSNumber numberWithInt:mPlug->GetIOConfig(i)->NChansOnBusSAFE(ERoute::kInput, 0)]];
+    [pChannelCapabilities addObject: [NSNumber numberWithInt:mPlug->GetIOConfig(i)->NChansOnBusSAFE(ERoute::kOutput, 0)]];
+  }
 
   mChannelCapabilitiesArray = pChannelCapabilities;
 
