@@ -3,31 +3,45 @@
 
 IPlugAUv3::IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig c)
 : IPLUG_BASE_CLASS(c, kAPIAUv3)
+, IPlugProcessor<PLUG_SAMPLE_DST>(c, kAPIAUv3)
+, IPlugPresetHandler(c, kAPIAUv3)
 {
+  Trace(TRACELOC, "%s", c.pluginName);
+  AttachPresetHandler(this);
 }
 
-void IPlugAUv3::handleOneEvent(AURenderEvent const *event) {
-  switch (event->head.eventType) {
+void IPlugAUv3::HandleOneEvent(AURenderEvent const *event)
+{
+  switch (event->head.eventType)
+  {
+//      TODO: audiounit parameter automation
     case AURenderEventParameter:
     case AURenderEventParameterRamp: {
-      AUParameterEvent const& paramEvent = event->parameter;
-      
-      startRamp(paramEvent.parameterAddress, paramEvent.value, paramEvent.rampDurationSampleFrames);
+//      AUParameterEvent const& paramEvent = event->parameter;
+//
+//      startRamp(paramEvent.parameterAddress, paramEvent.value, paramEvent.rampDurationSampleFrames);
       break;
     }
       
     case AURenderEventMIDI:
-      handleMIDIEvent(event->MIDI);
+    {
+      IMidiMsg msg;
+      msg.mStatus = event->MIDI.data[0];
+      msg.mData1 = event->MIDI.data[1];
+      msg.mData2 = event->MIDI.data[2];
+      msg.mOffset = (int) event->MIDI.eventSampleTime;
+      ProcessMidiMsg(msg);
       break;
-    
+    }
     default:
       break;
   }
 }
 
-void IPlugAUv3::performAllSimultaneousEvents(AUEventSampleTime now, AURenderEvent const *&event) {
+void IPlugAUv3::PerformAllSimultaneousEvents(AUEventSampleTime now, AURenderEvent const *&event)
+{
   do {
-    handleOneEvent(event);
+    HandleOneEvent(event);
 
     // Go to next event.
     event = event->head.next;
@@ -36,8 +50,12 @@ void IPlugAUv3::performAllSimultaneousEvents(AUEventSampleTime now, AURenderEven
   } while (event && event->head.eventSampleTime <= now);
 }
 
-void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events) {
-
+void IPlugAUv3::ProcessWithEvents(AudioTimeStamp const *timestamp, uint32_t frameCount, AURenderEvent const *events, ITimeInfo& timeInfo)
+{
+  TRACE;
+  
+  _SetTimeInfo(timeInfo);
+  
   AUEventSampleTime now = AUEventSampleTime(timestamp->mSampleTime);
   uint32_t framesRemaining = frameCount;
   AURenderEvent const *event = events;
@@ -45,8 +63,9 @@ void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
   while (framesRemaining > 0) {
     // If there are no more events, we can process the entire remaining segment and exit.
     if (event == nullptr) {
-      uint32_t const bufferOffset = frameCount - framesRemaining;
-      process(framesRemaining, bufferOffset);
+//      uint32_t const bufferOffset = frameCount - framesRemaining;
+      _ProcessBuffers(0.f, framesRemaining); // what about bufferOffset
+
       return;
     }
 
@@ -56,10 +75,11 @@ void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
     uint32_t const framesThisSegment = uint32_t(std::max(timeZero, headEventTime - now));
     
     // Compute everything before the next event.
-    if (framesThisSegment > 0) {
-      uint32_t const bufferOffset = frameCount - framesRemaining;
-      process(framesThisSegment, bufferOffset);
-              
+    if (framesThisSegment > 0)
+    {
+//      uint32_t const bufferOffset = frameCount - framesRemaining;
+      _ProcessBuffers(0.f, framesThisSegment); // what about bufferOffset
+
       // Advance frames.
       framesRemaining -= framesThisSegment;
 
@@ -67,40 +87,67 @@ void IPlugAUv3::processWithEvents(AudioTimeStamp const *timestamp, uint32_t fram
       now += AUEventSampleTime(framesThisSegment);
     }
     
-    performAllSimultaneousEvents(now, event);
+    PerformAllSimultaneousEvents(now, event);
   }
 }
 
-
-void IPlugAUv3::setParameter(uint64_t address, float value) {
+void IPlugAUv3::SetParameter(uint64_t address, float value)
+{
+  const int paramIdx = (int) address;
+  
+  WDL_MutexLock lock(&mParams_mutex);
+  IParam* pParam = GetParam(paramIdx);
+  pParam->Set((double) value);
+  SendParameterValueToUIFromAPI(paramIdx, value, false);
+  OnParamChange(paramIdx, EParamSource::kAutomation);
 }
 
-float IPlugAUv3::getParameter(uint64_t address) {
-  return 0.0;
+float IPlugAUv3::GetParameter(uint64_t address)
+{
+  const int paramIdx = (int) address;
+
+  WDL_MutexLock lock(&mParams_mutex);
+  return (float) GetParam(paramIdx)->Value();
 }
 
-void IPlugAUv3::startRamp(uint64_t address, float value, uint32_t duration) {
+const char* IPlugAUv3::GetParamDisplayForHost(uint64_t address, float value)
+{
+  const int paramIdx = (int) address;
+  
+  WDL_MutexLock lock(&mParams_mutex);
+  GetParam(paramIdx)->GetDisplayForHost(value, false, mParamDisplayStr);
+  return (const char*) mParamDisplayStr.Get();
 }
 
-void IPlugAUv3::setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList) {
-  mInBufferList = inBufferList;
-  mOutBufferList = outBufferList;
+//void IPlugAUv3::startRamp(uint64_t address, float value, uint32_t duration) {
+//}
+
+void IPlugAUv3::SetBuffers(AudioBufferList* pInBufList, AudioBufferList* pOutBufList)
+{
+  _SetChannelConnections(ERoute::kInput, 0, MaxNChannels(ERoute::kInput), false);
+  _SetChannelConnections(ERoute::kOutput, 0, MaxNChannels(ERoute::kOutput), false);
+
+  int chanIdx = 0;
+  for(int i = 0; i < pInBufList->mNumberBuffers; i++)
+  {
+    int nConnected = pInBufList->mBuffers[i].mNumberChannels;
+    _SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
+    _AttachBuffers(ERoute::kInput, chanIdx, nConnected, (float**) &(pInBufList->mBuffers[i].mData), GetBlockSize());
+    chanIdx += nConnected;
+  }
+  
+  chanIdx = 0;
+  for(int i = 0; i < pOutBufList->mNumberBuffers; i++)
+  {
+    int nConnected = pOutBufList->mBuffers[i].mNumberChannels;
+    _SetChannelConnections(ERoute::kInput, chanIdx, nConnected, true);
+    _AttachBuffers(ERoute::kOutput, chanIdx, nConnected, (float**) &(pOutBufList->mBuffers[i].mData), GetBlockSize());
+    chanIdx += nConnected;
+  }
 }
 
-void IPlugAUv3::process(uint32_t frameCount, uint32_t bufferOffset) {
-//  int channelCount = mNumChannels;
-//
-//  for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-//
-//    int frameOffset = int(frameIndex + bufferOffset);
-//
-//    for (int channel = 0; channel < channelCount; ++channel) {
-//      float* input  = (float*) mInBufferList->mBuffers[channel].mData  + frameOffset;
-//      float* output = (float*) mOutBufferList->mBuffers[channel].mData + frameOffset;
-//
-//      *output = *input * 0.5f;
-//    }
-//  }
+void IPlugAUv3::Prepare(double sampleRate, uint32_t blockSize)
+{
+  _SetBlockSize(blockSize);
+  _SetSampleRate(sampleRate);
 }
-
-

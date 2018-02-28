@@ -13,50 +13,41 @@
 /** Used to pass various instance info to the API class */
 struct IPlugInstanceInfo
 {
-  WDL_String mOSXBundleID;
+  WDL_String mBundleID;
 };
 
 union AURenderEvent;
 struct AUMIDIEvent;
 
 class IPlugAUv3 : public IPLUG_BASE_CLASS
+                , public IPlugProcessor<PLUG_SAMPLE_DST>
+                , public IPlugPresetHandler
 {
 public:
   IPlugAUv3(IPlugInstanceInfo instanceInfo, IPlugConfig config);
-
-  void process(uint32_t frameCount, uint32_t bufferOffset);
-  void startRamp(uint64_t address, float value, uint32_t duration);
-  void handleMIDIEvent(AUMIDIEvent const& midiEvent) {};
-  void processWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events);
-
-  void setParameter(uint64_t address, float value);
-  float getParameter(uint64_t address);
-  void setBuffers(AudioBufferList* inBufferList, AudioBufferList* outBufferList);
   
-  //IPlug
+  //IPlugBase
   void BeginInformHostOfParamChange(int idx) override {};
   void InformHostOfParamChange(int idx, double normalizedValue) override {};
   void EndInformHostOfParamChange(int idx) override {};
   void InformHostOfProgramChange() override {};
-  
-  int GetSamplePos() override { return 0; }
-  double GetTempo() override { return DEFAULT_TEMPO; }
-  void GetTimeSig(int& numerator, int& denominator) override { return; }
-  void GetTime(ITimeInfo& timeInfo) override { return; }
-  
   void ResizeGraphics() override {}
-  
-protected:
-  bool SendMidiMsg(IMidiMsg& msg) override { return false; }
+
+  //IPlugProcessor
+  bool SendMidiMsg(const IMidiMsg& msg) override { return false; }
   bool SendSysEx(ISysEx& msg) override { return false; }
   
+  //IPlugAUv3
+  void ProcessWithEvents(AudioTimeStamp const* timestamp, uint32_t frameCount, AURenderEvent const* events, ITimeInfo& timeInfo);
+  void SetParameter(uint64_t address, float value);
+  float GetParameter(uint64_t address);
+  const char* GetParamDisplayForHost(uint64_t address, float value);
+  void SetBuffers(AudioBufferList* pInBufferList, AudioBufferList* pOutBufferList);
+  void Prepare(double sampleRate, uint32_t blockSize);
   
 private:
-  void handleOneEvent(AURenderEvent const* event);
-  void performAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
-  
-  AudioBufferList* mInBufferList = nullptr;
-  AudioBufferList* mOutBufferList = nullptr;
+  void HandleOneEvent(AURenderEvent const* event);
+  void PerformAllSimultaneousEvents(int64_t now, AURenderEvent const*& event);
 };
 
 IPlugAUv3* MakePlug();
