@@ -1,15 +1,9 @@
-#ifndef __IPLUGMULTITARGETS__
-#define __IPLUGMULTITARGETS__
+#pragma once
 
 #include "IPlug_include_in_plug_hdr.h"
 #include "IMidiQueue.h"
 
-#ifndef OS_IOS
-#include "IControl.h"
-#endif
-
 // http://www.musicdsp.org/archive.php?classid=3#257
-
 class CParamSmooth
 {
 public:
@@ -30,23 +24,17 @@ public:
   void Reset();
   void OnParamChange(int paramIdx);
 
-#ifdef OS_IOS
-  void ProcessSingleReplacing(float** inputs, float** outputs, int nFrames);
-#else
   void ProcessDoubleReplacing(double** inputs, double** outputs, int nFrames);
   bool HostRequestingAboutBox();
-#endif
 
   int GetNumKeys();
   bool GetKeyStatus(int key);
   void ProcessMidiMsg(IMidiMsg* pMsg);
 
 private:
-#ifndef OS_IOS
   IBitmapOverlayControl* mAboutBox;
   IControl* mKeyboard;
   int mMeterIdx_L, mMeterIdx_R;
-#endif
 
   IMidiQueue mMidiQueue;
 
@@ -68,7 +56,6 @@ private:
   CParamSmooth mGainLSmoother, mGainRSmoother;
 };
 
-#ifndef OS_IOS
 enum ELayout
 {
   kWidth = GUI_WIDTH,  // width of plugin window
@@ -81,5 +68,4 @@ enum ELayout
   kGainY = 100,
   kKnobFrames = 60
 };
-#endif
-#endif //__IPLUGMULTITARGETS__
+
