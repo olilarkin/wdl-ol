@@ -16,14 +16,14 @@ COMPILER = com.apple.compilers.llvm.clang.1_0 // or this with xcode4+/10.7+
 //BASE_SDK = macosx10.6
 //BASE_SDK = macosx10.7 // Carbon GUIs do not work fully with the 10.7 or higher sdks
 //BASE_SDK = macosx10.8
-BASE_SDK = macosx10.13
+BASE_SDK = macosx
 
 //CLANG_CXX_LANGUAGE_STANDARD = c++0x
 CLANG_CXX_LIBRARY = libc++
 //CLANG_CXX_LIBRARY = libstdc++ // 10.6 < doesn't support libc++ so you have to use this if you want to support 10.6
 
 // the minimum OS to support
-DEPLOYMENT_TARGET = 10.5 // 10.7 or higher for C++11
+DEPLOYMENT_TARGET = 10.7 // 10.7 or higher for C++11
 
 // Where the SDKs etc are located in relation to the plugin xcode project
 WDL_PATH = $(SRCROOT)/../../WDL
