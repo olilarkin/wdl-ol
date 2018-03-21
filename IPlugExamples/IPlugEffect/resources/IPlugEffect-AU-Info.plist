@@ -51,7 +51,7 @@
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.5.0</string>
+	<string>10.7</string>
 	<key>NSPrincipalClass</key>
 	<string>IPlugEffect_View</string>
 </dict>

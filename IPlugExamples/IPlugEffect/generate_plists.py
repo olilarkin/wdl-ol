@@ -140,23 +140,23 @@ def main():
   
   fileinput.close()
   
-  LSMinimumSystemVersion = "10.6.0"
+  LSMinimumSystemVersion = "10.7.0"
   
-  BASE_SDK = "macosx10.6"
-  DEPLOYMENT_TARGET = "10.7"
+  BASE_SDK = "macosx10.13"
+  DEPLOYMENT_TARGET = "10.7.0"
 
   # extract values from common.xcconfig
   for line in fileinput.input(projectpath + "/../../common.xcconfig", inplace=0):
     if not "//" in line:
       if "BASE_SDK = " in line:
         BASE_SDK = string.lstrip(line, "BASE_SDK = ")
-      if "DEPLOYMENT_TARGET = " in line:
-        DEPLOYMENT_TARGET = string.lstrip(line, "DEPLOYMENT_TARGET = ")
+#      if "MACOSX_DEPLOYMENT_TARGET = " in line:
+#        DEPLOYMENT_TARGET = string.lstrip(line, "MACOSX_DEPLOYMENT_TARGET = ")
 
   BASE_SDK = BASE_SDK[0:-1]
-  DEPLOYMENT_TARGET = DEPLOYMENT_TARGET[0:-1]
-  DEPLOYMENT_TARGET += ".0"
-  
+#  DEPLOYMENT_TARGET = DEPLOYMENT_TARGET[0:-1]
+#  DEPLOYMENT_TARGET += ".0"
+
   LSMinimumSystemVersion = DEPLOYMENT_TARGET
   
 # VST3
