@@ -23,7 +23,7 @@ CLANG_CXX_LIBRARY = libc++
 //CLANG_CXX_LIBRARY = libstdc++ // 10.6 < doesn't support libc++ so you have to use this if you want to support 10.6
 
 // the minimum OS to support
-DEPLOYMENT_TARGET = 10.7 // 10.7 or higher for C++11
+MACOSX_DEPLOYMENT_TARGET = 10.7 // 10.7 or higher for C++11
 
 // Where the SDKs etc are located in relation to the plugin xcode project
 WDL_PATH = $(SRCROOT)/../../WDL
