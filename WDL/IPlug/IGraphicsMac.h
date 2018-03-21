@@ -5,17 +5,12 @@
   #define IPLUG_NO_CARBON_SUPPORT
 #endif
 
-// carbon support uses quickdraw methods that have been removed in SDKs > 10.6
-#if __MAC_OS_X_VERSION_MAX_ALLOWED > 1060
-  #warning Carbon GUIs work best with the 10.6 sdk or lower
-#endif
-
 #include "IGraphics.h"
 #include "../swell/swell.h"
 
-#ifdef VST3_API
-  #define _UINT32 // this is necessary to get VST3 to compile with the 10.6 SDK due to a conflict
-#endif
+//#ifdef VST3_API
+//  #define _UINT32 // this is necessary to get VST3 to compile with the 10.6 SDK due to a conflict
+//#endif
 
 #include <Carbon/Carbon.h>
 

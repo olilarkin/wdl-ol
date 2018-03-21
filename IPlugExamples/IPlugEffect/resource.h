@@ -7,6 +7,7 @@
 #define BUNDLE_NAME "IPlugEffect"
 
 #define PLUG_ENTRY IPlugEffect_Entry
+#define PLUG_FACTORY IPlugEffect_Factory
 #define PLUG_VIEW_ENTRY IPlugEffect_ViewEntry
 
 #define PLUG_ENTRY_STR "IPlugEffect_Entry"
@@ -18,6 +19,8 @@
 // Format        0xMAJR.MN.BG - in HEX! so version 10.1.5 would be 0x000A0105
 #define PLUG_VER 0x00010000
 #define VST3_VER_STR "1.0.0"
+
+#define PLUG_COPYRIGHT  "Copyright 2017 Acme Inc"
 
 // http://service.steinberg.de/databases/plugin.nsf/plugIn?openForm
 // 4 chars, single quotes. At least one capital letter

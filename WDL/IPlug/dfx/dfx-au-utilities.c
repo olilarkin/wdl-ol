@@ -202,7 +202,7 @@ static void kCFAUPresetArrayCallBacks_constructor()
 	CFAUPresetArrayCallBacks_Init( (CFArrayCallBacks*) &kCFAUPresetArrayCallBacks );
 }
 #else
-// XXX I'll use this for other compilers, even though I hate initializing structs with all arguments at once 
+// XXX I'll use this for other compilers, even though I hate initializing structs with all arguments at once
 // (cuz what if you ever decide to change the order of the struct members or something like that?)
 const CFArrayCallBacks kCFAUPresetArrayCallBacks = {
 	0, 

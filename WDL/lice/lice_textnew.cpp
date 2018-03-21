@@ -642,8 +642,8 @@ bool LICE_CachedFont::DrawGlyph(LICE_IBitmap *bm, unsigned short c,
         int x;
         for(x=0;x<width;x++) 
         {
-          unsigned char c=gsrc[x];
-          if (c) pout[x]=c==255? col : bkcol;
+          unsigned char cv=gsrc[x];
+          if (cv) pout[x]=cv==255? col : bkcol;
         }
         gsrc += src_span;
         pout += dest_span;
@@ -715,7 +715,6 @@ static BOOL LICE_Text_HasUTF8(const char *_str)
 int LICE_CachedFont::DrawTextImpl(LICE_IBitmap *bm, const char *str, int strcnt, 
                                RECT *rect, UINT dtFlags)
 {
-  int ret=0;
   if (!bm && !(dtFlags&DT_CALCRECT)) return 0;
 
   bool forceWantAlpha=false;
@@ -730,6 +729,8 @@ int LICE_CachedFont::DrawTextImpl(LICE_IBitmap *bm, const char *str, int strcnt,
   // if using line-spacing adjustments (m_lsadj), don't allow native rendering 
   // todo: split rendering up into invidual lines and DrawText calls
 #ifndef LICE_TEXT_NONATIVE
+
+  int ret=0;
   if (!bm || !bm->Extended('YUVx',NULL)) if (((m_flags&LICE_FONT_FLAG_FORCE_NATIVE) && m_font && !forceWantAlpha &&!LICE_Text_IsWine() &&
       !(dtFlags & LICE_DT_USEFGALPHA) &&
       !(m_flags&LICE_FONT_FLAG_PRECALCALL) && !LICE_FONT_FLAGS_HAS_FX(m_flags) &&

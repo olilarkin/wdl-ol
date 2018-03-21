@@ -327,19 +327,19 @@
 			remoteGlobalIDString = 4F3AE17812C0E5E2001FD7A4;
 			remoteInfo = "AU_32&64_intel";
 		};
+		4F87DADD1F65C45E00745478 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4FF7B0F3156A831000E6CB12 /* AAXLibrary.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 842A79751A6098F400EC60F5;
+			remoteInfo = AAXLibrary_libcpp;
+		};
 		4F8B6722158B4EB2002FC25B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4FF7B0F3156A831000E6CB12 /* AAXLibrary.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = AAXLibrary;
-		};
-		4F8B6724158B4EB2002FC25B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4FF7B0F3156A831000E6CB12 /* AAXLibrary.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4B00D06910E022FD00816F7B;
-			remoteInfo = AAXLibrary_UnitTest;
 		};
 		4F8B674E158B4F53002FC25B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -602,6 +602,7 @@
 		4F7F5D2413E9681E002918FD /* IPlugRTAS.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; name = IPlugRTAS.r; path = ../../WDL/IPlug/RTAS/IPlugRTAS.r; sourceTree = "<group>"; };
 		4F8B6747158B4F53002FC25B /* PluginLibrary.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = PluginLibrary.xcodeproj; path = ../../PT9_SDK/AlturaPorts/TDMPlugIns/PlugInLibrary/MacBuild/PluginLibrary.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4F8D4BC413E97664004F7633 /* lice.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = lice.xcodeproj; path = ../../WDL/lice/lice.xcodeproj; sourceTree = SOURCE_ROOT; };
+		4F9089961F6B3207006CB839 /* generate_plists.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = generate_plists.py; sourceTree = "<group>"; };
 		4F9828E0140A9EB700F3FCC1 /* IPlugEffect.vst3 */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IPlugEffect.vst3; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FA88B901444E4C4006CB8DA /* dfx-au-utilities.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "dfx-au-utilities.c"; path = "../../WDL/IPlug/dfx/dfx-au-utilities.c"; sourceTree = SOURCE_ROOT; };
 		4FA88B911444E4C4006CB8DA /* dfx-au-utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "dfx-au-utilities.h"; path = "../../WDL/IPlug/dfx/dfx-au-utilities.h"; sourceTree = SOURCE_ROOT; };
@@ -796,7 +797,7 @@
 			isa = PBXGroup;
 			children = (
 				4FD16C9D13B6327C001D0217 /* OSX App Wrapper */,
-				526F9C010D7DC7D700562CF8 /* IPlugEffect.exp */,
+				4F9089961F6B3207006CB839 /* generate_plists.py */,
 				4FCF15AF133124D1009A6277 /* IPlugEffect.xcconfig */,
 				4FF7B0D4156A825000E6CB12 /* common.xcconfig */,
 			);
@@ -1082,9 +1083,9 @@
 				4F78D8E913B63BA40032E0F3 /* IControl.h */,
 				4F78D90913B63BA50032E0F3 /* IControl.cpp */,
 				4F78D8EA13B63BA40032E0F3 /* IKeyboardControl.h */,
-				4F78D8F113B63BA50032E0F3 /* Containers.h */,
 				4F78D8F213B63BA50032E0F3 /* Hosts.h */,
 				4F78D8F313B63BA50032E0F3 /* Hosts.cpp */,
+				4F78D8F113B63BA50032E0F3 /* Containers.h */,
 				4F78D8FC13B63BA50032E0F3 /* IPopupMenu.h */,
 				4F78D8FD13B63BA50032E0F3 /* IPopupMenu.cpp */,
 				4F78D90213B63BA50032E0F3 /* IPlug_Prefix.pch */,
@@ -1227,7 +1228,7 @@
 			isa = PBXGroup;
 			children = (
 				4F8B6723158B4EB2002FC25B /* libAAXLibrary.a */,
-				4F8B6725158B4EB2002FC25B /* AAXLibrary_UnitTest */,
+				4F87DADE1F65C45E00745478 /* libAAXLibrary_libcpp.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1260,6 +1261,7 @@
 		4FD16C9D13B6327C001D0217 /* OSX App Wrapper */ = {
 			isa = PBXGroup;
 			children = (
+				526F9C010D7DC7D700562CF8 /* IPlugEffect.exp */,
 				4FB3624E13B648FE00DB6B76 /* main.mm */,
 				4F78D89413B639100032E0F3 /* English.lproj */,
 				4FD16C9E13B6327C001D0217 /* app_resource.h */,
@@ -1443,12 +1445,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F3AE1DC12C0E5E2001FD7A4 /* Build configuration list for PBXNativeTarget "AU" */;
 			buildPhases = (
+				4F90898D1F6B2BA5006CB839 /* Run Script "generate_plists.py" */,
 				4F3AE17912C0E5E2001FD7A4 /* Headers */,
 				4F3AE1A212C0E5E2001FD7A4 /* Sources */,
 				4F25BECE12C61F47005D51F7 /* Resources */,
 				4F3AE1D312C0E5E2001FD7A4 /* Frameworks */,
 				4F3AE1DA12C0E5E2001FD7A4 /* Rez */,
-				4F744D4C14005ADA002FAD90 /* ShellScript */,
+				4F744D4C14005ADA002FAD90 /* Clear AU Caches */,
 			);
 			buildRules = (
 			);
@@ -1600,18 +1603,18 @@
 			remoteRef = 4F4AD1F51409A56A0068A6D4 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		4F87DADE1F65C45E00745478 /* libAAXLibrary_libcpp.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libAAXLibrary_libcpp.a;
+			remoteRef = 4F87DADD1F65C45E00745478 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		4F8B6723158B4EB2002FC25B /* libAAXLibrary.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libAAXLibrary.a;
 			remoteRef = 4F8B6722158B4EB2002FC25B /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		4F8B6725158B4EB2002FC25B /* AAXLibrary_UnitTest */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = AAXLibrary_UnitTest;
-			remoteRef = 4F8B6724158B4EB2002FC25B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		4F8B674F158B4F53002FC25B /* libPluginLibrary.a */ = {
@@ -1718,7 +1721,7 @@
 /* End PBXRezBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		4F744D4C14005ADA002FAD90 /* ShellScript */ = {
+		4F744D4C14005ADA002FAD90 /* Clear AU Caches */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			comments = "reset audiounit caches";
@@ -1726,12 +1729,27 @@
 			);
 			inputPaths = (
 			);
+			name = "Clear AU Caches";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -f \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\" ]\n  then\n\trm \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\"\nfi\n\nif [ -f \"$HOME/Library/Caches/com.apple.audiounits.cache\" ]\n  then\n\trm \"$HOME/Library/Caches/com.apple.audiounits.cache\"\nfi";
+			shellScript = "# if [ -f \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\" ]\n#   then\n# \trm \"$HOME/Library/Application Support/AU Lab/com.apple.audio.aulab_componentcache.plist\"\n# fi\n#\n# if [ -f \"$HOME/Library/Caches/com.apple.audiounits.cache\" ]\n#   then\n# \trm \"$HOME/Library/Caches/com.apple.audiounits.cache\"\n# fi\n#\n# if [ -f \"$HOME/Library/Preferences/com.apple.audio.InfoHelper.plist\" ]\n#   then\n# \trm \"$HOME/Library/Preferences/com.apple.audio.InfoHelper.plist\"\n# fi\n#\n# if [ -f \"$HOME/Library/Caches/AudioUnitCache\" ]\n#   then\n# \trm \"$HOME/Library/Caches/AudioUnitCache\"\n# fi";
 			showEnvVarsInLog = 0;
+		};
+		4F90898D1F6B2BA5006CB839 /* Run Script "generate_plists.py" */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script \"generate_plists.py\"";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "python ./generate_plists.py";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2044,7 +2062,6 @@
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /;
 				LIBRARY_SEARCH_PATHS = "$(ADDITIONAL_LIBRARY_PATHS)";
-				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2094,7 +2111,6 @@
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /;
 				LIBRARY_SEARCH_PATHS = "$(ADDITIONAL_LIBRARY_PATHS)";
-				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"$(GCC_CFLAGS)",
@@ -2700,7 +2716,6 @@
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /;
 				LIBRARY_SEARCH_PATHS = "$(ADDITIONAL_LIBRARY_PATHS)";
-				MACOSX_DEPLOYMENT_TARGET = "$(DEPLOYMENT_TARGET)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"$(GCC_CFLAGS)",
