@@ -257,7 +257,7 @@ public:
   NSEEL_VMCTX m_vmref;
   void *m_user_ctx;
 
-  int setup_frame(HWND hwnd, RECT r);
+  int setup_frame(HWND hwnd, RECT r, int _mouse_x=0, int _mouse_y=0); // mouse_x/y used only if hwnd is NULL
 
   void gfx_lineto(EEL_F xpos, EEL_F ypos, EEL_F aaflag);
   void gfx_rectto(EEL_F xpos, EEL_F ypos);
@@ -668,7 +668,7 @@ static EEL_F NSEEL_CGEN_CALL _gfx_getfont(void *opaque, INT_PTR np, EEL_F **parm
       NOT_EEL_STRING_UPDATE_STRING(parms[0][0],f->actual_fontname);
 #else
       WDL_FastString *fs=NULL;
-      EEL_STRING_GET_FOR_INDEX(parms[0][0],&fs);
+      EEL_STRING_GET_FOR_WRITE(parms[0][0],&fs);
       if (fs) fs->Set(f->actual_fontname);
 #endif
     }
@@ -1538,10 +1538,8 @@ EEL_F eel_lice_state::gfx_showmenu(void* opaque, EEL_F** parms, int nparms)
 {
   if (!hwnd_standalone) return 0.0;
 
-  WDL_FastString* fs=NULL;
-  const char* p=EEL_STRING_GET_FOR_INDEX(parms[0][0], &fs);
+  const char* p=EEL_STRING_GET_FOR_INDEX(parms[0][0], NULL);
   if (!p || !p[0]) return 0.0;
-  if (fs) {}
 
   int id=1;
   HMENU hm=PopulateMenuFromStr(&p, &id);
@@ -1567,10 +1565,8 @@ EEL_F eel_lice_state::gfx_setcursor(void* opaque, EEL_F** parms, int nparms)
   m_cursor_name[0]=0;
   if (nparms > 1)
   {
-    WDL_FastString* fs=NULL;
-    const char* p=EEL_STRING_GET_FOR_INDEX(parms[1][0], &fs);
+    const char* p=EEL_STRING_GET_FOR_INDEX(parms[1][0], NULL);
     if (p && p[0]) lstrcpyn(m_cursor_name, p, sizeof(m_cursor_name));
-    if (fs) {}
   }
 #endif
   return 1.0;
@@ -1697,20 +1693,23 @@ void eel_lice_state::gfx_drawnumber(EEL_F n, EEL_F ndigits)
                            getCurColor(),getCurMode(),(float)*m_gfx_a,DT_NOCLIP,NULL,NULL);
 }
 
-int eel_lice_state::setup_frame(HWND hwnd, RECT r)
+int eel_lice_state::setup_frame(HWND hwnd, RECT r, int _mouse_x, int _mouse_y)
 {
   int use_w = r.right - r.left;
   int use_h = r.bottom - r.top;
 
-  POINT pt;
-  GetCursorPos(&pt);
-  ScreenToClient(hwnd,&pt);
+  POINT pt = { _mouse_x, _mouse_y };
+  if (hwnd)
+  {
+    GetCursorPos(&pt);
+    ScreenToClient(hwnd,&pt);
+  }
   *m_mouse_x=pt.x-r.left;
   *m_mouse_y=pt.y-r.top;
   if (*m_gfx_ext_retina > 0.0)
   {
 #ifdef __APPLE__
-    *m_gfx_ext_retina = SWELL_IsRetinaHWND(hwnd) ? 2.0 : 1.0;
+    *m_gfx_ext_retina = (hwnd && SWELL_IsRetinaHWND(hwnd)) ? 2.0 : 1.0;
     if (*m_gfx_ext_retina > 1.0)
     {
       *m_mouse_x *= 2.0;
@@ -1775,7 +1774,7 @@ int eel_lice_state::setup_frame(HWND hwnd, RECT r)
     if (GetAsyncKeyState(VK_RBUTTON)&0x8000) vflags|=swap?1:2;
     if (GetAsyncKeyState(VK_MBUTTON)&0x8000) vflags|=64;
   }
-  if (m_has_cap || (m_has_had_getch && GetFocus()==hwnd))
+  if (m_has_cap || (m_has_had_getch && hwnd && GetFocus()==hwnd))
   {
     if (GetAsyncKeyState(VK_CONTROL)&0x8000) vflags|=4;
     if (GetAsyncKeyState(VK_SHIFT)&0x8000) vflags|=8;
@@ -2546,6 +2545,13 @@ LRESULT WINAPI eel_lice_wndproc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
           EndPaint(hwnd,&ps);
         }
       }
+    return 0;
+    case WM_GETMINMAXINFO:
+    {
+      LPMINMAXINFO p=(LPMINMAXINFO)lParam;
+      if (p->ptMinTrackSize.x > 10) p->ptMinTrackSize.x = 10;
+      if (p->ptMinTrackSize.y > 10) p->ptMinTrackSize.y = 10;
+    }
     return 0;
   }
 

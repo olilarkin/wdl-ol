@@ -362,6 +362,10 @@ typedef struct tagDRAWITEMSTRUCT {
 typedef struct tagBITMAP {
   LONG bmWidth;
   LONG bmHeight;
+  LONG bmWidthBytes;
+  WORD bmPlanes;
+  WORD bmBitsPixel;
+  LPVOID bmBits;
 } BITMAP, *PBITMAP, *LPBITMAP;
 #define ODT_MENU        1
 #define ODT_LISTBOX     2
@@ -478,6 +482,7 @@ typedef struct
   DWORD_PTR dwItemData;
   char *dwTypeData;
   int cch;
+  HBITMAP hbmpItem;
 } MENUITEMINFO;
 
 #define SetMenuDefaultItem(a,b,c) do { if ((a)||(b)||(c)) { } } while(0)
@@ -866,6 +871,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define MIIM_TYPE 4
 #define MIIM_SUBMENU 8
 #define MIIM_DATA 16
+#define MIIM_BITMAP 0x80
 
 #define MF_ENABLED 0
 #define MF_GRAYED 1
@@ -900,6 +906,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define WM_MOVE                         0x0003
 #define WM_SIZE                         0x0005
 #define WM_ACTIVATE                     0x0006
+#define WM_SETREDRAW                    0x000B // implemented on macOS NSTableViews, maybe elsewhere?
 #define WM_SETTEXT			0x000C // not implemented on OSX, used internally on Linux
 #define WM_PAINT                        0x000F
 #define WM_CLOSE                        0x0010
@@ -913,8 +920,8 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define WM_SETFONT                      0x0030
 #define WM_GETFONT                      0x0031
 #define WM_GETOBJECT 			0x003D // implemented differently than win32 -- see virtwnd/virtwnd-nsaccessibility.mm
+#define WM_COPYDATA                     0x004A
 #define WM_NOTIFY                       0x004E
-
 #define WM_CONTEXTMENU                  0x007B
 #define WM_STYLECHANGED                 0x007D
 #define WM_DISPLAYCHANGE                0x007E
@@ -968,7 +975,6 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define WM_CAPTURECHANGED               0x0215
 #define WM_DROPFILES                    0x0233
 #define WM_USER                         0x0400
-
 
 #define HTCAPTION 2
 #define HTBOTTOMRIGHT 17
@@ -1363,6 +1369,13 @@ typedef struct _ICONINFO
   HBITMAP hbmMask;
   HBITMAP hbmColor;
 } ICONINFO, *PICONINFO;
+
+typedef struct _COPYDATASTRUCT
+{
+  ULONG_PTR dwData;
+  DWORD     cbData;
+  PVOID     lpData;
+} COPYDATASTRUCT, *PCOPYDATASTRUCT;
 
 
 #endif //_WDL_SWELL_H_TYPES_DEFINED_

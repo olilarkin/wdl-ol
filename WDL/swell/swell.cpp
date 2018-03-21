@@ -72,9 +72,10 @@ DWORD GetTickCount()
 
 static void intToFileTime(time_t t, FILETIME *out)
 {
+  // see WDL_DirScan::GetCurrentLastWriteTime and similar
   unsigned long long a=(unsigned long long)t; // seconds since january 1st, 1970
-  a+=(60*60*24*(365*4+1)/4)*(long long)(1970-1601); // this is approximate
-  a*=1000*10000; // seconds to 1/10th microseconds (100 nanoseconds)
+  a += 11644473600ull; // 1601-1970
+  a *= 10000000; // seconds to 1/10th microseconds (100 nanoseconds)
   out->dwLowDateTime=a & 0xffffffff;
   out->dwHighDateTime=a>>32;
 }
@@ -591,10 +592,21 @@ int WinIntersectRect(RECT *out, const RECT *in1, const RECT *in2)
 }
 void WinUnionRect(RECT *out, const RECT *in1, const RECT *in2)
 {
-  out->left = wdl_min(in1->left,in2->left);
-  out->top = wdl_min(in1->top,in2->top);
-  out->right=wdl_max(in1->right,in2->right);
-  out->bottom=wdl_max(in1->bottom,in2->bottom);
+  if (in1->left == in1->right && in1->top == in1->bottom) 
+  {
+    *out = *in2;
+  }
+  else if (in2->left == in2->right && in2->top == in2->bottom) 
+  {
+    *out = *in1;
+  }
+  else
+  {
+    out->left = wdl_min(in1->left,in2->left);
+    out->top = wdl_min(in1->top,in2->top);
+    out->right=wdl_max(in1->right,in2->right);
+    out->bottom=wdl_max(in1->bottom,in2->bottom);
+  }
 }
 
 

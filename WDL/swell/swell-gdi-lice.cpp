@@ -1176,13 +1176,21 @@ void DrawImageInRect(HDC hdcOut, HICON in, const RECT *r)
 BOOL GetObject(HICON icon, int bmsz, void *_bm)
 {
   memset(_bm,0,bmsz);
-  if (bmsz != sizeof(BITMAP)) return false;
+  if (bmsz < 2*(int)sizeof(LONG)) return false;
   BITMAP *bm=(BITMAP *)_bm;
   HGDIOBJ__ *i = (HGDIOBJ__ *)icon;
   if (!HGDIOBJ_VALID(i,TYPE_BITMAP) || !i->typedata) return false;
 
   bm->bmWidth = ((LICE_IBitmap *)i->typedata)->getWidth();
   bm->bmHeight = ((LICE_IBitmap *)i->typedata)->getHeight();
+
+  if (bmsz >= (int)sizeof(BITMAP))
+  {
+    bm->bmWidthBytes = ((LICE_IBitmap *)i->typedata)->getRowSpan()*4;
+    bm->bmPlanes = 1;
+    bm->bmBitsPixel = 32;
+    bm->bmBits = ((LICE_IBitmap *)i->typedata)->getBits();
+  }
 
   return true;
 }
@@ -1312,6 +1320,7 @@ HDC SWELL_internalGetWindowDC(HWND h, bool calcsize_on_first)
 
   bool vis=true;
   HWND starth = h;
+  int ltrim=0, ttrim=0, rtrim=0, btrim=0;
   for (;;)
   {
     if ((calcsize_on_first || h!=starth)  && h->m_wndproc)
@@ -1338,22 +1347,32 @@ HDC SWELL_internalGetWindowDC(HWND h, bool calcsize_on_first)
 
     xoffs += h->m_position.left;
     yoffs += h->m_position.top;
+
+    ltrim = wdl_max(ltrim, -xoffs);
+    ttrim = wdl_max(ttrim, -yoffs);
+    rtrim = wdl_max(rtrim, xoffs+wndw - h->m_position.right);
+    btrim = wdl_max(btrim, yoffs+wndh - h->m_position.bottom);
+
     h = h->m_parent;
   }
 
   swell_gdpLocalContext *p = (swell_gdpLocalContext*)SWELL_GDP_CTX_NEW();
 
-  p->clipr.left=p->clipr.right=xoffs;
-  p->clipr.top=p->clipr.bottom=yoffs;
+  p->clipr.left=p->clipr.right=xoffs + ltrim;
+  p->clipr.top=p->clipr.bottom=yoffs + ttrim;
 
   if (h->m_backingstore && vis)
   {
-    p->ctx.surface=new LICE_SubBitmap(h->m_backingstore,xoffs,yoffs,wndw,wndh);
+    p->ctx.surface=new LICE_SubBitmap(h->m_backingstore,
+        xoffs+ltrim,yoffs+ttrim,
+        wndw-ltrim-rtrim,wndh-ttrim-btrim);
     p->clipr.right += p->ctx.surface->getWidth();
     p->clipr.bottom += p->ctx.surface->getHeight();
   }
   if (xoffs<0) p->ctx.surface_offs.x = xoffs;
   if (yoffs<0) p->ctx.surface_offs.y = yoffs;
+  p->ctx.surface_offs.x -= ltrim;
+  p->ctx.surface_offs.y -= ttrim;
 
   p->ctx.curfont = starth->m_font;
   // todo: other GDI defaults?

@@ -471,14 +471,12 @@ typedef struct WindowPropRec
   // 10.4 SDK
   #define SWELL_NO_CORETEXT
   #define SWELL_ATSUI_TEXT_SUPPORT
-#else
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
-#ifndef __LP64__
-#define SWELL_ATSUI_TEXT_SUPPORT
-#endif
-#endif
-
+#elif !defined(__LP64__)
+  #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
+    #ifndef MAC_OS_X_VERSION_10_9 // not sure when ATSUI was dropped completely, definitely gone in 10.13!
+      #define SWELL_ATSUI_TEXT_SUPPORT
+    #endif
+  #endif
 #endif
 
 struct HGDIOBJ__
@@ -582,6 +580,11 @@ struct HDC__ {
 
 #elif defined(SWELL_TARGET_GDK)
 
+
+#ifdef SWELL_SUPPORT_GTK
+#include <gtk/gtk.h>
+#endif
+
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkx.h>
@@ -609,7 +612,6 @@ struct HTREEITEM__
   WDL_PtrList<HTREEITEM__> m_children; // only used in tree mode
   LPARAM m_param;
 };
-
 
 
 #ifndef SWELL_TARGET_OSX 
@@ -748,7 +750,6 @@ struct HDC__ {
 HWND DialogBoxIsActive(void);
 void DestroyPopupMenus(void);
 HWND ChildWindowFromPoint(HWND h, POINT p);
-bool IsWindowEnabled(HWND hwnd);
 HWND GetFocusIncludeMenus();
 
 void SWELL_RunEvents();
