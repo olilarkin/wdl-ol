@@ -503,7 +503,7 @@ LICE_IBitmap* IGraphicsWin::OSLoadBitmap(int ID, const char* name)
   while (ext > name && *ext != '.') --ext;
   ++ext;
 
-  if (!stricmp(ext, "png")) return _LICE::LICE_LoadPNGFromResource(mHInstance, ID, 0);
+  if (!stricmp(ext, "png")) return _LICE::LICE_LoadPNGFromResource(mHInstance, MAKEINTRESOURCE(ID), 0);
   #ifdef IPLUG_JPEG_SUPPORT
   if (!stricmp(ext, "jpg") || !stricmp(ext, "jpeg")) return _LICE::LICE_LoadJPGFromResource(mHInstance, ID, 0);
   #endif

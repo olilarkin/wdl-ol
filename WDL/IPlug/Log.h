@@ -11,6 +11,7 @@
 
 #include "Containers.h"
 #include "IPlugOSDetect.h"
+#include <time.h>
 
 #if defined OS_WIN
   #include <stdio.h>
