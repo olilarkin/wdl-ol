@@ -6,7 +6,7 @@ KNOB_ID       PNG KNOB_FN
 //Standalone stuff
 #include <windows.h>
 
-IDI_ICON1                ICON    DISCARDABLE     "resources\IPlugEffect.ico"
+IDI_ICON1                ICON    DISCARDABLE     "resources/IPlugEffect.ico"
 
 IDD_DIALOG_MAIN DIALOG DISCARDABLE  0, 0, GUI_WIDTH, GUI_HEIGHT
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
