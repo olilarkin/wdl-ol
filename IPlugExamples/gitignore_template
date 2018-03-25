@@ -21,3 +21,4 @@ gui/*
 
 Icon?
 .DS_Stor*
+.vs/*
