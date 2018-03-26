@@ -292,13 +292,28 @@ if exist "%programfiles(x86)%" (copy /y "$(TargetPath)" "$(VST3_64_PATH)\IPlugEf
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\conststringtable.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\doc.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\falignpop.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\falignpush.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\fplatform.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\fstrdefs.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ftypes.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\funknown.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\futils.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\fvariant.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\geoconstants.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ibstream.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\icloneable.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ierrorcontext.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ipersistent.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ipluginbase.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\istringresult.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\iupdatehandler.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\keycodes.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\pluginbasefwd.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\smartpointer.h" />
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ucolorspec.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ustring.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\gui\iplugview.h" />
     <ClInclude Include="..\..\VST3_SDK\pluginterfaces\vst\ivstattributes.h" />
@@ -328,6 +343,8 @@ if exist "%programfiles(x86)%" (copy /y "$(TargetPath)" "$(VST3_64_PATH)\IPlugEf
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\VST3_SDK\pluginterfaces\base\conststringtable.cpp" />
+    <ClCompile Include="..\..\VST3_SDK\pluginterfaces\base\coreiids.cpp" />
     <ClCompile Include="..\..\VST3_SDK\pluginterfaces\base\funknown.cpp" />
     <ClCompile Include="..\..\VST3_SDK\pluginterfaces\base\ustring.cpp" />
     <ClCompile Include="..\..\VST3_SDK\public.sdk\source\common\pluginview.cpp" />

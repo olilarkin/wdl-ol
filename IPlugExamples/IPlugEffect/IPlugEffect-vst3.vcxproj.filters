@@ -41,6 +41,12 @@
     <ClCompile Include="..\..\WDL\IPlug\IPlugVST3.cpp">
       <Filter>vst3</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\VST3_SDK\pluginterfaces\base\conststringtable.cpp">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\VST3_SDK\pluginterfaces\base\coreiids.cpp">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IPlugEffect.h" />
@@ -140,6 +146,51 @@
     </ClInclude>
     <ClInclude Include="..\..\WDL\IPlug\IPlugVST3.h">
       <Filter>vst3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\conststringtable.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\doc.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\fstrdefs.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\futils.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\fvariant.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\geoconstants.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ibstream.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\icloneable.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ierrorcontext.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ipersistent.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\istringresult.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\iupdatehandler.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\pluginbasefwd.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\smartpointer.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\VST3_SDK\pluginterfaces\base\ucolorspec.h">
+      <Filter>vst3\VST3SDK\pluginterfaces\base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

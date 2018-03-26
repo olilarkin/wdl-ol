@@ -294,7 +294,7 @@ tresult PLUGIN_API IPlugVST3::setBusArrangements(SpeakerArrangement* inputs, int
   // if existing input bus has a different number of channels to the input bus being connected
   if (bus && SpeakerArr::getChannelCount(bus->getArrangement()) != reqNumInputChannels)
   {
-    audioInputs.erase(std::remove(audioInputs.begin(), audioInputs.end(), bus));
+    audioInputs.clear();
     addAudioInput(USTRING("Input"), getSpeakerArrForChans(reqNumInputChannels));
   }
 
@@ -303,7 +303,7 @@ tresult PLUGIN_API IPlugVST3::setBusArrangements(SpeakerArrangement* inputs, int
   // if existing output bus has a different number of channels to the output bus being connected
   if (bus && SpeakerArr::getChannelCount(bus->getArrangement()) != reqNumOutputChannels)
   {
-    audioOutputs.erase(std::remove(audioOutputs.begin(), audioOutputs.end(), bus));
+    audioOutputs.clear();
     addAudioOutput(USTRING("Output"), getSpeakerArrForChans(reqNumOutputChannels));
   }
 
@@ -320,7 +320,8 @@ tresult PLUGIN_API IPlugVST3::setBusArrangements(SpeakerArrangement* inputs, int
 
     if (bus && SpeakerArr::getChannelCount(bus->getArrangement()) != reqNumSideChainChannels)
     {
-      audioInputs.erase(std::remove(audioInputs.begin(), audioInputs.end(), bus));
+      audioInputs.clear();
+      addAudioInput(USTRING("Input"), getSpeakerArrForChans(reqNumInputChannels));
       addAudioInput(USTRING("Sidechain Input"), getSpeakerArrForChans(reqNumSideChainChannels), kAux, 0); // either mono or stereo
     }
 
@@ -788,7 +789,7 @@ void IPlugVST3::addDependentView(IPlugVST3View* view)
 
 void IPlugVST3::removeDependentView(IPlugVST3View* view)
 {
-  viewsArray.erase(std::remove(viewsArray.begin(), viewsArray.end(), view));
+  viewsArray.clear(); //TODO: not quite right but we only do one view anyway
 }
 
 tresult IPlugVST3::beginEdit(ParamID tag)
