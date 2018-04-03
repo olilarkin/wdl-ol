@@ -726,9 +726,9 @@ struct IRECT
 /** Used to manage mouse modifiers i.e. right click and shift/control/alt keys. */
 struct IMouseMod
 {
-  bool L, R, S, C, A;
-  IMouseMod(bool l = false, bool r = false, bool s = false, bool c = false, bool a = false)
-    : L(l), R(r), S(s), C(c), A(a) {}
+  bool L, R, M, S, C, A;
+  IMouseMod(bool l = false, bool r = false, bool m = false, bool s = false, bool c = false, bool a = false)
+    : L(l), R(r), M(m), S(s), C(c), A(a) {}
 };
 
 struct IMouseInfo

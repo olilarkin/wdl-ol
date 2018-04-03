@@ -67,6 +67,7 @@ inline IMouseInfo IGraphicsWin::GetMouseInfo(LPARAM lParam, WPARAM wParam)
   info.y = mMouseY = GET_Y_LPARAM(lParam) / GetScale();
   info.ms = IMouseMod((wParam & MK_LBUTTON),
     (wParam & MK_RBUTTON),
+    (wParam & MK_MBUTTON),
     (wParam & MK_SHIFT),
     (wParam & MK_CONTROL),
 
@@ -116,7 +117,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
   }
   if (pGraphics->mParamEditWnd && pGraphics->mParamEditMsg == kEditing)
   {
-    if (msg == WM_RBUTTONDOWN || (msg == WM_LBUTTONDOWN))
+    if ((msg == WM_LBUTTONDOWN) || (msg == WM_RBUTTONDOWN) || (msg == WM_MBUTTONDOWN))
     {
       pGraphics->mParamEditMsg = kCancel;
       return 0;
@@ -224,7 +225,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
 
     case WM_MOUSEMOVE:
     {
-      if (!(wParam & (MK_LBUTTON | MK_RBUTTON)))
+      if (!(wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)))
       {
         IMouseInfo info = pGraphics->GetMouseInfo(lParam, wParam);
     if (pGraphics->OnMouseOver(info.x, info.y, info.ms))
@@ -266,6 +267,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     }
     case WM_LBUTTONUP:
     case WM_RBUTTONUP:
+    case WM_MBUTTONUP:
     {
       ReleaseCapture();
       IMouseInfo info = pGraphics->GetMouseInfo(lParam, wParam);
@@ -273,6 +275,8 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       return 0;
     }
     case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDBLCLK:
     {
       IMouseInfo info = pGraphics->GetMouseInfo(lParam, wParam);
       if (pGraphics->OnMouseDblClick(info.x, info.y, info.ms))
