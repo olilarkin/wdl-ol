@@ -327,7 +327,13 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
   SetOutputChannelConnections(numOutChannels, NOutChannels() - numOutChannels, false);
   
   AttachOutputBuffers(0, NOutChannels(), ioRenderInfo->mAudioOutputs);
-  
+	
+	// make sure that we initialize the plugin with the correct block size
+	if(GetBlockSize() != numSamples) {
+		SetBlockSize(numSamples);
+		Reset();
+	}
+	
   if (bypass) 
   {
     PassThroughBuffers(0.0f, numSamples);
