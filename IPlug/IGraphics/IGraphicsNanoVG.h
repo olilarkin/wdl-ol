@@ -82,4 +82,7 @@ private:
 
   WDL_PtrList<NanoVGBitmap> mBitmaps;
   NVGcontext* mVG = nullptr;
+#ifdef OS_WIN
+  HGLRC mHGLRC = nullptr;
+#endif
 };

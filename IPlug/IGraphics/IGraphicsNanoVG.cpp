@@ -105,9 +105,14 @@ IGraphicsNanoVG::~IGraphicsNanoVG()
   if(mVG)
     nvgDeleteMTL(mVG);
 #endif
+
 #ifdef OS_WIN
   if (mVG)
     nvgDeleteGL3(mVG);
+  if (mHGLRC) {
+    wglMakeCurrent((HDC)mPlatformContext, nullptr);
+    wglDeleteContext(mHGLRC);
+  }
 #endif
 }
 
@@ -143,39 +148,40 @@ void IGraphicsNanoVG::RetainBitmap(const IBitmap& bitmap, const char* cacheName)
 void IGraphicsNanoVG::SetPlatformContext(void* pContext) {
   mPlatformContext = pContext;
 #ifdef OS_WIN
-  PIXELFORMATDESCRIPTOR pfd =
-  {
-    sizeof(PIXELFORMATDESCRIPTOR),
-    1,
-    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
-    PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
-    32,                   // Colordepth of the framebuffer.
-    0, 0, 0, 0, 0, 0,
-    0,
-    0,
-    0,
-    0, 0, 0, 0,
-    24,                   // Number of bits for the depthbuffer
-    8,                    // Number of bits for the stencilbuffer
-    0,                    // Number of Aux buffers in the framebuffer.
-    PFD_MAIN_PLANE,
-    0,
-    0, 0, 0
-  };
+  if (pContext) {
+    PIXELFORMATDESCRIPTOR pfd =
+    {
+      sizeof(PIXELFORMATDESCRIPTOR),
+      1,
+      PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, //Flags
+      PFD_TYPE_RGBA, // The kind of framebuffer. RGBA or palette.
+      32, // Colordepth of the framebuffer.
+      0, 0, 0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0, 0, 0, 0,
+      24, // Number of bits for the depthbuffer
+      8, // Number of bits for the stencilbuffer
+      0, // Number of Aux buffers in the framebuffer.
+      PFD_MAIN_PLANE,
+      0,
+      0, 0, 0
+    };
 
-  HDC dc = (HDC)pContext;
+    HDC dc = (HDC)pContext;
 
-  int fmt = ChoosePixelFormat(dc, &pfd);
-  SetPixelFormat(dc, fmt, &pfd);
+    int fmt = ChoosePixelFormat(dc, &pfd);
+    SetPixelFormat(dc, fmt, &pfd);
 
-  HGLRC hglrc = wglCreateContext(dc);
-  wglMakeCurrent(dc, hglrc);
-  if (!gladLoadGL())
-    throw std::runtime_error{"Error initializing glad"};
-  glGetError();
+    mHGLRC = wglCreateContext(dc);
+    wglMakeCurrent(dc, mHGLRC);
+    if (!gladLoadGL())
+      throw std::runtime_error{"Error initializing glad"};
+    glGetError();
+    mVG = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+  }
 #endif
-
-  mVG = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
 }
 
 IBitmap IGraphicsNanoVG::ScaleBitmap(const IBitmap& bitmap, const char* name, int targetScale)
