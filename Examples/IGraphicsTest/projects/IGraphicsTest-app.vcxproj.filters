@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\..\IPlug\IPlugParameter.cpp">
       <Filter>IPlug</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Dependencies\IGraphics\glad\src\glad.c">
+      <Filter>IGraphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\IGraphicsTest.h" />

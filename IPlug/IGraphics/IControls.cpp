@@ -213,5 +213,6 @@ IRECT IBSliderControl::GetHandleRECT(double value) const
 //    r.R += offs;
 //  }
 //  return r;
+  return {};
 }
 

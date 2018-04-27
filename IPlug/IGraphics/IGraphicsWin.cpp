@@ -63,8 +63,8 @@ void GetKnownFolder(WDL_String &path, int identifier, int flags = 0)
 inline IMouseInfo IGraphicsWin::GetMouseInfo(LPARAM lParam, WPARAM wParam)
 {
   IMouseInfo info;
-  info.x = mMouseX = GET_X_LPARAM(lParam) / GetScale();
-  info.y = mMouseY = GET_Y_LPARAM(lParam) / GetScale();
+  info.x = mCursorX = GET_X_LPARAM(lParam) / GetScale();
+  info.y = mCursorY = GET_Y_LPARAM(lParam) / GetScale();
   info.ms = IMouseMod((wParam & MK_LBUTTON), (wParam & MK_RBUTTON), (wParam & MK_SHIFT), (wParam & MK_CONTROL),
 #ifdef AAX_API
     GetAsyncKeyState(VK_MENU) < 0
@@ -77,8 +77,8 @@ inline IMouseInfo IGraphicsWin::GetMouseInfo(LPARAM lParam, WPARAM wParam)
 
 inline IMouseInfo IGraphicsWin::GetMouseInfoDeltas(float& dX, float& dY, LPARAM lParam, WPARAM wParam)
 {
-  float oldX = mMouseX;
-  float oldY = mMouseY;
+  float oldX = mCursorX;
+  float oldY = mCursorY;
   
   IMouseInfo info = GetMouseInfo(lParam, wParam);
 
@@ -337,10 +337,14 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     {
       RECT r;
       if (GetUpdateRect(hWnd, &r, FALSE))
-      { 
+      {
+        PAINTSTRUCT ps;
+        BeginPaint(hWnd, &ps);
         IRECT ir(r.left, r.top, r.right, r.bottom);
         ir.ScaleBounds(1. / pGraphics->GetScale());
         pGraphics->Draw(ir);
+        SwapBuffers((HDC)pGraphics->mPlatformContext);
+        EndPaint(hWnd, &ps);
       }
       return 0;
     }
@@ -581,9 +585,9 @@ void IGraphicsWin::Resize(int w, int h, float scale)
   }
 }
 
-void IGraphicsWin::HideMouseCursor(bool hide)
+void IGraphicsWin::HideMouseCursor(bool hide, bool returnToStartPosition)
 {
-  if(hide)
+  if(!hide)
   {
     if (mCursorHidden)
     {
@@ -632,12 +636,12 @@ void* IGraphicsWin::OpenWindow(void* pParentWnd)
 
   if (nWndClassReg++ == 0)
   {
-    WNDCLASS wndClass = { CS_DBLCLKS, WndProc, 0, 0, mHInstance, 0, LoadCursor(NULL, IDC_ARROW), 0, 0, wndClassName };
+    WNDCLASS wndClass = { CS_DBLCLKS | CS_OWNDC, WndProc, 0, 0, mHInstance, 0, LoadCursor(NULL, IDC_ARROW), 0, 0, wndClassName };
     RegisterClass(&wndClass);
   }
 
   sFPS = FPS();
-  mDelegateWnd = CreateWindow(wndClassName, "IPlug", WS_CHILD | WS_VISIBLE, // | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+  mDelegateWnd = CreateWindow(wndClassName, "IPlug", WS_CHILD | WS_VISIBLE,
                           x, y, w, h, (HWND) pParentWnd, 0, mHInstance, this);
 
   HDC dc = GetDC(mDelegateWnd);
@@ -1190,7 +1194,7 @@ void IGraphicsWin::PromptForDirectory(WDL_String& dir)
   memset(&bi, 0, sizeof(bi));
   
   bi.ulFlags   = BIF_USENEWUI;
-  bi.hwndOwner = mPlugWnd;
+  bi.hwndOwner = mDelegateWnd;
   bi.lpszTitle = "Choose a Directory";
   
   // must call this if using BIF_USENEWUI

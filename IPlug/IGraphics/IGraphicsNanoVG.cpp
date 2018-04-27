@@ -1,6 +1,11 @@
 #include <cmath>
 
 #include "IGraphicsNanoVG.h"
+#ifdef OS_WIN
+#define NANOVG_GL3_IMPLEMENTATION
+#include <glad/glad.h>
+#include "nanovg_gl.h"
+#endif
 
 #pragma mark -
 
@@ -100,6 +105,10 @@ IGraphicsNanoVG::~IGraphicsNanoVG()
   if(mVG)
     nvgDeleteMTL(mVG);
 #endif
+#ifdef OS_WIN
+  if (mVG)
+    nvgDeleteGL3(mVG);
+#endif
 }
 
 IBitmap IGraphicsNanoVG::LoadBitmap(const char* name, int nStates, bool framesAreHorizontal)
@@ -131,6 +140,44 @@ void IGraphicsNanoVG::RetainBitmap(const IBitmap& bitmap, const char* cacheName)
 {
 }
 
+void IGraphicsNanoVG::SetPlatformContext(void* pContext) {
+  mPlatformContext = pContext;
+#ifdef OS_WIN
+  PIXELFORMATDESCRIPTOR pfd =
+  {
+    sizeof(PIXELFORMATDESCRIPTOR),
+    1,
+    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+    PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
+    32,                   // Colordepth of the framebuffer.
+    0, 0, 0, 0, 0, 0,
+    0,
+    0,
+    0,
+    0, 0, 0, 0,
+    24,                   // Number of bits for the depthbuffer
+    8,                    // Number of bits for the stencilbuffer
+    0,                    // Number of Aux buffers in the framebuffer.
+    PFD_MAIN_PLANE,
+    0,
+    0, 0, 0
+  };
+
+  HDC dc = (HDC)pContext;
+
+  int fmt = ChoosePixelFormat(dc, &pfd);
+  SetPixelFormat(dc, fmt, &pfd);
+
+  HGLRC hglrc = wglCreateContext(dc);
+  wglMakeCurrent(dc, hglrc);
+  if (!gladLoadGL())
+    throw std::runtime_error{"Error initializing glad"};
+  glGetError();
+#endif
+
+  mVG = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+}
+
 IBitmap IGraphicsNanoVG::ScaleBitmap(const IBitmap& bitmap, const char* name, int targetScale)
 {
   return bitmap;
@@ -145,6 +192,9 @@ void IGraphicsNanoVG::ViewInitialized(void* layer)
 
 void IGraphicsNanoVG::BeginFrame()
 {
+  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+  glViewport(0, 0, Width()*GetDisplayScale(), Height()*GetDisplayScale());
   nvgBeginFrame(mVG, Width(), Height(), GetDisplayScale());
 }
 

@@ -31,6 +31,7 @@
     <ProjectGuid>{41785AE4-5B70-4A75-880B-4B418B4E13C6}</ProjectGuid>
     <RootNamespace>IGraphicsTest</RootNamespace>
     <ProjectName>IGraphicsTest</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -375,6 +376,7 @@
     <ClInclude Include="..\resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Dependencies\IGraphics\glad\src\glad.c" />
     <ClCompile Include="..\..\..\IPlug\IGraphics\IControl.cpp" />
     <ClCompile Include="..\..\..\IPlug\IGraphics\IControls.cpp" />
     <ClCompile Include="..\..\..\IPlug\IGraphics\IGraphics.cpp" />

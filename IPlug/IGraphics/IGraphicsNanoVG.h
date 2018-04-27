@@ -9,6 +9,7 @@
 
 #include "IGraphicsPathBase.h"
 
+
 class NanoVGBitmap : public APIBitmap
 {
 public:
@@ -67,6 +68,8 @@ public:
   void RetainBitmap(const IBitmap& bitmap, const char * cacheName) override;
 //  IBitmap CreateIBitmap(const char * cacheName, int w, int h) override {}
 
+  void SetPlatformContext(void* pContext) override;
+
 protected:
 
   APIBitmap* LoadAPIBitmap(const WDL_String& resourcePath, int scale) override;
@@ -76,7 +79,7 @@ private:
   
   void ClipRegion(const IRECT& r) override { nvgScissor(mVG, r.L, r.T, r.W(), r.H()); }
   void ResetClipRegion() override { nvgResetScissor(mVG); }
-  
+
   WDL_PtrList<NanoVGBitmap> mBitmaps;
   NVGcontext* mVG = nullptr;
 };

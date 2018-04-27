@@ -2,8 +2,8 @@
 
 #include "IPlugParameter.h"
 #include "IControls.h"
-#include "IVDropDownListControl.h"
-#include "Easing.h"
+#include "IControls/IVDropDownListControl.h"
+#include "Extras/Easing.h"
 
 #define MAC_TITLEBAR_BODGE 22
 
