@@ -200,7 +200,7 @@ protected:
   void SetTailSize(unsigned int tailSizeSamples) { mTailSize = tailSizeSamples; }
   
   virtual bool SendMidiMsg(IMidiMsg* pMsg) = 0;
-  bool SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs);
+  virtual bool SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs);
   virtual bool SendSysEx(ISysEx* pSysEx) { return false; }
   bool IsInst() { return mIsInst; }
   bool DoesMIDI() { return mDoesMIDI; }

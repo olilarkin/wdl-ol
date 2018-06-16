@@ -31,6 +31,7 @@
 kAudioUnitType_MusicDevice      = "aumu"
 kAudioUnitType_MusicEffect      = "aumf"
 kAudioUnitType_Effect           = "aufx"
+kAudioUnitType_MIDIProcessor    = "aumi"
 
 import plistlib, os, datetime, fileinput, glob, sys, string
 scriptpath = os.path.dirname(os.path.realpath(__file__))
@@ -66,7 +67,8 @@ def main():
   PLUG_VIEW_ENTRY = ""
   PLUG_IS_INST = 0
   PLUG_DOES_MIDI = 0
-  
+  PLUG_IS_MFX = 0
+
   # extract values from resource.h
   for line in fileinput.input(projectpath + "/resource.h", inplace=0):
     if "#define PLUG_VER " in line:
@@ -116,7 +118,10 @@ def main():
     
     if "#define PLUG_DOES_MIDI " in line:
       PLUG_DOES_MIDI = int(string.lstrip(line, "#define PLUG_DOES_MIDI "), 16)
-      
+
+    if "#define PLUG_IS_MFX " in line:
+      PLUG_IS_MFX = int(string.lstrip(line, "#define PLUG_IS_MFX "), 16)
+  
   FULLVERSIONSTR = MAJORSTR + "." + MINORSTR + "." + BUGFIXSTR
   
   #strip quotes and newlines
@@ -219,6 +224,8 @@ def main():
   
   if PLUG_IS_INST:
     COMP_TYPE = kAudioUnitType_MusicDevice
+  elif PLUG_IS_MFX:
+    COMP_TYPE = kAudioUnitType_MIDIProcessor
   elif PLUG_DOES_MIDI:
      COMP_TYPE = kAudioUnitType_MusicEffect
   else:

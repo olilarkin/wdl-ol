@@ -1,3 +1,5 @@
+#include <CoreMIDI/CoreMIDI.h>
+
 #include "IPlugAU.h"
 #include "IGraphicsMac.h"
 #include "Log.h"
@@ -986,8 +988,32 @@ OSStatus IPlugAU::GetProperty(AudioUnitPropertyID propID, AudioUnitScope scope, 
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1040
     NO_OP(kAudioUnitProperty_AUHostIdentifier);           // 46,
-    NO_OP(kAudioUnitProperty_MIDIOutputCallbackInfo);     // 47,
-    NO_OP(kAudioUnitProperty_MIDIOutputCallback);         // 48,
+    case kAudioUnitProperty_MIDIOutputCallbackInfo:     // 47,
+    {
+      if(pData == 0)
+      {
+        *pWriteable = false;
+        *pDataSize = sizeof(CFArrayRef);
+      }
+      else
+      {
+        CFStringRef outputName = CFSTR("midiOut");
+        CFArrayRef array = CFArrayCreate(kCFAllocatorDefault, (const void**) &outputName, 1, nullptr);
+        CFRelease(outputName);
+        *((CFArrayRef*) pData) = array;
+      }
+      return noErr;
+    }
+    case kAudioUnitProperty_MIDIOutputCallback:         // 48,
+    {
+      if(pData == 0)
+      {
+        *pWriteable = true;
+        *pDataSize = sizeof(AUMIDIOutputCallbackStruct);
+        
+        return noErr;
+      }
+    }
     NO_OP(kAudioUnitProperty_InputSamplesInOutput);       // 49,
     NO_OP(kAudioUnitProperty_ClassInfoFromDocument);      // 50
 #endif
@@ -1187,7 +1213,11 @@ OSStatus IPlugAU::SetProperty(AudioUnitPropertyID propID, AudioUnitScope scope, 
       return noErr;
     }
     NO_OP(kAudioUnitProperty_MIDIOutputCallbackInfo);   // 47,
-    NO_OP(kAudioUnitProperty_MIDIOutputCallback);       // 48,
+    case kAudioUnitProperty_MIDIOutputCallback:
+    {
+      mMidiCallback = *((AUMIDIOutputCallbackStruct*) pData);
+      return noErr;
+    }
     NO_OP(kAudioUnitProperty_InputSamplesInOutput);       // 49,
     NO_OP(kAudioUnitProperty_ClassInfoFromDocument)       // 50
 #endif
@@ -1563,6 +1593,8 @@ OSStatus IPlugAU::RenderProc(void* pPlug, AudioUnitRenderActionFlags* pFlags, co
   TRACE_PROCESS(TRACELOC, "%d:%d:%d", outputBusIdx, pOutBufList->mNumberBuffers, nFrames);
 
   IPlugAU* _this = (IPlugAU*) pPlug;
+
+  _this->mLastRenderTimeStamp = *pTimestamp;
 
   if (!(pTimestamp->mFlags & kAudioTimeStampSampleTimeValid) || outputBusIdx >= _this->mOutBuses.GetSize() || nFrames > _this->GetBlockSize())
   {
@@ -2104,10 +2136,39 @@ void IPlugAU::SetLatency(int samples)
   IPlugBase::SetLatency(samples);
 }
 
-// TODO: SendMidiMsg
 bool IPlugAU::SendMidiMsg(IMidiMsg* pMsg)
 {
-  return false;
+  MIDIPacketList packetList;
+  
+  packetList.packet[0].data[0] = pMsg->mStatus;
+  packetList.packet[0].data[1] = pMsg->mData1;
+  packetList.packet[0].data[2] = pMsg->mData2;
+  packetList.packet[0].length = 3;
+  packetList.packet[0].timeStamp = pMsg->mOffset;
+  packetList.numPackets = 1;
+
+  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, &packetList);
+  
+  return true;
+}
+
+bool IPlugAU::SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs)
+{
+  MIDIPacketList packetList;
+  packetList.numPackets = pMsgs->GetSize();
+  
+  IMidiMsg* pMsg = pMsgs->Get();
+  for (int i = 0; i < packetList.numPackets; ++i, ++pMsg) {
+    packetList.packet[i].data[0] = pMsg->mStatus;
+    packetList.packet[i].data[1] = pMsg->mData1;
+    packetList.packet[i].data[2] = pMsg->mData2;
+    packetList.packet[i].length = 3;
+    packetList.packet[i].timeStamp = pMsg->mOffset;
+  }
+  
+  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, &packetList);
+  
+  return true;
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070

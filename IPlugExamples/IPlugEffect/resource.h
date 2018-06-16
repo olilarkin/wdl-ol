@@ -50,6 +50,7 @@ instrument determined by PLUG _IS _INST
 
 #define PLUG_LATENCY 0
 #define PLUG_IS_INST 0
+#define PLUG_IS_MFX 0 // AU Midi Effect
 
 // if this is 0 RTAS can't get tempo info
 #define PLUG_DOES_MIDI 0
