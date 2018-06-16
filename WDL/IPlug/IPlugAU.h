@@ -97,6 +97,7 @@ protected:
   void SetLatency(int samples);
   bool SendMidiMsg(IMidiMsg* pMsg);
   bool SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs);
+  bool SendSysEx(ISysEx* pSysEx);
 
   void HostSpecificInit();
   

@@ -2154,19 +2154,46 @@ bool IPlugAU::SendMidiMsg(IMidiMsg* pMsg)
 
 bool IPlugAU::SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs)
 {
-  MIDIPacketList packetList;
-  packetList.numPackets = pMsgs->GetSize();
-  
+  ByteCount listSize = pMsgs->GetSize() * 3;
+  MIDIPacketList* pPktlist = (MIDIPacketList*) malloc(listSize);
+  MIDIPacket* pPkt = MIDIPacketListInit(pPktlist);
+
   IMidiMsg* pMsg = pMsgs->Get();
-  for (int i = 0; i < packetList.numPackets; ++i, ++pMsg) {
-    packetList.packet[i].data[0] = pMsg->mStatus;
-    packetList.packet[i].data[1] = pMsg->mData1;
-    packetList.packet[i].data[2] = pMsg->mData2;
-    packetList.packet[i].length = 3;
-    packetList.packet[i].timeStamp = pMsg->mOffset;
+  for (int i = 0; i < pMsgs->GetSize(); ++i, ++pMsg) {
+    pPkt = MIDIPacketListAdd(pPktlist, listSize, pPkt, pMsg->mOffset /* TODO: is this correct? */, 1, &pMsg->mStatus);
+    pPkt = MIDIPacketListAdd(pPktlist, listSize, pPkt, pMsg->mOffset /* TODO: is this correct? */, 1, &pMsg->mData1);
+    pPkt = MIDIPacketListAdd(pPktlist, listSize, pPkt, pMsg->mOffset /* TODO: is this correct? */, 1, &pMsg->mData2);
   }
   
-  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, &packetList);
+  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, pPktlist);
+  
+  free(pPktlist);
+
+  return true;
+}
+
+bool IPlugAU::SendSysEx(ISysEx* pSysEx)
+{
+  ByteCount listSize = pSysEx->mSize;
+  
+  assert(listSize > 65536); // maximum packet list size
+  
+  MIDIPacketList* pPktlist = (MIDIPacketList*) malloc(listSize);
+  MIDIPacket* pPkt = MIDIPacketListInit(pPktlist);
+  
+  ByteCount bytesLeft = listSize;
+  
+  while (bytesLeft) {
+    ByteCount packetSize = listSize < 256 ? listSize : 256;
+    pPkt = MIDIPacketListAdd(pPktlist, listSize, pPkt, pSysEx->mOffset /* TODO: is this correct? */, packetSize, pSysEx->mData);
+    bytesLeft -= packetSize;
+  }
+  
+  assert(pPkt != nullptr);
+  
+  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, pPktlist);
+  
+  free(pPktlist);
   
   return true;
 }
