@@ -2147,13 +2147,20 @@ bool IPlugAU::SendMidiMsg(IMidiMsg* pMsg)
   packetList.packet[0].timeStamp = pMsg->mOffset;
   packetList.numPackets = 1;
 
-  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, &packetList);
+  if(mMidiCallback.midiOutputCallback)
+  {
+    OSStatus status = mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, &packetList);
+    
+    if (status == noErr)
+      return true;
+  }
   
-  return true;
+  return false;
 }
 
 bool IPlugAU::SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs)
 {
+  bool result = false;
   ByteCount listSize = pMsgs->GetSize() * 3;
   MIDIPacketList* pPktlist = (MIDIPacketList*) malloc(listSize);
   MIDIPacket* pPkt = MIDIPacketListInit(pPktlist);
@@ -2165,15 +2172,23 @@ bool IPlugAU::SendMidiMsgs(WDL_TypedBuf<IMidiMsg>* pMsgs)
     pPkt = MIDIPacketListAdd(pPktlist, listSize, pPkt, pMsg->mOffset /* TODO: is this correct? */, 1, &pMsg->mData2);
   }
   
-  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, pPktlist);
+  if(mMidiCallback.midiOutputCallback)
+  {
+    OSStatus status = mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, pPktlist);
+    
+    if (status == noErr)
+      result = true;
+  }
   
   free(pPktlist);
 
-  return true;
+  return result;
 }
 
 bool IPlugAU::SendSysEx(ISysEx* pSysEx)
 {
+  bool result = false;
+
   ByteCount listSize = pSysEx->mSize;
   
   assert(listSize > 65536); // maximum packet list size
@@ -2191,11 +2206,17 @@ bool IPlugAU::SendSysEx(ISysEx* pSysEx)
   
   assert(pPkt != nullptr);
   
-  mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, pPktlist);
+  if(mMidiCallback.midiOutputCallback)
+  {
+    OSStatus status = mMidiCallback.midiOutputCallback(mMidiCallback.userData, &mLastRenderTimeStamp, 0, pPktlist);
+    
+    if (status == noErr)
+      result = true;
+  }
   
   free(pPktlist);
   
-  return true;
+  return result;
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
