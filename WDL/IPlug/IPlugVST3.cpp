@@ -364,6 +364,7 @@ tresult PLUGIN_API IPlugVST3::setupProcessing (ProcessSetup& newSetup)
   mSampleRate = newSetup.sampleRate;
   mIsBypassed = false;
   IPlugBase::SetBlockSize(newSetup.maxSamplesPerBlock);
+  mMidiOutputQueue.Resize(newSetup.maxSamplesPerBlock);
   Reset();
 
   processSetup = newSetup;
@@ -579,8 +580,7 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
     if (!mMidiOutputQueue.Empty() && outputEvents)
     {
       Event toAdd = {0};
-      IMidiMsg msg;
-      
+
       while (!mMidiOutputQueue.Empty())
       {
         IMidiMsg* pMsg = mMidiOutputQueue.Peek();
