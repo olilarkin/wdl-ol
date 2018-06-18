@@ -9,6 +9,7 @@
 #include "AAX_CEffectGUI.h"
 
 #include "AAX_Push8ByteStructAlignment.h"
+#include "IMidiQueue.h"
 
 const int kAAXParamIdxOffset = 1;
 
@@ -95,6 +96,7 @@ private:
   AAX_CParameter<bool>* mBypassParameter;
   AAX_ITransport* mTransport;
   WDL_PtrList<WDL_String> mParamIDs;
+  IMidiQueue mMidiOutputQueue;
 };
 
 IPlugAAX* MakePlug();

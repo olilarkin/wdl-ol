@@ -135,7 +135,7 @@ IPlugAAX::IPlugAAX(IPlugInstanceInfo instanceInfo,
   }
   
   SetBlockSize(DEFAULT_BLOCK_SIZE);
-  SetHost("ProTools", vendorVersion); // TODO:vendor version correct?  
+  SetHost("ProTools", vendorVersion); // TODO:vendor version correct?
 }
 
 IPlugAAX::~IPlugAAX()
@@ -298,12 +298,7 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
     AAX_CMidiStream* midiBuffer = midiIn->GetNodeBuffer();
     AAX_CMidiPacket* midiBufferPtr = midiBuffer->mBuffer;
     uint32_t packets_count = midiBuffer->mBufferSize;
-    
-    // Setup MIDI Out node pointers 
-//		AAX_IMIDINode* midiNodeOut = instance->mMIDINodeOutP;
-//		AAX_CMidiStream* midiBufferOut = midiNodeOut->GetNodeBuffer();
-//		AAX_CMidiPacket* midiBufferOutPtr = midiBufferOut->mBuffer;
-        
+
     for (int i = 0; i<packets_count; i++, midiBufferPtr++) 
     {
       IMidiMsg msg(midiBufferPtr->mTimestamp, midiBufferPtr->mData[0], midiBufferPtr->mData[1], midiBufferPtr->mData[2]);
@@ -335,21 +330,58 @@ void IPlugAAX::RenderAudio(AAX_SIPlugRenderInfo* ioRenderInfo)
   {
     ProcessBuffers(0.0f, numSamples);
   }
+  
+  // Midi Out
+  if (DoesMIDI())
+  {
+    AAX_IMIDINode* midiOut = ioRenderInfo->mOutputNode;
+
+    if(midiOut)
+    {
+      //MIDI
+      if (!mMidiOutputQueue.Empty())
+      {
+        IMidiMsg msg;
+        
+        while (!mMidiOutputQueue.Empty())
+        {
+          IMidiMsg* pMsg = mMidiOutputQueue.Peek();
+          
+          AAX_CMidiPacket packet;
+          
+          packet.mIsImmediate = true; // TODO: how does this affect sample accuracy?
+          
+          packet.mTimestamp = (uint32_t) pMsg->mOffset;
+          packet.mLength = 3;
+          
+          packet.mData[0] = (char) pMsg->mStatus;
+          packet.mData[1] = (char) pMsg->mData1;
+          packet.mData[2] = (char) pMsg->mData2;
+          
+          midiOut->PostMIDIPacket (&packet);
+
+          mMidiOutputQueue.Remove();
+        }
+      }
+      
+      mMidiOutputQueue.Flush(numSamples);
+    }
+  }
 }
 
 AAX_Result IPlugAAX::GetChunkIDFromIndex( int32_t index, AAX_CTypeID * chunkID )  const 
 {
   IPlugAAX* _this = const_cast<IPlugAAX*>(this);
 
-	if (index != 0)
-	{
-		*chunkID = AAX_CTypeID(0);
-		return AAX_ERROR_INVALID_CHUNK_INDEX;
-	}
-	
-	*chunkID = _this->GetUniqueID();
-  
-	return AAX_SUCCESS;	
+  if (index != 0)
+  {
+    *chunkID = AAX_CTypeID(0);
+    return AAX_ERROR_INVALID_CHUNK_INDEX;
+  }
+
+  *chunkID = _this->GetUniqueID();
+
+  return AAX_SUCCESS;	
 }
 
 AAX_Result IPlugAAX::GetChunkSize(AAX_CTypeID chunkID, uint32_t * oSize ) const
