@@ -324,6 +324,8 @@ tresult PLUGIN_API IPlugVST3::setBusArrangements(SpeakerArrangement* inputs, int
   {
     return kResultTrue;
   }
+  
+  // TODO: instrument with side-chain
 
   if (mScChans && numIns == 2) // numIns = num Input BUSes
   {
