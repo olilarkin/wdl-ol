@@ -8,7 +8,7 @@
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/vsttypes.h"
 #include "pluginterfaces/vst/ivstcontextmenu.h"
-//#include "IMidiQueue.h"
+#include "IMidiQueue.h"
 
 struct IPlugInstanceInfo
 {
@@ -117,7 +117,7 @@ public:
   REFCOUNT_METHODS(SingleComponentEffect)
 
 protected:
-  virtual bool SendMidiMsg(IMidiMsg* pMsg) {return false;}  //TODO
+  bool SendMidiMsg(IMidiMsg* pMsg);
 
 private:
   void addDependentView (IPlugVST3View* view);
@@ -131,7 +131,7 @@ private:
 
   int mScChans;
   bool mSidechainActive;
-//  IMidiQueue mMidiOutputQueue;
+  IMidiQueue mMidiOutputQueue;
   Steinberg::Vst::ProcessContext mProcessContext;
   std::vector <IPlugVST3View*> viewsArray;
   friend class IPlugVST3View;

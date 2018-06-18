@@ -203,7 +203,7 @@ tresult PLUGIN_API IPlugVST3::initialize (FUnknown* context)
     if(DoesMIDI())
     {
       addEventInput (STR16("MIDI Input"), 1);
-      //addEventOutput(STR16("MIDI Output"), 1);
+      addEventOutput(STR16("MIDI Output"), 1);
     }
 
     if (NPresets())
@@ -279,7 +279,11 @@ tresult PLUGIN_API IPlugVST3::setBusArrangements(SpeakerArrangement* inputs, int
   SetInputChannelConnections(0, NInChannels(), false);
   SetOutputChannelConnections(0, NOutChannels(), false);
 
-  int32 reqNumInputChannels = SpeakerArr::getChannelCount(inputs[0]);  //requested # input channels
+  int32 reqNumInputChannels = 0;
+  
+  if(!IsInst())
+    reqNumInputChannels = SpeakerArr::getChannelCount(inputs[0]);  //requested # input channels
+  
   int32 reqNumOutputChannels = SpeakerArr::getChannelCount(outputs[0]);//requested # output channels
 
   // legal io doesn't consider sidechain inputs
@@ -288,16 +292,25 @@ tresult PLUGIN_API IPlugVST3::setBusArrangements(SpeakerArrangement* inputs, int
     return kResultFalse;
   }
 
+  AudioBus* bus;
+  
   // handle input
-  AudioBus* bus = FCast<AudioBus>(audioInputs.at(0));
-
-  // if existing input bus has a different number of channels to the input bus being connected
-  if (bus && SpeakerArr::getChannelCount(bus->getArrangement()) != reqNumInputChannels)
+  if(IsInst())
   {
-    audioInputs.clear();
-    addAudioInput(USTRING("Input"), getSpeakerArrForChans(reqNumInputChannels));
+     audioInputs.clear();
   }
+  else
+  {
+    bus = FCast<AudioBus>(audioInputs.at(0));
 
+    // if existing input bus has a different number of channels to the input bus being connected
+    if (bus && SpeakerArr::getChannelCount(bus->getArrangement()) != reqNumInputChannels)
+    {
+      audioInputs.clear();
+      addAudioInput(USTRING("Input"), getSpeakerArrForChans(reqNumInputChannels));
+    }
+  }
+  
   // handle output
   bus = FCast<AudioBus>(audioOutputs.at(0));
   // if existing output bus has a different number of channels to the output bus being connected
@@ -556,19 +569,50 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
   }
 
 // Midi Out
-//  if (mDoesMidi) {
-//    IEventList eventList = data.outputEvents;
-//
-//    if (eventList)
-//    {
-//      Event event;
-//
-//      while (!mMidiOutputQueue.Empty()) {
-//        //TODO: parse events and add
-//        eventList.addEvent(event);
-//      }
-//    }
-//  }
+  if (DoesMIDI())
+  {
+    IEventList* outputEvents = data.outputEvents;
+    
+    //MIDI
+    if (!mMidiOutputQueue.Empty() && outputEvents)
+    {
+      Event toAdd = {0};
+      IMidiMsg msg;
+      
+      while (!mMidiOutputQueue.Empty())
+      {
+        IMidiMsg* pMsg = mMidiOutputQueue.Peek();
+        
+        if (pMsg->StatusMsg() == IMidiMsg::kNoteOn)
+        {
+          toAdd.type = Event::kNoteOnEvent;
+          toAdd.noteOn.channel = pMsg->Channel();
+          toAdd.noteOn.pitch = pMsg->NoteNumber();
+          toAdd.noteOn.tuning = 0.;
+          toAdd.noteOn.velocity = (float) pMsg->Velocity() * (1.f / 127.f);
+          toAdd.noteOn.length = -1;
+          toAdd.noteOn.noteId = -1; // TODO ?
+          toAdd.sampleOffset = pMsg->mOffset;
+          outputEvents->addEvent(toAdd);
+        }
+        else if (pMsg->StatusMsg() == IMidiMsg::kNoteOff)
+        {
+          toAdd.type = Event::kNoteOffEvent;
+          toAdd.noteOff.channel = pMsg->Channel();
+          toAdd.noteOff.pitch = pMsg->NoteNumber();
+          toAdd.noteOff.velocity = (float) pMsg->Velocity() * (1.f / 127.f);
+          toAdd.noteOff.noteId = -1; // TODO ?
+          toAdd.sampleOffset = pMsg->mOffset;
+          outputEvents->addEvent(toAdd);
+        }
+        
+        mMidiOutputQueue.Remove();
+        // don't add any midi messages other than noteon/noteoff
+      }
+    }
+    
+    mMidiOutputQueue.Flush(data.numSamples);
+  }
 
   return kResultOk;
 }
@@ -1009,6 +1053,12 @@ void IPlugVST3::PopupHostContextMenuForParam(int param, int x, int y)
     menu->popup((UCoord) x,(UCoord) y);
     menu->release();
   }
+}
+
+bool IPlugVST3::SendMidiMsg(IMidiMsg* pMsg)
+{
+  mMidiOutputQueue.Add(pMsg);
+  return true;
 }
 
 //void IPlugVST3::DumpFactoryPresets(const char* path, int a, int b, int c, int d)
