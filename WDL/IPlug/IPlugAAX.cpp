@@ -562,8 +562,8 @@ void IPlugAAX::SetLatency(int latency)
   IPlugBase::SetLatency(latency); // will update delay time
 }
 
-// TODO: SendMidiMsg()
 bool IPlugAAX::SendMidiMsg(IMidiMsg* pMsg)
 {
-  return false;
+  mMidiOutputQueue.Add(pMsg);
+  return true;
 }
