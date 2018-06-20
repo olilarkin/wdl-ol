@@ -60,6 +60,8 @@ public:
   virtual void OnGUIOpen() { TRACE; }
   virtual void OnGUIClose() { TRACE; }
 
+  virtual void OnMouseDown(int x, int y, IMouseMod* pMod, int controlIdx) {}
+
   // This is an idle call from the audio processing thread, as opposed to
   // IGraphics::OnGUIIdle which is called from the GUI thread.
   // Only active if USE_IDLE_CALLS is defined.

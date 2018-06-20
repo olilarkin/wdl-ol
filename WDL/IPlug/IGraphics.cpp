@@ -854,6 +854,7 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 {
   ReleaseMouseCapture();
   int c = GetMouseControlIdx(x, y);
+  mPlug->OnMouseDown(x, y, pMod, c);
   if (c >= 0)
   {
     mMouseCapture = c;
