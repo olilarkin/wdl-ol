@@ -209,7 +209,7 @@ AAX_Result IPlugAAX::EffectInit()
                                         AAX_CString(p->GetNameForHost()), 
                                         (int)p->GetDefault(), 
                                         AAX_CLinearTaperDelegate<int,1>((int)p->GetMin(), (int)p->GetMax()),
-                                        AAX_CUnitDisplayDelegateDecorator<int>( AAX_CNumberDisplayDelegate<int>(), AAX_CString(p->GetLabelForHost())), 
+                                        AAX_CUnitDisplayDelegateDecorator<int>( AAX_CNumberDisplayDelegate<int,0>(), AAX_CString(p->GetLabelForHost())), 
                                         p->GetCanAutomate());
         
         param->SetNumberOfSteps(128);
