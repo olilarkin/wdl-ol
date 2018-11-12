@@ -5,13 +5,35 @@
 #include <math.h>
 
 // The number of presets/programs
-const int kNumPrograms = 8;
+const int kNumPrograms = 128;
 
 // An enumerated list for all the parameters of the plugin
 enum EParams
 {
   kGain = 0,
   kNumParams, // the last element is used to store the total number of parameters
+};
+
+// Pointer to parameter names for use by preset file menu to dump/ append preset source from named parameters.
+const char* pParamNames[] =
+{
+  //"kParam1",
+  //"kParam2",
+  //"Param3",
+  "kGain"
+};
+
+//Pointer to SubMenu names for use by PresetSubMenu control. 8 submenus max.
+const char* pSubMenuNames[] =
+{
+  "Factory Presets 1",
+  "Factory Presets 2",
+  "User Presets 1",
+  "User Presets 2",
+  "User Presets 3",
+  "User Presets 4",
+  "User Presets 5",
+  "User Presets 6"
 };
 
 const int kDummyParamForMultislider = -2;
@@ -22,7 +44,7 @@ enum ELayout
   kH = 300
 };
 
-class ITempPresetSaveButtonControl : public IPanelControl
+/*class ITempPresetSaveButtonControl : public IPanelControl
 {
 public:
   ITempPresetSaveButtonControl(IPlugBase *pPlug, IRECT pR)
@@ -40,7 +62,7 @@ public:
     mPlug->DumpPresetBlob(presetFilePath.Get());
   }
 
-};
+};*/
 
 class PresetFunctionsMenu : public IPanelControl
 {
@@ -134,18 +156,15 @@ IPlugChunks::IPlugChunks(IPlugInstanceInfo instanceInfo)
   // Define parameter ranges, display units, labels.
   //arguments are: name, defaultVal, minVal, maxVal, step, label
   GetParam(kGain)->InitDouble("Gain", 0.0, -70.0, 12.0, 0.1, "dB");
-
-  MakePresetFromBlob("Ramp Up", "AAAAAJqZqT8AAAAAmpm5PwAAAIA9Csc/AAAAAAAA0D8AAABA4XrUPwAAAIDC9dg/AAAAwMzM3D8AAAAQ16PgPwAAALBH4eI/AAAA0MzM5D8AAADwUbjmPwAAAAjXo+g/AAAAKFyP6j8AAADMzMzsPwAAAOxRuO4/AAAAAAAA8D8AAAAAAAC8Pg==", 136);
-  MakePresetFromBlob("Ramp Down", "AAAA7FG47j8AAABI4XrsPwAAALBH4eo/AAAAGK5H6T8AAABwPQrnPwAAANDMzOQ/AAAAwB6F4z8AAAAghevhPwAAAAB7FN4/AAAAgOtR2D8AAABAuB7VPwAAAACuR9E/AAAAgEfhyj8AAAAAhevBPwAAAABSuK4/AAAAAOB6hD8AAAAAAAC8Pg==", 136);
-  MakePresetFromBlob("Triangle", "AAAAAIXrwT8AAACAR+HKPwAAAEBcj9I/AAAAgBSu1z8AAADA9SjcPwAAABDXo+A/AAAAsEfh4j8AAABQuB7lPwAAAGBmZuY/AAAAMDMz4z8AAAAAAADgPwAAAMD1KNw/AAAAQI/C1T8AAAAArkfRPwAAAICPwsU/AAAAAJqZuT8AAAAAAAAAAA==", 136);
-  MakePresetFromBlob("Inv Triangle", "AAAAAAAA8D8AAABQuB7tPwAAAKBwPeo/AAAAcD0K5z8AAABA4XrkPwAAAJDC9eA/AAAAwEfh2j8AAABAj8LVPwAAAECPwtU/AAAAwMzM3D8AAAAghevhPwAAANDMzOQ/AAAAgBSu5z8AAACYmZnpPwAAAFyPwu0/AAAAAAAA8D8AAAAAAAAAAA==", 136);
-  MakePresetFromBlob("Da Endz", "AAAAAAAA8D8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAAAA8D8AAAAAAAAAAA==", 136);
-  MakePresetFromBlob("Alternate", "AAAAAAAA8D8AAAAA4HqEPwAAAAAAAPA/AAAAAOB6hD8AAAAAAADwPwAAAADgeoQ/AAAAAAAA8D8AAAAA4HqEPwAAAAAAAPA/AAAAAOB6hD8AAAAAAADwPwAAAADgeoQ/AAAAAAAA8D8AAAAA4HqEPwAAAAAAAPA/AAAAAOB6hD8AAAAAAAAAAA==", 136);
-  MakePresetFromBlob("Alt Ramp Down", "AAAAAAAA8D8AAAAA4HqEPwAAALgehes/AAAAAOB6hD8AAACI61HoPwAAAADgeoQ/AAAAQArX4z8AAAAA4HqEPwAAAAAAAOA/AAAAAOB6hD8AAABAuB7VPwAAAADgeoQ/AAAAAKRwzT8AAAAA4HqEPwAAAAAzM8M/AAAAAOB6hD8AAAAAAAAAAA==", 136);
-  MakePresetFromBlob("Alt Ramp Up", "AAAAgJmZyT8AAAAA4HqEPwAAAIBmZtY/AAAAAOB6hD8AAAAAKVzfPwAAAADgeoQ/AAAAMFyP4j8AAAAA4HqEPwAAAEDheuQ/AAAAAOB6hD8AAADwKFznPwAAAADgeoQ/AAAAIIXr6T8AAAAA4HqEPwAAANijcO0/AAAAAOB6hD8AAAAAAAAAAA==", 136);
-
+    
   IGraphics* pGraphics = MakeGraphics(this, kW, kH);
   pGraphics->AttachPanelBackground(&COLOR_BLUE);
+
+  IText textProps3 = IText(14, &IColor(255, 0, 255, 255), "Tahoma", IText::kStyleNormal,
+    IText::kAlignNear, 0, IText::kQualityDefault, &COLOR_TRANSPARENT, &IColor(255, 0, 255, 255));
+
+  pGraphics->AttachControl(new PresetSubMenu(this, IRECT(32, 150, 208, 166), &textProps3, pSubMenuNames, &COLOR_BLACK));
+  pGraphics->AttachControl(new PresetFileMenuDev(this, IRECT(300, 250, 320, 270), pParamNames, &COLOR_BLACK, &COLOR_WHITE));
 
   mMSlider = new MultiSliderControlV(this, IRECT(10, 10, 170, 110), kDummyParamForMultislider, NUM_SLIDERS, 10, &COLOR_WHITE, &COLOR_BLACK, &COLOR_RED);
 
@@ -156,6 +175,9 @@ IPlugChunks::IPlugChunks(IPlugInstanceInfo instanceInfo)
   pGraphics->AttachControl(new PresetFunctionsMenu(this, IRECT(350, 250, 390, 290)));
 
   AttachGraphics(pGraphics);
+
+  //Initialize Presets
+  CreatePresets();
   
   // call RestorePreset(0) here which will initialize the multislider in the gui and the mSteps array
   RestorePreset(0);
@@ -233,6 +255,35 @@ void IPlugChunks::OnParamChange(int paramIdx)
       break;
     default:
       break;
+  }
+}
+
+void IPlugChunks::CreatePresets()
+{
+  IMutexLock lock(this);
+  int n = 0;
+  //Add presets below here and increment n after each preset **********
+  MakePresetFromBlob("Ramp Up", "AAAAAJqZqT8AAAAAmpm5PwAAAIA9Csc/AAAAAAAA0D8AAABA4XrUPwAAAIDC9dg/AAAAwMzM3D8AAAAQ16PgPwAAALBH4eI/AAAA0MzM5D8AAADwUbjmPwAAAAjXo+g/AAAAKFyP6j8AAADMzMzsPwAAAOxRuO4/AAAAAAAA8D8AAAAAAAC8Pg==", 136);
+  ++n;
+  MakePresetFromBlob("Ramp Down", "AAAA7FG47j8AAABI4XrsPwAAALBH4eo/AAAAGK5H6T8AAABwPQrnPwAAANDMzOQ/AAAAwB6F4z8AAAAghevhPwAAAAB7FN4/AAAAgOtR2D8AAABAuB7VPwAAAACuR9E/AAAAgEfhyj8AAAAAhevBPwAAAABSuK4/AAAAAOB6hD8AAAAAAAC8Pg==", 136);
+  ++n;
+  MakePresetFromBlob("Triangle", "AAAAAIXrwT8AAACAR+HKPwAAAEBcj9I/AAAAgBSu1z8AAADA9SjcPwAAABDXo+A/AAAAsEfh4j8AAABQuB7lPwAAAGBmZuY/AAAAMDMz4z8AAAAAAADgPwAAAMD1KNw/AAAAQI/C1T8AAAAArkfRPwAAAICPwsU/AAAAAJqZuT8AAAAAAAAAAA==", 136);
+  ++n;
+  MakePresetFromBlob("Inv Triangle", "AAAAAAAA8D8AAABQuB7tPwAAAKBwPeo/AAAAcD0K5z8AAABA4XrkPwAAAJDC9eA/AAAAwEfh2j8AAABAj8LVPwAAAECPwtU/AAAAwMzM3D8AAAAghevhPwAAANDMzOQ/AAAAgBSu5z8AAACYmZnpPwAAAFyPwu0/AAAAAAAA8D8AAAAAAAAAAA==", 136);
+  ++n;
+  MakePresetFromBlob("Da Endz", "AAAAAAAA8D8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAOB6hD8AAAAA4HqEPwAAAADgeoQ/AAAAAAAA8D8AAAAAAAAAAA==", 136);
+  ++n;
+  MakePresetFromBlob("Alternate", "AAAAAAAA8D8AAAAA4HqEPwAAAAAAAPA/AAAAAOB6hD8AAAAAAADwPwAAAADgeoQ/AAAAAAAA8D8AAAAA4HqEPwAAAAAAAPA/AAAAAOB6hD8AAAAAAADwPwAAAADgeoQ/AAAAAAAA8D8AAAAA4HqEPwAAAAAAAPA/AAAAAOB6hD8AAAAAAAAAAA==", 136);
+  ++n;
+  MakePresetFromBlob("Alt Ramp Down", "AAAAAAAA8D8AAAAA4HqEPwAAALgehes/AAAAAOB6hD8AAACI61HoPwAAAADgeoQ/AAAAQArX4z8AAAAA4HqEPwAAAAAAAOA/AAAAAOB6hD8AAABAuB7VPwAAAADgeoQ/AAAAAKRwzT8AAAAA4HqEPwAAAAAzM8M/AAAAAOB6hD8AAAAAAAAAAA==", 136);
+  ++n;
+  MakePresetFromBlob("Alt Ramp Up", "AAAAgJmZyT8AAAAA4HqEPwAAAIBmZtY/AAAAAOB6hD8AAAAAKVzfPwAAAADgeoQ/AAAAMFyP4j8AAAAA4HqEPwAAAEDheuQ/AAAAAOB6hD8AAADwKFznPwAAAADgeoQ/AAAAIIXr6T8AAAAA4HqEPwAAANijcO0/AAAAAOB6hD8AAAAAAAAAAA==", 136);
+  ++n;
+  // Add presets above here ***************
+  for (int i = 0; i < kNumPrograms - n; ++i)
+  {
+    //Add "User Preset" with default parameter settings here
+    MakePresetFromBlob("User Preset", "AAAAAJqZqT8AAAAAmpm5PwAAAIA9Csc/AAAAAAAA0D8AAABA4XrUPwAAAIDC9dg/AAAAwMzM3D8AAAAQ16PgPwAAALBH4eI/AAAA0MzM5D8AAADwUbjmPwAAAAjXo+g/AAAAKFyP6j8AAADMzMzsPwAAAOxRuO4/AAAAAAAA8D8AAAAAAAC8Pg==", 136);
   }
 }
 
