@@ -800,6 +800,24 @@ const char* IPlugBase::GetPresetName(int idx)
   return "";
 }
 
+void IPlugBase::ModifyPreset(int idx, const char* name)
+{
+  if (idx >= 0 && idx < mPresets.GetSize())
+  {
+    IPreset* pPreset = mPresets.Get(idx);
+    pPreset->mChunk.Clear();
+
+    Trace(TRACELOC, "%d %s", idx, pPreset->mName);
+
+    SerializeState(&(pPreset->mChunk));
+
+    if (CSTR_NOT_EMPTY(name))
+    {
+      strcpy(pPreset->mName, name);
+    }
+  }
+}
+
 void IPlugBase::ModifyCurrentPreset(const char* name)
 {
   if (mCurrentPresetIdx >= 0 && mCurrentPresetIdx < mPresets.GetSize())
@@ -947,7 +965,7 @@ void IPlugBase::DirtyParameters()
 
 void IPlugBase::DumpPresetSrcCode(const char* filename, const char* paramEnumNames[])
 {
-// static bool sDumped = false;
+  // static bool sDumped = false;
   bool sDumped = false;
 
   if (!sDumped)
@@ -955,6 +973,10 @@ void IPlugBase::DumpPresetSrcCode(const char* filename, const char* paramEnumNam
     sDumped = true;
     int i, n = NParams();
     FILE* fp = fopen(filename, "w");
+
+    if (!fp)
+      return;
+
     fprintf(fp, "  MakePresetFromNamedParams(\"name\", %d", n);
     for (i = 0; i < n; ++i)
     {
@@ -962,23 +984,111 @@ void IPlugBase::DumpPresetSrcCode(const char* filename, const char* paramEnumNam
       char paramVal[32];
       switch (pParam->Type())
       {
-        case IParam::kTypeBool:
-          sprintf(paramVal, "%s", (pParam->Bool() ? "true" : "false"));
-          break;
-        case IParam::kTypeInt:
-          sprintf(paramVal, "%d", pParam->Int());
-          break;
-        case IParam::kTypeEnum:
-          sprintf(paramVal, "%d", pParam->Int());
-          break;
-        case IParam::kTypeDouble:
-        default:
-          sprintf(paramVal, "%.6f", pParam->Value());
-          break;
+      case IParam::kTypeBool:
+        sprintf(paramVal, "%s", (pParam->Bool() ? "true" : "false"));
+        break;
+      case IParam::kTypeInt:
+        sprintf(paramVal, "%d", pParam->Int());
+        break;
+      case IParam::kTypeEnum:
+        sprintf(paramVal, "%d", pParam->Int());
+        break;
+      case IParam::kTypeDouble:
+      default:
+        sprintf(paramVal, "%.6f", pParam->Value());
+        break;
       }
       fprintf(fp, ",\n    %s, %s", paramEnumNames[i], paramVal);
     }
     fprintf(fp, ");\n");
+    fclose(fp);
+  }
+}
+
+/*Dumps/adds preset source for "MakePreset" to a txt file. Adds data to an existing file, otherwise creates a new one.
+++n is an integer used in CreatePresets() to count the number of presets created. */
+void IPlugBase::AppendPrstSrc(const char* filename)
+{
+  bool sDumped = false;
+  if (!sDumped)
+  {
+    sDumped = true;
+    int i, n = NParams();
+    FILE* fp = fopen(filename, "a");
+
+    if (!fp)
+      return;
+
+    int pNumber = GetCurrentPresetIdx();
+    fprintf(fp, "  MakePreset(\"%s\"", GetPresetName(pNumber));
+    for (i = 0; i < n; ++i)
+    {
+      IParam* pParam = GetParam(i);
+      char paramVal[32];
+      switch (pParam->Type())
+      {
+      case IParam::kTypeBool:
+        sprintf(paramVal, "%s", (pParam->Bool() ? "true" : "false"));
+        break;
+      case IParam::kTypeInt:
+        sprintf(paramVal, "%d", pParam->Int());
+        break;
+      case IParam::kTypeEnum:
+        sprintf(paramVal, "%d", pParam->Int());
+        break;
+      case IParam::kTypeDouble:
+      default:
+        sprintf(paramVal, "%.6f", pParam->Value());
+        break;
+      }
+      fprintf(fp, ", %s", paramVal);
+    }
+    fprintf(fp, ");\n");
+    fprintf(fp, "  ++n;\n");
+    fclose(fp);
+  }
+}
+
+/*Dumps/adds MakePresetFromNamedParams to a text file. Adds data to an existing file, otherwise creates a new one.
+++n is an integer used in CreatePresets() to count the number of presets created. */
+void IPlugBase::AppendPrstSrcNamed(const char* filename, const char* paramEnumNames[])
+{
+  bool sDumped = false;
+  if (!sDumped)
+  {
+    sDumped = true;
+    int i, n = NParams();
+    FILE* fp = fopen(filename, "a");
+
+    if (!fp)
+      return;
+
+    int pNumber = GetCurrentPresetIdx();
+    fprintf(fp, "  MakePresetFromNamedParams(\"%s\", %d", GetPresetName(pNumber), n);
+    for (i = 0; i < n; ++i)
+    {
+      IParam* pParam = GetParam(i);
+      char paramVal[32];
+      switch (pParam->Type())
+      {
+      case IParam::kTypeBool:
+        sprintf(paramVal, "%s", (pParam->Bool() ? "true" : "false"));
+        break;
+      case IParam::kTypeInt:
+        sprintf(paramVal, "%d", pParam->Int());
+        break;
+      case IParam::kTypeEnum:
+        sprintf(paramVal, "%d", pParam->Int());
+        break;
+      case IParam::kTypeDouble:
+      default:
+        sprintf(paramVal, "%.6f", pParam->Value());
+        break;
+      }
+      fprintf(fp, ",\n    %s, %s", paramEnumNames[i], paramVal);
+    }
+    fprintf(fp, ");\n");
+    fprintf(fp, "  ++n;\n");
     fclose(fp);
   }
 }
@@ -990,6 +1100,10 @@ void IPlugBase::DumpPresetSrcCode(const char* filename, const char* paramEnumNam
 void IPlugBase::DumpPresetBlob(const char* filename)
 {
   FILE* fp = fopen(filename, "w");
+
+  if (!fp)
+    return;
+
   fprintf(fp, "MakePresetFromBlob(\"name\", \"");
 
   char buf[MAX_BLOB_LENGTH];
@@ -1003,26 +1117,51 @@ void IPlugBase::DumpPresetBlob(const char* filename)
   fclose(fp);
 }
 
+/*Dumps MakePresetFromBlob() for current preset to a new text file or adds to one that already exists.
+++n is an integer used in CreatePresets() to count the number of presets created. */
+void IPlugBase::AppendPresetBlob(const char* filename)
+{
+  FILE* fp = fopen(filename, "a");
+
+  if (!fp)
+    return;
+
+  int pNumber = GetCurrentPresetIdx();
+  fprintf(fp, "  MakePresetFromBlob(\"%s\", \"", GetPresetName(pNumber));
+
+  char buf[MAX_BLOB_LENGTH];
+
+  ByteChunk* pPresetChunk = &mPresets.Get(mCurrentPresetIdx)->mChunk;
+  BYTE* byteStart = pPresetChunk->GetBytes();
+
+  base64encode(byteStart, buf, pPresetChunk->Size());
+
+  fprintf(fp, "%s\", %i);\n", buf, pPresetChunk->Size());
+  fprintf(fp, "  ++n;\n");
+  fclose(fp);
+}
+
 void IPlugBase::DumpBankBlob(const char* filename)
 {
   FILE* fp = fopen(filename, "w");
-  
+
   if (!fp)
     return;
-  
+
   char buf[MAX_BLOB_LENGTH] = "";
-  
-  for (int i = 0; i< NPresets(); i++)
+
+  for (int i = 0; i < NPresets(); i++)
   {
     IPreset* pPreset = mPresets.Get(i);
-    fprintf(fp, "MakePresetFromBlob(\"%s\", \"", pPreset->mName);
-    
+    fprintf(fp, "  MakePresetFromBlob(\"%s\", \"", pPreset->mName);
+
     ByteChunk* pPresetChunk = &pPreset->mChunk;
     base64encode(pPresetChunk->GetBytes(), buf, pPresetChunk->Size());
-    
+
     fprintf(fp, "%s\", %i);\n", buf, pPresetChunk->Size());
+    fprintf(fp, "  ++n;\n"); // Added "++n" to keep count of presets in projects CreatePresets() function. ******************************
   }
-  
+
   fclose(fp);
 }
 
