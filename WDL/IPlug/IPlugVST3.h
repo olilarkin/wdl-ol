@@ -46,16 +46,16 @@ public:
   Steinberg::tresult PLUGIN_API setActive(Steinberg::TBool state);
   Steinberg::tresult PLUGIN_API setupProcessing (Steinberg::Vst::ProcessSetup& newSetup);
   Steinberg::tresult PLUGIN_API process(Steinberg::Vst::ProcessData& data);
-//  Steinberg::tresult PLUGIN_API setState(IBStream* state);
-//  Steinberg::tresult PLUGIN_API getState(IBStream* state);
-//  Steinberg::tresult PLUGIN_API setComponentState(IBStream *state);
+  Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state);
+  Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state);
+  Steinberg::tresult PLUGIN_API setComponentState(Steinberg::IBStream *state);
   Steinberg::tresult PLUGIN_API canProcessSampleSize(Steinberg::int32 symbolicSampleSize);
   Steinberg::uint32 PLUGIN_API getLatencySamples ();
   Steinberg::uint32 PLUGIN_API getTailSamples() { return GetTailSize(); }
   // IEditController
   Steinberg::IPlugView* PLUGIN_API createView (const char* name);
-  Steinberg::tresult PLUGIN_API setEditorState (Steinberg::IBStream* state);
-  Steinberg::tresult PLUGIN_API getEditorState (Steinberg::IBStream* state);
+  //Steinberg::tresult PLUGIN_API setEditorState (Steinberg::IBStream* state);
+  //Steinberg::tresult PLUGIN_API getEditorState (Steinberg::IBStream* state);
   Steinberg::tresult PLUGIN_API setParamNormalized (Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue value);
   Steinberg::Vst::ParamValue PLUGIN_API getParamNormalized(Steinberg::Vst::ParamID tag);
   Steinberg::Vst::ParamValue PLUGIN_API plainParamToNormalized(Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue plainValue);

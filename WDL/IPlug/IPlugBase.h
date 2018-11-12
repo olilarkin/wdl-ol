@@ -99,6 +99,7 @@ public:
   int NParams() { return mParams.GetSize(); }
   IParam* GetParam(int idx) { return mParams.Get(idx); }
   IGraphics* GetGUI() { return mGraphics; }
+  IPreset* GetPreset(int idx) { return mPresets.Get(idx); }
 
   const char* GetEffectName() { return mEffectName; }
   int GetEffectVersion(bool decimal);   // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
