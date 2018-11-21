@@ -178,6 +178,7 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mCursorHidden(false)
   , mHiddenMousePointX(-1)
   , mHiddenMousePointY(-1)
+  , mCursor(NULL)
   , mEnableTooltips(false)
   , mShowControlBounds(false)
 {
@@ -1017,6 +1018,24 @@ bool IGraphics::OnKeyDown(int x, int y, int key)
     return mKeyCatcher->OnKeyDown(x, y, key);
   else
     return false;
+}
+
+void IGraphics::SetMouseCursor(HCURSOR cursor)
+{
+  mCursor = cursor;
+  UpdateMouseCursor();
+}
+
+void IGraphics::UpdateMouseCursor()
+{
+  if (mCursor != NULL)
+  {
+    SetCursor(mCursor);
+  }
+  else
+  {
+    SetCursor(LoadCursor(NULL, IDC_ARROW));
+  }
 }
 
 int IGraphics::GetMouseControlIdx(int x, int y, bool mo)
