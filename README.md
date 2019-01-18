@@ -1,11 +1,15 @@
+# This project is now archived and is no longer developed
+
+iPlug 2 is the continuation, please go and star/follow that ->
+
+https://github.com/iPlug2/iPlug2
+
+--------------------------------------------
+
 # WDL / IPlug (Oli Larkin Edition)
 
 IPlug is a simple-to-use C++ framework for developing cross platform audio plugins and targeting multiple plugin APIs with the same code. Originally developed by Schwa/Cockos, IPlug has been enhanced by various contributors. IPlug depends on WDL, and that is why this project is called WDL-OL,  although most of the differences from Cockos' WDL are to do with IPlug.
 This version of IPlug targets VST2, VST3, AudioUnit RTAS and AAX (Native) APIs. It can also produce standalone Windows/macOS audio/midi apps. 
-
-**NOTE: This project is currently going through a massive re-factoring with some great new features coming. "IPlug2" will be released sometime in 2018. In the meantime I have updated this master branch which was very stale and was not compiling with current versions of Xcode and Visual Studio. There are probably a few things not working so well and out of date information, but I would much rather spend my time on IPlug2, which will provide options to maintain backwards compatibility as best as possible.** 
-
-**Much of this work is not exactly fun. If you appreciate having a completely free open source and easy-to-use C++ plug-in framework, free of commercial interest, please consider supporting my efforts financially via [my patreon](https://patreon.com/olilarkin) (even a token contribution of $1/month means a lot)**
 
 This version of WDL/IPlug shares the same license as the Cockos edition. Several of the added features are based on the work of other people. See individual source code files for any extra license information.
 
