@@ -2025,8 +2025,8 @@
 				OTHER_REZFLAGS = "-d ppc_$ppc -d i386_$i386 -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I $CA_SDK/AudioUnits/AUPublic/AUBase";
 				PREBINDING = YES;
 				REZ_SEARCH_PATHS = (
+					"$(SRCROOT)",
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
-					$CA_SDK/AudioUnits/AUPublic/AUBase,
 				);
 				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = component;
@@ -2047,8 +2047,8 @@
 				OTHER_REZFLAGS = "-d ppc_$ppc -d i386_$i386 -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I $CA_SDK/AudioUnits/AUPublic/AUBase";
 				PREBINDING = YES;
 				REZ_SEARCH_PATHS = (
+					"$(SRCROOT)",
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
-					$CA_SDK/AudioUnits/AUPublic/AUBase,
 				);
 				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = component;
@@ -2069,8 +2069,8 @@
 				OTHER_REZFLAGS = "-d ppc_$ppc -d i386_$i386 -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I $CA_SDK/AudioUnits/AUPublic/AUBase";
 				PREBINDING = YES;
 				REZ_SEARCH_PATHS = (
+					"$(SRCROOT)",
 					/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers,
-					$CA_SDK/AudioUnits/AUPublic/AUBase,
 				);
 				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = component;
