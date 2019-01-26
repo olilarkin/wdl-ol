@@ -59,3 +59,4 @@ RELEASE_OPTIMIZE = 3 //0,1,2,3,s
 // Debug build options
 DEBUG_OPTIMIZE = 0 //0,1,2,3,s
 
+ARCHS = $(ARCHS_STANDARD_64_BIT)

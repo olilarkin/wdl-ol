@@ -372,9 +372,9 @@
 			productReference = 4FA708BC158B47D200BFC572 /* libbase32.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		D2AAC045055464E500DB518D /* base_32&64_intel */ = {
+		D2AAC045055464E500DB518D /* base_64_intel */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "base_32&64_intel" */;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "base_64_intel" */;
 			buildPhases = (
 				D2AAC043055464E500DB518D /* Headers */,
 				D2AAC044055464E500DB518D /* Sources */,
@@ -384,7 +384,7 @@
 			);
 			dependencies = (
 			);
-			name = "base_32&64_intel";
+			name = base_64_intel;
 			productName = base;
 			productReference = D2AAC046055464E500DB518D /* libbase.a */;
 			productType = "com.apple.product-type.library.static";
@@ -413,7 +413,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D2AAC045055464E500DB518D /* base_32&64_intel */,
+				D2AAC045055464E500DB518D /* base_64_intel */,
 				4FA7087C158B47D200BFC572 /* base_32_intel */,
 			);
 		};
@@ -471,6 +471,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4FA70847158B454300BFC572 /* common.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 			};
 			name = Debug;
 		};
@@ -478,6 +479,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4FA70847158B454300BFC572 /* common.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				DEPLOYMENT_POSTPROCESSING = NO;
 			};
 			name = Release;
@@ -549,7 +551,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "base_32&64_intel" */ = {
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "base_64_intel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91EC08733DB70010E9CD /* Debug */,

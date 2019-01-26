@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D2AAC045055464E500DB518D"
-               BuildableName = "libbase.a"
-               BlueprintName = "base_32&amp;64_intel"
-               ReferencedContainer = "container:base.xcodeproj">
+               BuildableName = "lice.a"
+               BlueprintName = "lice_64_intel"
+               ReferencedContainer = "container:lice.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,9 +46,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D2AAC045055464E500DB518D"
-            BuildableName = "libbase.a"
-            BlueprintName = "base_32&amp;64_intel"
-            ReferencedContainer = "container:base.xcodeproj">
+            BuildableName = "lice.a"
+            BlueprintName = "lice_64_intel"
+            ReferencedContainer = "container:lice.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -60,6 +60,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "D2AAC045055464E500DB518D"
+            BuildableName = "lice.a"
+            BlueprintName = "lice_64_intel"
+            ReferencedContainer = "container:lice.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

@@ -414,9 +414,9 @@
 			productReference = 4F8D4C1413E976A7004F7633 /* lice32.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		D2AAC045055464E500DB518D /* lice_32&64_intel */ = {
+		D2AAC045055464E500DB518D /* lice_64_intel */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "lice_32&64_intel" */;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "lice_64_intel" */;
 			buildPhases = (
 				D2AAC043055464E500DB518D /* Headers */,
 				D2AAC044055464E500DB518D /* Sources */,
@@ -426,7 +426,7 @@
 			);
 			dependencies = (
 			);
-			name = "lice_32&64_intel";
+			name = lice_64_intel;
 			productName = lice;
 			productReference = D2AAC046055464E500DB518D /* lice.a */;
 			productType = "com.apple.product-type.library.static";
@@ -454,7 +454,7 @@
 			projectRoot = "";
 			targets = (
 				4F8D4C1B13E97722004F7633 /* All */,
-				D2AAC045055464E500DB518D /* lice_32&64_intel */,
+				D2AAC045055464E500DB518D /* lice_64_intel */,
 				4F8D4BD513E976A7004F7633 /* lice_32_intel */,
 			);
 		};
@@ -560,7 +560,7 @@
 /* Begin PBXTargetDependency section */
 		4F8D4C2013E97732004F7633 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = D2AAC045055464E500DB518D /* lice_32&64_intel */;
+			target = D2AAC045055464E500DB518D /* lice_64_intel */;
 			targetProxy = 4F8D4C1F13E97732004F7633 /* PBXContainerItemProxy */;
 		};
 		4F8D4C2213E97732004F7633 /* PBXTargetDependency */ = {
@@ -576,7 +576,7 @@
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = "";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -598,7 +598,7 @@
 			baseConfigurationReference = 4F8D4BAD13E974CF004F7633 /* lice.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				EXECUTABLE_PREFIX = "";
 				GCC_ENABLE_SSE3_EXTENSIONS = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -720,7 +720,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "lice_32&64_intel" */ = {
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "lice_64_intel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91EC08733DB70010E9CD /* Debug */,
