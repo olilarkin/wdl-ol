@@ -31,6 +31,7 @@
 kAudioUnitType_MusicDevice      = "aumu"
 kAudioUnitType_MusicEffect      = "aumf"
 kAudioUnitType_Effect           = "aufx"
+kAudioUnitType_MIDIProcessor    = "aumi"
 
 import plistlib, os, datetime, fileinput, glob, sys, string
 scriptpath = os.path.dirname(os.path.realpath(__file__))
@@ -66,11 +67,12 @@ def main():
   PLUG_VIEW_ENTRY = ""
   PLUG_IS_INST = 0
   PLUG_DOES_MIDI = 0
-  
+  PLUG_IS_MFX = 0
+
   # extract values from resource.h
   for line in fileinput.input(projectpath + "/resource.h", inplace=0):
     if "#define PLUG_VER " in line:
-      PLUG_VER_STR = string.lstrip(line, "#define PLUG_VER ")
+      PLUG_VER_STR = line.split("#define PLUG_VER ")[1]
       PLUG_VER = int(PLUG_VER_STR, 16)
       MAJOR = PLUG_VER & 0xFFFF0000
       MAJORSTR = str(MAJOR >> 16)
@@ -79,44 +81,47 @@ def main():
       BUGFIXSTR = str(PLUG_VER & 0x000000FF)
       
     if "#define PLUG_NAME " in line:
-      PLUG_NAME_STR = string.lstrip(line, "#define PLUG_NAME ")
+      PLUG_NAME_STR = line.split("#define PLUG_NAME ")[1]
       
     if "#define PLUG_MFR " in line:
-      PLUG_MFR_NAME_STR = string.lstrip(line, "#define PLUG_MFR ")
+      PLUG_MFR_NAME_STR = line.split("#define PLUG_MFR ")[1]
       
     if "#define BUNDLE_MFR " in line:
-      BUNDLE_MFR = string.lstrip(line, "#define BUNDLE_MFR ")
+      BUNDLE_MFR = line.split("#define BUNDLE_MFR ")[1]
       
     if "#define BUNDLE_NAME " in line:
-      BUNDLE_NAME = string.lstrip(line, "#define BUNDLE_NAME ")
+      BUNDLE_NAME = line.split("#define BUNDLE_NAME ")[1]
        
     if "#define PLUG_CHANNEL_IO " in line:
-      PLUG_CHANNEL_IO = string.lstrip(line, "#define PLUG_CHANNEL_IO ")
+      PLUG_CHANNEL_IO = line.split("#define PLUG_CHANNEL_IO ")[1]
       
     if "#define PLUG_COPYRIGHT " in line:
-      PLUG_COPYRIGHT = string.lstrip(line, "#define PLUG_COPYRIGHT ")
+      PLUG_COPYRIGHT = line.split("#define PLUG_COPYRIGHT ")[1]
 
     if "#define PLUG_UNIQUE_ID " in line:
-      PLUG_UID = string.lstrip(line, "#define PLUG_UNIQUE_ID ")
+      PLUG_UID = line.split("#define PLUG_UNIQUE_ID ")[1]
       
     if "#define PLUG_MFR_ID " in line:
-      PLUG_MFR_UID = string.lstrip(line, "#define PLUG_MFR_ID ")
+      PLUG_MFR_UID = line.split("#define PLUG_MFR_ID ")[1]
     
     if "#define PLUG_ENTRY " in line:
-      PLUG_ENTRY = string.lstrip(line, "#define PLUG_ENTRY ")
+      PLUG_ENTRY = line.split("#define PLUG_ENTRY ")[1]
      
     if "#define PLUG_FACTORY " in line:
-      PLUG_FACTORY = string.lstrip(line, "#define PLUG_FACTORY ")
-    
+      PLUG_FACTORY = line.split("#define PLUG_FACTORY ")[1];
+  
     if "#define PLUG_VIEW_ENTRY " in line:
-      PLUG_VIEW_ENTRY = string.lstrip(line, "#define PLUG_VIEW_ENTRY")
+      PLUG_VIEW_ENTRY = line.split("#define PLUG_VIEW_ENTRY")[1]
       
     if "#define PLUG_IS_INST " in line:
-      PLUG_IS_INST = int(string.lstrip(line, "#define PLUG_IS_INST "), 16)
+      PLUG_IS_INST = int(line.split("#define PLUG_IS_INST ")[1], 16)
     
     if "#define PLUG_DOES_MIDI " in line:
-      PLUG_DOES_MIDI = int(string.lstrip(line, "#define PLUG_DOES_MIDI "), 16)
-      
+      PLUG_DOES_MIDI = int(line.split("#define PLUG_DOES_MIDI ")[1], 16)
+
+    if "#define PLUG_IS_MFX " in line:
+      PLUG_IS_MFX = int(line.split("#define PLUG_IS_MFX ")[1], 16)
+  
   FULLVERSIONSTR = MAJORSTR + "." + MINORSTR + "." + BUGFIXSTR
   
   #strip quotes and newlines
@@ -149,9 +154,9 @@ def main():
   for line in fileinput.input(projectpath + "/../../common.xcconfig", inplace=0):
     if not "//" in line:
       if "BASE_SDK = " in line:
-        BASE_SDK = string.lstrip(line, "BASE_SDK = ")
+        BASE_SDK = line.split("BASE_SDK = ")[1]
 #      if "MACOSX_DEPLOYMENT_TARGET = " in line:
-#        DEPLOYMENT_TARGET = string.lstrip(line, "MACOSX_DEPLOYMENT_TARGET = ")
+#        DEPLOYMENT_TARGET = line.split("MACOSX_DEPLOYMENT_TARGET = ")[1]
 
   BASE_SDK = BASE_SDK[0:-1]
 #  DEPLOYMENT_TARGET = DEPLOYMENT_TARGET[0:-1]
@@ -219,6 +224,8 @@ def main():
   
   if PLUG_IS_INST:
     COMP_TYPE = kAudioUnitType_MusicDevice
+  elif PLUG_IS_MFX:
+    COMP_TYPE = kAudioUnitType_MIDIProcessor
   elif PLUG_DOES_MIDI:
      COMP_TYPE = kAudioUnitType_MusicEffect
   else:
