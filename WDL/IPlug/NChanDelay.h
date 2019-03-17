@@ -45,9 +45,10 @@ public:
       {
         if (chan < mNumOutChans)
         {
+          double input = inputs[chan][s];
           int offset = chan * mDTSamples;
           outputs[chan][s] = buffer[offset + readAddress];
-          buffer[offset + mWriteAddress] = inputs[chan][s];
+          buffer[offset + mWriteAddress] = input;
         }
       }
       
