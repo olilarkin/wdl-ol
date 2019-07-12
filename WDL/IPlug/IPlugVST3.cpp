@@ -208,7 +208,7 @@ tresult PLUGIN_API IPlugVST3::initialize (FUnknown* context)
                                             kPresetParam,
                                             STR16(""),
                                             0,
-                                            NPresets(),
+                                            NPresets() - 1,
                                             ParameterInfo::kIsProgramChange));
     }
 
@@ -396,7 +396,7 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
               break;
             }
             case kPresetParam:
-              RestorePreset(FromNormalizedParam(value, 0, NPresets(), 1.));
+              RestorePreset(value * (NPresets() - 1) + 0.5);
               break;
               //TODO pitch bend, modwheel etc
             default:
@@ -452,6 +452,7 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
 
   if (processSetup.symbolicSampleSize == kSample32)
   {
+#if 0
     if (data.numInputs)
     {
       if (mScChans)
@@ -483,6 +484,45 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
         AttachInputBuffers(0, NInChannels(), data.inputs[0].channelBuffers32, data.numSamples);
       }
     }
+#else
+    // https://forum.cockos.com/showpost.php?p=1891661&postcount=6
+    if (data.numInputs)
+    {
+      if (mScChans)
+      {
+          int ninsum = data.inputs[0].numChannels; // At least the count of input channels
+          if (ninsum > NInChannels()) ninsum = NInChannels(); // Just to be sure
+          if (ninsum > data.outputs[0].numChannels) ninsum = data.outputs[0].numChannels; // E.g. studio one reports for mono tracks 2 ins and 1 out !
+          int mins = ninsum; // Real ins without sc
+
+          if (getAudioInput(1)->isActive())
+          {
+              ninsum += data.inputs[1].numChannels;
+              mSidechainActive = true;
+          }
+          else // Plug-in supports SC but it is not connected
+          {
+              if (mSidechainActive)
+              {
+                  ZeroScratchBuffers();
+                  mSidechainActive = false;
+              }
+          }
+          if (ninsum > NInChannels()) ninsum = NInChannels(); // Sum higher than allowed resource.h count ? Cut...
+          SetInputChannelConnections(0, ninsum, true); // Connect the real number of channels...
+          SetInputChannelConnections(ninsum, NInChannels() - ninsum, false); // ... and disconnect others
+
+          AttachInputBuffers(0, mins, data.inputs[0].channelBuffers32, data.numSamples);
+          if (mSidechainActive) AttachInputBuffers(mins, data.inputs[1].numChannels, data.inputs[1].channelBuffers32, data.numSamples);
+      }
+      else
+      {
+          SetInputChannelConnections(0, data.inputs[0].numChannels, true); // old solution is ok here
+          SetInputChannelConnections(data.inputs[0].numChannels, NInChannels() - data.inputs[0].numChannels, false);
+          AttachInputBuffers(0, NInChannels(), data.inputs[0].channelBuffers32, data.numSamples);
+      }
+    }
+#endif
 
     for (int outBus = 0, chanOffset = 0; outBus < data.numOutputs; outBus++)
     {
@@ -503,6 +543,7 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
 
   else if (processSetup.symbolicSampleSize == kSample64)
   {
+#if 0
     if (data.numInputs)
     {
       if (mScChans)
@@ -534,6 +575,45 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
         AttachInputBuffers(0, NInChannels(), data.inputs[0].channelBuffers64, data.numSamples);
       }
     }
+#else
+    // https://forum.cockos.com/showpost.php?p=1891661&postcount=6
+    if (data.numInputs)
+    {
+      if (mScChans)
+      {
+          int ninsum = data.inputs[0].numChannels; // At least the count of input channels
+          if (ninsum > NInChannels()) ninsum = NInChannels(); // Just to be sure
+          if (ninsum > data.outputs[0].numChannels) ninsum = data.outputs[0].numChannels; // E.g. studio one reports for mono tracks 2 ins and 1 out !
+          int mins = ninsum; // Real ins without sc
+
+          if (getAudioInput(1)->isActive())
+          {
+              ninsum += data.inputs[1].numChannels;
+              mSidechainActive = true;
+          }
+          else // Plug-in supports SC but it is not connected
+          {
+              if (mSidechainActive)
+              {
+                  ZeroScratchBuffers();
+                  mSidechainActive = false;
+              }
+          }
+          if (ninsum > NInChannels()) ninsum = NInChannels(); // Sum higher than allowed resource.h count ? Cut...
+          SetInputChannelConnections(0, ninsum, true); // Connect the real number of channels...
+          SetInputChannelConnections(ninsum, NInChannels() - ninsum, false); // ... and disconnect others
+
+          AttachInputBuffers(0, mins, data.inputs[0].channelBuffers64, data.numSamples);
+          if (mSidechainActive) AttachInputBuffers(mins, data.inputs[1].numChannels, data.inputs[1].channelBuffers64, data.numSamples);
+      }
+      else
+      {
+          SetInputChannelConnections(0, data.inputs[0].numChannels, true); // old solution is ok here
+          SetInputChannelConnections(data.inputs[0].numChannels, NInChannels() - data.inputs[0].numChannels, false);
+          AttachInputBuffers(0, NInChannels(), data.inputs[0].channelBuffers64, data.numSamples);
+      }
+    }
+#endif
 
     for (int outBus = 0, chanOffset = 0; outBus < data.numOutputs; outBus++)
     {
@@ -706,13 +786,31 @@ tresult PLUGIN_API IPlugVST3::getEditorState(IBStream* state)
   }  
   
   int32 toSaveBypass = mIsBypassed ? 1 : 0;
-  state->write(&toSaveBypass, sizeof (int32));  
+  state->write(&toSaveBypass, sizeof (int32));
 
   return kResultOk;
 }
 
+ParamValue PLUGIN_API IPlugVST3::normalizedParamToPlain (ParamID tag, ParamValue valueNormalized)
+{
+  if (tag == kPresetParam)
+    return floor(valueNormalized * (NPresets() - 1) + 0.5);
+
+  IParam* param = GetParam(tag);
+
+  if (param)
+  {
+    return param->GetNonNormalized(valueNormalized);
+  }
+
+  return 0;
+}
+
 ParamValue PLUGIN_API IPlugVST3::plainParamToNormalized(ParamID tag, ParamValue plainValue)
 {
+  if (tag == kPresetParam)
+    return plainValue / (NPresets() - 1);
+
   IParam* param = GetParam(tag);
 
   if (param)
@@ -729,10 +827,10 @@ ParamValue PLUGIN_API IPlugVST3::getParamNormalized(ParamID tag)
   {
     return (ParamValue) mIsBypassed;
   }
-//   else if (tag == kPresetParam) 
-//   {
-//     return (ParamValue) ToNormalizedParam(mCurrentPresetIdx, 0, NPresets(), 1.);
-//   }
+  else if (tag == kPresetParam)
+  {
+    return (ParamValue) mCurrentPresetIdx / (NPresets() - 1);
+  }
 
   IParam* param = GetParam(tag);
 
@@ -746,6 +844,17 @@ ParamValue PLUGIN_API IPlugVST3::getParamNormalized(ParamID tag)
 
 tresult PLUGIN_API IPlugVST3::setParamNormalized(ParamID tag, ParamValue value)
 {
+  if (tag == kBypassParam)
+  {
+    mIsBypassed = (bool)value;
+    return kResultOk;
+  }
+  else if (tag == kPresetParam)
+  {
+    mCurrentPresetIdx = value * (NPresets() - 1) + 0.5;
+    return kResultOk;
+  }
+
   IParam* param = GetParam(tag);
 
   if (param)
@@ -828,7 +937,7 @@ AudioBus* IPlugVST3::getAudioOutput (int32 index)
 }
 
 // TODO: more speaker arrs
-SpeakerArrangement IPlugVST3::getSpeakerArrForChans(int32 chans)
+/*SpeakerArrangement*/ /*njr* PACE doesn't like */ unsigned long long IPlugVST3::getSpeakerArrForChans(int32 chans)
 {
   switch (chans)
   {
@@ -989,7 +1098,8 @@ void IPlugVST3::SetLatency(int latency)
   IPlugBase::SetLatency(latency);
 
   FUnknownPtr<IComponentHandler>handler(componentHandler);
-  handler->restartComponent(kLatencyChanged);  
+  if (handler != nullptr)
+    handler->restartComponent(kLatencyChanged);
 }
 
 void IPlugVST3::PopupHostContextMenuForParam(int param, int x, int y)
