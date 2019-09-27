@@ -99,6 +99,7 @@ public:
   int NParams() { return mParams.GetSize(); }
   IParam* GetParam(int idx) { return mParams.Get(idx); }
   IGraphics* GetGUI() { return mGraphics; }
+  IPreset* GetPreset(int idx) { return mPresets.Get(idx); }
 
   const char* GetEffectName() { return mEffectName; }
   int GetEffectVersion(bool decimal);   // Decimal = VVVVRRMM, otherwise 0xVVVVRRMM.
@@ -254,6 +255,7 @@ protected:
   void ZeroScratchBuffers();
   
 public:
+  void ModifyPreset(int idx, const char* name = 0);  // Sets the specified preset to whatever current params are.
   void ModifyCurrentPreset(const char* name = 0);     // Sets the currently active preset to whatever current params are.
   int NPresets() { return mPresets.GetSize(); }
   int GetCurrentPresetIdx() { return mCurrentPresetIdx; }
@@ -265,8 +267,11 @@ public:
 
   // Dump the current state as source code for a call to MakePresetFromNamedParams / MakePresetFromBlob
   void DumpPresetSrcCode(const char* filename, const char* paramEnumNames[]);
+  void AppendPrstSrc(const char* filename); //See function for comments
+  void AppendPrstSrcNamed(const char* filename, const char* paramEnumNames[]); //See function for comments
   void DumpPresetBlob(const char* filename);
-  void DumpBankBlob(const char* filename);
+  void AppendPresetBlob(const char* filename); //See function for comments
+  void DumpBankBlob(const char* filename); //See function for comments
   
   virtual void PresetsChangedByHost() {} // does nothing by default
   void DirtyParameters(); // hack to tell the host to dirty file state, when a preset is recalled

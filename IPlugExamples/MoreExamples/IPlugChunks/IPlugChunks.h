@@ -42,6 +42,8 @@ public:
   void PresetsChangedByHost();
 
 private:
+  //Presets
+  void CreatePresets();
 
   double mSteps[NUM_SLIDERS];
 

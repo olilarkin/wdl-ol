@@ -573,59 +573,143 @@ tresult PLUGIN_API IPlugVST3::process(ProcessData& data)
   return kResultOk;
 }
 
-//tresult PLUGIN_API IPlugVST3::setState(IBStream* state)
-//{
-//  TRACE;
-//  WDL_MutexLock lock(&mMutex);
-//
-//  ByteChunk chunk;
-//  SerializeState(&chunk); // to get the size
-//
-//  if (chunk.Size() > 0)
-//  {
-//    state->read(chunk.GetBytes(), chunk.Size());
-//    UnserializeState(&chunk, 0);
-//    RedrawParamControls();
-//    return kResultOk;
-//  }
-//
-//  return kResultFalse;
-//}
-//
-//tresult PLUGIN_API IPlugVST3::getState(IBStream* state)
-//{
-//  TRACE;
-//  WDL_MutexLock lock(&mMutex);
-//
-//  ByteChunk chunk;
-//
-//  if (SerializeState(&chunk))
-//  {
-//    state->write(chunk.GetBytes(), chunk.Size());
-//    return kResultOk;
-//  }
-//
-//  return kResultFalse;
-//}
+/* Called when restoring the plugin state from a saved host project or .vstpreset file.
+ Loads chunk, bypass state, current preset idx, and bank state from IBStream *state. */
+tresult PLUGIN_API IPlugVST3::setState(IBStream* state)
+{
+  TRACE;
+  WDL_MutexLock lock(&mMutex);
 
-//tresult PLUGIN_API IPlugVST3::setComponentState(IBStream *state)
-//{
-//  TRACE;
-//  WDL_MutexLock lock(&mMutex);
-//
-//  ByteChunk chunk;
-//  SerializeState(&chunk); // to get the size
-//
-//  if (chunk.Size() > 0)
-//  {
-//    state->read(chunk.GetBytes(), chunk.Size());
-//    UnserializeState(&chunk, 0);
-//    RedrawParamControls();
-//    return kResultOk;
-//  }
-//
-//  return kResultFalse;
-//}
+  ByteChunk chunk;
+
+  SerializeState(&chunk); // to get the size
+  int32 chunksize = chunk.Size();
+
+  if (chunksize > 0)
+  {
+    state->read(chunk.GetBytes(), chunksize);
+    UnserializeState(&chunk, 0);
+
+    int32 savedBypass = 0;
+
+    if (state->read(&savedBypass, sizeof(int32)) != kResultOk)
+    {
+      return kResultFalse;
+    }
+
+    mIsBypassed = (bool)savedBypass;
+
+    int numberofpresets = NPresets();
+    if (numberofpresets > 0)
+    {
+      int32 savedPresetIdx = 0;
+      state->read(&savedPresetIdx, sizeof(int32));
+
+      for (int i = 0; i < numberofpresets; ++i)
+      {
+        IPreset* pPreset = GetPreset(i);
+
+        String128 savedPresetName;
+        if (state->read(&savedPresetName, sizeof(String128)) != kResultOk)
+        {
+          return kResultFalse;
+        }
+
+        WDL_String mPresetName;
+        char PresetName[128];
+        Steinberg::UString(savedPresetName, sizeof(String128)).toAscii(PresetName, sizeof(String128));
+        mPresetName.Set(PresetName);
+        strcpy(pPreset->mName, mPresetName.Get());
+
+        state->read(pPreset->mChunk.GetBytes(), chunksize);
+      }
+
+      RestorePreset(savedPresetIdx);
+    }
+
+    RedrawParamControls();
+
+    return kResultOk;
+  }
+
+  return kResultFalse;
+}
+
+/* Called when saving the plugin state to a host project or .vstpreset file.
+ Writes chunk, bypass state, current preset idx, and bank state to IBStream *state. */
+tresult PLUGIN_API IPlugVST3::getState(IBStream* state)
+{
+  TRACE;
+  WDL_MutexLock lock(&mMutex);
+
+  ByteChunk chunk;
+  int32 chunksize;
+
+  if (SerializeState(&chunk))
+  {
+    chunksize = chunk.Size();
+
+    state->write(chunk.GetBytes(), chunksize);
+  }
+  else
+  {
+    return kResultFalse;
+  }
+
+  int32 toSaveBypass = mIsBypassed ? 1 : 0;
+  state->write(&toSaveBypass, sizeof(int32));
+
+  int numberofpresets = NPresets();
+  if (numberofpresets > 0)
+  {
+    int32 toSaveCurrentPresetIdx = GetCurrentPresetIdx();
+    state->write(&toSaveCurrentPresetIdx, sizeof(int32));
+
+    for (int i = 0; i < numberofpresets; ++i)
+    {
+      IPreset* pPreset = GetPreset(i);
+
+      String128 toSavePresetName;
+      WDL_String mPresetName;
+      mPresetName.Set(pPreset->mName);
+      Steinberg::UString(toSavePresetName, sizeof(String128)).fromAscii(mPresetName.Get());
+      state->write(&toSavePresetName, sizeof(String128));
+
+      state->write(pPreset->mChunk.GetBytes(), chunksize);
+    }
+  }
+
+  return kResultOk;
+}
+
+/* Called when restoring a state. Load the plugin state of the component (processor part) only from IBStream *state. */
+tresult PLUGIN_API IPlugVST3::setComponentState(IBStream *state)
+{
+  TRACE;
+  WDL_MutexLock lock(&mMutex);
+
+  ByteChunk chunk;
+  SerializeState(&chunk); // to get the size
+
+  if (chunk.Size() > 0)
+  {
+    state->read(chunk.GetBytes(), chunk.Size());
+    UnserializeState(&chunk, 0);
+
+    int32 savedBypass = 0;
+
+    if (state->read(&savedBypass, sizeof(int32)) != kResultOk)
+    {
+      return kResultFalse;
+    }
+
+    mIsBypassed = (bool)savedBypass;
+    RedrawParamControls();
+    return kResultOk;
+  }
+
+  return kResultFalse;
+}
 
 tresult PLUGIN_API IPlugVST3::canProcessSampleSize(int32 symbolicSampleSize)
 {
@@ -665,7 +749,8 @@ IPlugView* PLUGIN_API IPlugVST3::createView (const char* name)
   return 0;
 }
 
-tresult PLUGIN_API IPlugVST3::setEditorState(IBStream* state)
+/* Gets the controller state and restores any GUI settings that are not related to the processor */
+/*tresult PLUGIN_API IPlugVST3::setEditorState(IBStream* state)
 {
   TRACE;
   WDL_MutexLock lock(&mMutex);
@@ -677,24 +762,25 @@ tresult PLUGIN_API IPlugVST3::setEditorState(IBStream* state)
   {
     state->read(chunk.GetBytes(), chunk.Size());
     UnserializeState(&chunk, 0);
-    
+
     int32 savedBypass = 0;
-    
-    if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
+
+    if (state->read(&savedBypass, sizeof(int32)) != kResultOk)
     {
       return kResultFalse;
     }
-    
-    mIsBypassed = (bool) savedBypass;
-    
+
+    mIsBypassed = (bool)savedBypass;
+
     RedrawParamControls();
     return kResultOk;
   }
 
   return kResultFalse;
-}
+}*/
 
-tresult PLUGIN_API IPlugVST3::getEditorState(IBStream* state)
+/* Sets the controller state and stores any GUI settings that are not related to the processor */
+/*tresult PLUGIN_API IPlugVST3::getEditorState(IBStream* state)
 {
   TRACE;
   WDL_MutexLock lock(&mMutex);
@@ -708,13 +794,13 @@ tresult PLUGIN_API IPlugVST3::getEditorState(IBStream* state)
   else
   {
     return kResultFalse;
-  }  
-  
+  }
+
   int32 toSaveBypass = mIsBypassed ? 1 : 0;
-  state->write(&toSaveBypass, sizeof (int32));  
+  state->write(&toSaveBypass, sizeof(int32));
 
   return kResultOk;
-}
+}*/
 
 ParamValue PLUGIN_API IPlugVST3::plainParamToNormalized(ParamID tag, ParamValue plainValue)
 {
@@ -734,10 +820,10 @@ ParamValue PLUGIN_API IPlugVST3::getParamNormalized(ParamID tag)
   {
     return (ParamValue) mIsBypassed;
   }
-//   else if (tag == kPresetParam) 
-//   {
-//     return (ParamValue) ToNormalizedParam(mCurrentPresetIdx, 0, NPresets(), 1.);
-//   }
+   else if (tag == kPresetParam)
+   {
+     return (ParamValue) ToNormalizedParam(mCurrentPresetIdx, 0, NPresets(), 1.);
+   }
 
   IParam* param = GetParam(tag);
 
