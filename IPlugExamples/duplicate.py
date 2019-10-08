@@ -175,7 +175,7 @@ def main():
 
     copy('gitignore_template', output + "/.gitignore")
 
-    print("\ndone - don't forget to change PLUG_UID and MFR_UID in config.h")
+    print("\ndone - don't forget to change PLUG_UNIQUE_ID and PLUG_MFR_ID in resource.h")
     
 if __name__ == '__main__':
   main()
