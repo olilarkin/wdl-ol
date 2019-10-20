@@ -667,31 +667,37 @@ IPlugView* PLUGIN_API IPlugVST3::createView (const char* name)
 
 tresult PLUGIN_API IPlugVST3::setEditorState(IBStream* state)
 {
-  TRACE;
-  WDL_MutexLock lock(&mMutex);
-
-  ByteChunk chunk;
-  SerializeState(&chunk); // to get the size
-
-  if (chunk.Size() > 0)
-  {
-    state->read(chunk.GetBytes(), chunk.Size());
-    UnserializeState(&chunk, 0);
-    
-    int32 savedBypass = 0;
-    
-    if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
-    {
-      return kResultFalse;
-    }
-    
-    mIsBypassed = (bool) savedBypass;
-    
-    RedrawParamControls();
-    return kResultOk;
-  }
-
-  return kResultFalse;
+	TRACE;
+	WDL_MutexLock lock(&mMutex);
+	
+	ByteChunk chunk;
+	
+	const int bytesPerBlock = 128;
+	char buffer[bytesPerBlock];
+	
+	for (;;)
+	{
+		Steinberg::int32 bytesRead = 0;
+		auto status = state->read (buffer, (Steinberg::int32) bytesPerBlock, &bytesRead);
+		
+		if (bytesRead <= 0 || status != kResultTrue)
+			break;
+		
+		chunk.PutBytes(buffer, bytesRead);
+	}
+	UnserializeState(&chunk,0);
+	
+	int32 savedBypass = 0;
+		
+	if (state->read (&savedBypass, sizeof (int32)) != kResultOk) {
+		return kResultFalse;
+	}
+		
+	mIsBypassed = (bool) savedBypass;
+	
+	RedrawParamControls();
+	return kResultOk;
+	
 }
 
 tresult PLUGIN_API IPlugVST3::getEditorState(IBStream* state)
