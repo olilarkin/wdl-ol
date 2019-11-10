@@ -774,8 +774,8 @@ bool IGraphics::Draw(IRECT* pR)
       if (!(pControl->IsHidden()) && pR->Intersects(pControl->GetRECT()))
       {
         pControl->Draw(this);
+        pControl->SetClean();
       }
-      pControl->SetClean();
     }
   }
   else
@@ -816,9 +816,9 @@ bool IGraphics::Draw(IRECT* pR)
               //printf("control %i and %i \n", i, j);
 
               pControl2->Draw(this);
+              pControl->SetClean();
             }
           }
-          pControl->SetClean();
         }
       }
     }
