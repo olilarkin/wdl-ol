@@ -74,6 +74,8 @@ NSString* ToNSString(const char* cStr);
 - (BOOL) acceptsFirstResponder;
 - (BOOL) acceptsFirstMouse: (NSEvent*) pEvent;
 - (void) viewDidMoveToWindow;
+- (void) updateTrackingAreas;
+- (void) mouseEntered:(NSEvent *) pEvent;
 - (void) drawRect: (NSRect) rect;
 - (void) onTimer: (NSTimer*) pTimer;
 - (void) getMouseXY: (NSEvent*) pEvent x: (int*) pX y: (int*) pY;
