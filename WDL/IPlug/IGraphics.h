@@ -188,6 +188,8 @@ public:
   void OnMouseWheel(int x, int y, IMouseMod* pMod, int d);
   bool OnKeyDown(int x, int y, int key);
 
+  void SetMouseCursor(HCURSOR cursor);
+
   virtual void HideMouseCursor() {};
   virtual void ShowMouseCursor() {};
 
@@ -256,6 +258,9 @@ protected:
   inline int GetMouseX() const { return mMouseX; }
   inline int GetMouseY() const { return mMouseY; }
   inline bool TooltipsEnabled() const { return mEnableTooltips; }
+
+  HCURSOR mCursor;
+  void UpdateMouseCursor();
   
   virtual LICE_IBitmap* OSLoadBitmap(int ID, const char* name) = 0;
   

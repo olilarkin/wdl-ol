@@ -65,6 +65,7 @@ NSString* ToNSString(const char* cStr);
   IControl* mEdControl; // the control linked to the open text edit
   IParam* mEdParam; // the param linked to the open text edit (optional)
   int mPrevX, mPrevY;
+  NSTrackingArea* mTrackingArea;
 @public
   IGraphicsMac* mGraphics;
 }
@@ -84,6 +85,8 @@ NSString* ToNSString(const char* cStr);
 - (void) rightMouseUp: (NSEvent*) pEvent;
 - (void) rightMouseDragged: (NSEvent*) pEvent;
 - (void) mouseMoved: (NSEvent*) pEvent;
+- (void) updateTrackingAreas;
+- (void) mouseExited: (NSEvent*) pEvent;
 - (void) scrollWheel: (NSEvent*) pEvent;
 - (void) keyDown: (NSEvent *)pEvent;
 - (void) killTimer;

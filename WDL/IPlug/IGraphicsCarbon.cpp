@@ -579,6 +579,8 @@ pascal void IGraphicsCarbon::TimerHandler(EventLoopTimerRef pTimer, void* pGraph
 {
   IGraphicsCarbon* _this = (IGraphicsCarbon*) pGraphicsCarbon;
 
+  _this->mGraphicsMac->GetPlug()->OnGUITimer();
+
   IRECT r;
 
   if (_this->mGraphicsMac->IsDirty(&r))

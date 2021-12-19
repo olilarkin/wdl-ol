@@ -276,9 +276,14 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
 - (void) onTimer: (NSTimer*) pTimer
 {
   IRECT r;
-  if (pTimer == mTimer && mGraphics && mGraphics->IsDirty(&r))
+  if (pTimer == mTimer && mGraphics)
   {
-    [self setNeedsDisplayInRect:ToNSRect(mGraphics, &r)];
+    mGraphics->GetPlug()->OnGUITimer();
+
+    if (mGraphics->IsDirty(&r))
+    {
+      [self setNeedsDisplayInRect:ToNSRect(mGraphics, &r)];
+    }
   }
 }
 
@@ -394,6 +399,24 @@ inline int GetMouseOver(IGraphicsMac* pGraphics)
     [self getMouseXY:pEvent x:&x y:&y];
     IMouseMod ms = GetMouseMod(pEvent);
     mGraphics->OnMouseOver(x, y, &ms);
+  }
+}
+
+- (void) updateTrackingAreas
+{
+  if (mTrackingArea != nil) {
+    [self removeTrackingArea:mTrackingArea];
+  }
+  
+  mTrackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds] options:NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways owner:self userInfo:nil];
+  [self addTrackingArea:mTrackingArea];
+}
+
+- (void) mouseExited: (NSEvent*) pEvent
+{
+  if (mGraphics)
+  {
+    mGraphics->OnMouseOut();
   }
 }
 

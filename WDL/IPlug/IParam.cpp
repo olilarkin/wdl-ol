@@ -133,6 +133,9 @@ void IParam::GetDisplayForHost(double value, bool normalized, char* rDisplay, bo
 
   double displayValue = value;
 
+  double roundScale = pow(10, mDisplayPrecision);
+  displayValue = round(displayValue * roundScale) / roundScale;
+
   if (mNegateDisplay) displayValue = -displayValue;
 
   if (mDisplayPrecision == 0)

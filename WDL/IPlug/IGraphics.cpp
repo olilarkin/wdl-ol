@@ -178,6 +178,7 @@ IGraphics::IGraphics(IPlugBase* pPlug, int w, int h, int refreshFPS)
   , mCursorHidden(false)
   , mHiddenMousePointX(-1)
   , mHiddenMousePointY(-1)
+  , mCursor(NULL)
   , mEnableTooltips(false)
   , mShowControlBounds(false)
 {
@@ -774,8 +775,8 @@ bool IGraphics::Draw(IRECT* pR)
       if (!(pControl->IsHidden()) && pR->Intersects(pControl->GetRECT()))
       {
         pControl->Draw(this);
+        pControl->SetClean();
       }
-      pControl->SetClean();
     }
   }
   else
@@ -816,9 +817,9 @@ bool IGraphics::Draw(IRECT* pR)
               //printf("control %i and %i \n", i, j);
 
               pControl2->Draw(this);
+              pControl->SetClean();
             }
           }
-          pControl->SetClean();
         }
       }
     }
@@ -854,6 +855,7 @@ void IGraphics::OnMouseDown(int x, int y, IMouseMod* pMod)
 {
   ReleaseMouseCapture();
   int c = GetMouseControlIdx(x, y);
+  mPlug->OnMouseDown(x, y, pMod, c);
   if (c >= 0)
   {
     mMouseCapture = c;
@@ -1016,6 +1018,24 @@ bool IGraphics::OnKeyDown(int x, int y, int key)
     return mKeyCatcher->OnKeyDown(x, y, key);
   else
     return false;
+}
+
+void IGraphics::SetMouseCursor(HCURSOR cursor)
+{
+  mCursor = cursor;
+  UpdateMouseCursor();
+}
+
+void IGraphics::UpdateMouseCursor()
+{
+  if (mCursor != NULL)
+  {
+    SetCursor(mCursor);
+  }
+  else
+  {
+    SetCursor(LoadCursor(NULL, IDC_ARROW));
+  }
 }
 
 int IGraphics::GetMouseControlIdx(int x, int y, bool mo)

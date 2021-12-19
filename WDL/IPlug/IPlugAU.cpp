@@ -1564,7 +1564,7 @@ OSStatus IPlugAU::RenderProc(void* pPlug, AudioUnitRenderActionFlags* pFlags, co
 
   IPlugAU* _this = (IPlugAU*) pPlug;
 
-  if (!(pTimestamp->mFlags & kAudioTimeStampSampleTimeValid) || outputBusIdx >= _this->mOutBuses.GetSize() || nFrames > _this->GetBlockSize())
+  if (outputBusIdx >= _this->mOutBuses.GetSize() || nFrames > _this->GetBlockSize())
   {
     return kAudioUnitErr_InvalidPropertyValue;
   }

@@ -85,6 +85,7 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
     {
       if (wParam == IPLUG_TIMER_ID)
       {
+        pGraphics->GetPlug()->OnGUITimer();
 
         if (pGraphics->mParamEditWnd && pGraphics->mParamEditMsg != kNone)
         {
@@ -336,7 +337,13 @@ LRESULT CALLBACK IGraphicsWin::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARA
       return 0;
     }
 
-    case WM_CTLCOLOREDIT:
+    case WM_SETCURSOR:
+    {
+      pGraphics->UpdateMouseCursor();
+      return TRUE;
+    }
+
+	case WM_CTLCOLOREDIT:
     {
 
       if(!pGraphics->mEdControl)
